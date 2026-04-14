@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Cool Games</title>
+  <meta name="description" content="A launchpad for every game in the Super Cool Games collection.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: rgba(7, 17, 31, 0.72);
+      --panel-strong: rgba(10, 23, 41, 0.92);
+      --border: rgba(197, 225, 255, 0.12);
+      --text: #f7fbff;
+      --muted: #aac3dc;
+      --shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 105, 64, 0.22), transparent 30%),
+        radial-gradient(circle at 80% 10%, rgba(96, 215, 255, 0.2), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(77, 255, 175, 0.16), transparent 25%),
+        linear-gradient(160deg, #02050b 0%, #07111f 45%, #0a1730 100%);
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: auto;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(10px);
+      opacity: 0.7;
+    }
+
+    body::before {
+      top: 8%;
+      right: -10rem;
+      width: 28rem;
+      height: 28rem;
+      border-radius: 48% 52% 61% 39% / 41% 43% 57% 59%;
+      background: linear-gradient(135deg, rgba(255, 104, 60, 0.28), rgba(255, 224, 102, 0.08));
+      animation: drift 20s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      bottom: -8rem;
+      left: -6rem;
+      width: 24rem;
+      height: 24rem;
+      border-radius: 63% 37% 44% 56% / 45% 51% 49% 55%;
+      background: linear-gradient(135deg, rgba(0, 224, 255, 0.18), rgba(92, 90, 255, 0.06));
+      animation: drift 24s ease-in-out infinite alternate-reverse;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      width: min(1200px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 72px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
+        var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.08), transparent 30%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 70px);
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: #ffb484;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 10ch;
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-size: clamp(3rem, 9vw, 6.8rem);
+      line-height: 0.94;
+      letter-spacing: -0.05em;
+    }
+
+    .hero-copy {
+      max-width: 58rem;
+      margin: 20px 0 28px;
+      color: var(--muted);
+      font-size: clamp(1rem, 2.2vw, 1.15rem);
+      line-height: 1.7;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #dff0ff;
+      font-size: 0.9rem;
+    }
+
+    .hero-note {
+      color: #d8e9fa;
+      font-size: 0.94rem;
+      opacity: 0.86;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 30px 4px 18px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2.4rem);
+      letter-spacing: -0.04em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .game-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 340px;
+      padding: 18px;
+      border-radius: 26px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+        var(--panel-strong);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.22);
+      overflow: hidden;
+      transform: translateY(0);
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .game-card::before {
+      content: "";
+      position: absolute;
+      inset: -30% 55% auto -25%;
+      height: 220px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--accent) 45%, transparent) 0%, transparent 65%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .game-card:hover,
+    .game-card:focus-visible {
+      transform: translateY(-5px);
+      border-color: color-mix(in srgb, var(--accent) 55%, white 15%);
+      box-shadow: 0 28px 54px rgba(0, 0, 0, 0.34);
+      outline: none;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      color: #edf6ff;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+
+    .launch {
+      color: color-mix(in srgb, var(--accent) 60%, white 30%);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .icon-frame {
+      position: relative;
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      width: 100%;
+      margin-bottom: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.015)),
+        rgba(1, 8, 18, 0.35);
+      overflow: hidden;
+    }
+
+    .icon-frame::after {
+      content: "";
+      position: absolute;
+      inset: auto 14px 12px auto;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--accent) 38%, transparent), transparent 68%);
+      filter: blur(16px);
+      opacity: 0.9;
+    }
+
+    .game-icon {
+      width: calc(100% - 16px);
+      max-width: 164px;
+      border-radius: 20px;
+      filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.28));
+      transform: translateZ(0);
+    }
+
+    .game-title {
+      margin: 0 0 10px;
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-size: 1.34rem;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .game-desc {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.96rem;
+    }
+
+    .card-footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-top: 18px;
+      color: #d9edff;
+      font-size: 0.92rem;
+    }
+
+    .card-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 75%, transparent), transparent);
+    }
+
+    .footer-copy {
+      margin: 28px 8px 0;
+      color: #8ea7c0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @keyframes drift {
+      from {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+      }
+      to {
+        transform: translate3d(-24px, 24px, 0) rotate(12deg);
+      }
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .hero,
+      .game-card {
+        animation: rise 500ms ease both;
+      }
+
+      .game-card:nth-child(2n) {
+        animation-delay: 60ms;
+      }
+
+      .game-card:nth-child(3n) {
+        animation-delay: 110ms;
+      }
+    }
+
+    @media (max-width: 720px) {
+      main {
+        width: min(100% - 20px, 1200px);
+        padding-top: 20px;
+      }
+
+      .hero {
+        padding: 22px;
+        border-radius: 26px;
+      }
+
+      .meta-row,
+      .section-head {
+        flex-direction: column;
+        align-items: start;
+      }
+
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Collection Launcher</p>
+      <h1>Super Cool Games</h1>
+      <p class="hero-copy">
+        A single launchpad for every game in this repo. Each card links straight into its own subdirectory and carries a custom PNG icon generated in-browser just for that title.
+      </p>
+      <div class="meta-row">
+        <div class="meta-pills">
+          <span class="pill" id="game-count">23 games</span>
+          <span class="pill">Embedded PNG icons</span>
+          <span class="pill">No external art files</span>
+        </div>
+        <div class="hero-note">Root page: <code>/index.html</code></div>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>Choose A Game</h2>
+      <p>Arcade experiments, survival loops, sports sims, and monster worlds.</p>
+    </div>
+
+    <section class="games-grid" id="games-grid" aria-label="Game catalog"></section>
+
+    <p class="footer-copy">
+      Icons are rendered to a canvas and inserted as <code>image/png</code> data URLs, so the page stays self-contained while each game still gets a distinct visual identity.
+    </p>
+  </main>
+
+  <script>
+    const games = [
+      {
+        title: "ArcherCar: Velocity Rush",
+        href: "ArcherCar/index.html",
+        tag: "Arcade Racing",
+        desc: "Neon street racing with selectable machines.",
+        motif: "car",
+        palette: ["#ff8a3d", "#ff4d6d", "#4de2ff"]
+      },
+      {
+        title: "War Game",
+        href: "BattleSomething/war_game.html",
+        tag: "Strategy Shooter",
+        desc: "A top-down war sandbox built around battlefield pressure.",
+        motif: "war",
+        palette: ["#68717f", "#ffa94d", "#f03e3e"]
+      },
+      {
+        title: "Clash Raccoon",
+        href: "ClashRaccoon/index.html",
+        tag: "Creature Battler",
+        desc: "Level up a raccoon hero and grind through enemy waves.",
+        motif: "raccoon",
+        palette: ["#9b7b58", "#e8ba77", "#4d2d1f"]
+      },
+      {
+        title: "Fishing Frenzy",
+        href: "FishingFrenzy/index.html",
+        tag: "Idle Fishing",
+        desc: "Upgrade hooks, bait, and profit from the catch.",
+        motif: "fishing",
+        palette: ["#2ec5ff", "#0077ff", "#ffd166"]
+      },
+      {
+        title: "Pokemon World",
+        href: "PokemonExtravaganza/game.html",
+        tag: "Open World Catching",
+        desc: "A first-person monster world with exploration and captures.",
+        motif: "monster",
+        palette: ["#ffd43b", "#ff5f6d", "#2979ff"]
+      },
+      {
+        title: "Raccoon Survival",
+        href: "RecoonSurvivial/raccoon_survival.html",
+        tag: "Survival Adventure",
+        desc: "Stay alive as a scavenging raccoon in the wild.",
+        motif: "survival",
+        palette: ["#60d394", "#22543d", "#f3d250"]
+      },
+      {
+        title: "Hybrid Tycoon",
+        href: "SuperFactory/index.html",
+        tag: "Factory Tycoon",
+        desc: "Scale production lines and compound passive income.",
+        motif: "factory",
+        palette: ["#a0aec0", "#63b3ed", "#f6ad55"]
+      },
+      {
+        title: "Transformer War",
+        href: "TransformerWar/index.html",
+        tag: "Sci-Fi Action",
+        desc: "Robot warfare with a glossy movie-scale presentation.",
+        motif: "robot",
+        palette: ["#7f5cff", "#1be7ff", "#ff7f50"]
+      },
+      {
+        title: "Baseball Dream 2026",
+        href: "baseball%20dream/index.html",
+        tag: "Sports Sim",
+        desc: "Step onto the mound and chase a clean big-league run.",
+        motif: "baseball",
+        palette: ["#f7f7f7", "#e53e3e", "#2563eb"]
+      },
+      {
+        title: "Fruit Power: Boss Battle",
+        href: "blocks%20battles%20/index.html",
+        tag: "Boss Rush",
+        desc: "Weaponized fruit meets escalating arcade boss fights.",
+        motif: "fruit",
+        palette: ["#ff7b00", "#ff3366", "#ffe66d"]
+      },
+      {
+        title: "Ring Rivals",
+        href: "fighting/index.html",
+        tag: "Arena Fighter",
+        desc: "Boxing-arena boss ladder with local multiplayer energy.",
+        motif: "boxing",
+        palette: ["#ff5d8f", "#9b2c2c", "#ffd166"]
+      },
+      {
+        title: "Final Boss Sour",
+        href: "final%20boss%20sour%20/index.html",
+        tag: "Character Fighter",
+        desc: "Choose a fighter and square up against a candy-coated final boss.",
+        motif: "candy",
+        palette: ["#d0ff59", "#ef476f", "#8b5cf6"]
+      },
+      {
+        title: "Fish Evolve: Legend of the Deep",
+        href: "fishevolve%20/index.html",
+        tag: "Evolution Survival",
+        desc: "Grow from a small fish into something enormous.",
+        motif: "deepfish",
+        palette: ["#00c2ff", "#1a365d", "#7fdbff"]
+      },
+      {
+        title: "Food Chain Evolution",
+        href: "food_chain/index.html",
+        tag: "Arcade Survival",
+        desc: "Climb the ecosystem one bite at a time.",
+        motif: "foodchain",
+        palette: ["#73ffa7", "#00b894", "#ffee93"]
+      },
+      {
+        title: "Archer's Football Draft",
+        href: "football_draft/index.html",
+        tag: "Sports Management",
+        desc: "Draft a roster and turn choices into season momentum.",
+        motif: "football",
+        palette: ["#58d68d", "#1d8348", "#f4d03f"]
+      },
+      {
+        title: "Neon Dash",
+        href: "geomatry%20dash/index.html",
+        tag: "Rhythm Platformer",
+        desc: "Hard-edged obstacle dodging in a bright neon lane.",
+        motif: "dash",
+        palette: ["#18dcff", "#ff9f1c", "#ff2d95"]
+      },
+      {
+        title: "Megalodon Survival",
+        href: "megalodonFeedoff/index.html",
+        tag: "Ocean Survival",
+        desc: "A giant shark survival game built around hunger and growth.",
+        motif: "shark",
+        palette: ["#00c2ff", "#0f3460", "#7fffd4"]
+      },
+      {
+        title: "Pokemon Adventure",
+        href: "pokemon%20adventure/index.html",
+        tag: "Retro Adventure",
+        desc: "Classic-style pixel exploration with creature battles.",
+        motif: "adventure",
+        palette: ["#8fd14f", "#ffcb05", "#3b4cca"]
+      },
+      {
+        title: "Pokemon Eye View",
+        href: "pokemon%20battle/index.html",
+        tag: "3D Catching",
+        desc: "A stylized catch-and-collect view of the monster world.",
+        motif: "eye",
+        palette: ["#ffcd38", "#f44336", "#0ea5e9"]
+      },
+      {
+        title: "Recycler",
+        href: "recycler/index.html",
+        tag: "Sorting Arcade",
+        desc: "Fast waste-sorting with score pressure and clean feedback.",
+        motif: "recycle",
+        palette: ["#7de76a", "#00b37e", "#c0fdfb"]
+      },
+      {
+        title: "Sharkpedia",
+        href: "shakpedia/index.html",
+        tag: "Info Experience",
+        desc: "An aquatic encyclopedia interface centered on shark knowledge.",
+        motif: "pedia",
+        palette: ["#64d2ff", "#0f4c81", "#d9f4ff"]
+      },
+      {
+        title: "Castle Defense",
+        href: "tower%20defense/index.html",
+        tag: "Tower Defense",
+        desc: "Protect the stronghold through waves and tactical purchases.",
+        motif: "castle",
+        palette: ["#9d4edd", "#adb5bd", "#ffd166"]
+      },
+      {
+        title: "Tower Destroy",
+        href: "tower%20destroy/index.html",
+        tag: "Destruction Arcade",
+        desc: "Bring towers down with precision and impact.",
+        motif: "destroy",
+        palette: ["#ff7f50", "#a4508b", "#ffd166"]
+      }
+    ];
+
+    const grid = document.getElementById("games-grid");
+    document.getElementById("game-count").textContent = `${games.length} games`;
+
+    function mulberry32(seed) {
+      let t = seed >>> 0;
+      return function () {
+        t += 0x6d2b79f5;
+        let x = Math.imul(t ^ t >>> 15, 1 | t);
+        x ^= x + Math.imul(x ^ x >>> 7, 61 | x);
+        return ((x ^ x >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function hashText(text) {
+      let hash = 2166136261;
+      for (let i = 0; i < text.length; i += 1) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    }
+
+    function alpha(hex, opacity) {
+      const value = hex.replace("#", "");
+      const full = value.length === 3
+        ? value.split("").map((part) => part + part).join("")
+        : value;
+      const r = parseInt(full.slice(0, 2), 16);
+      const g = parseInt(full.slice(2, 4), 16);
+      const b = parseInt(full.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + width, y, x + width, y + height, radius);
+      ctx.arcTo(x + width, y + height, x, y + height, radius);
+      ctx.arcTo(x, y + height, x, y, radius);
+      ctx.arcTo(x, y, x + width, y, radius);
+      ctx.closePath();
+    }
+
+    function fillCircle(ctx, x, y, r, color) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function drawBackground(ctx, game, rand, size) {
+      const gradient = ctx.createLinearGradient(18, 14, size - 14, size - 10);
+      gradient.addColorStop(0, game.palette[0]);
+      gradient.addColorStop(0.5, game.palette[1]);
+      gradient.addColorStop(1, game.palette[2]);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      const flare = ctx.createRadialGradient(size * 0.28, size * 0.24, 6, size * 0.28, size * 0.24, size * 0.62);
+      flare.addColorStop(0, alpha("#ffffff", 0.24));
+      flare.addColorStop(1, alpha("#ffffff", 0));
+      ctx.fillStyle = flare;
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.globalCompositeOperation = "overlay";
+      for (let i = 0; i < 7; i += 1) {
+        ctx.strokeStyle = alpha("#ffffff", 0.12 + rand() * 0.08);
+        ctx.lineWidth = 1 + rand() * 2;
+        ctx.beginPath();
+        ctx.moveTo(rand() * size * 0.4, rand() * size);
+        ctx.bezierCurveTo(rand() * size, rand() * size, rand() * size * 0.3, rand() * size * 0.3, size + 10, rand() * size);
+        ctx.stroke();
+      }
+
+      ctx.globalCompositeOperation = "screen";
+      for (let i = 0; i < 18; i += 1) {
+        fillCircle(ctx, rand() * size, rand() * size, 0.8 + rand() * 2.6, alpha("#ffffff", 0.15 + rand() * 0.3));
+      }
+
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = alpha("#020817", 0.18);
+      for (let x = 0; x < size; x += 14) {
+        ctx.fillRect(x, 0, 1, size);
+      }
+    }
+
+    function drawCar(ctx) {
+      ctx.fillStyle = alpha("#0d1321", 0.82);
+      ctx.beginPath();
+      ctx.moveTo(28, 96);
+      ctx.lineTo(52, 74);
+      ctx.lineTo(98, 74);
+      ctx.lineTo(120, 92);
+      ctx.lineTo(128, 92);
+      ctx.lineTo(128, 106);
+      ctx.lineTo(24, 106);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = alpha("#c8f5ff", 0.92);
+      ctx.beginPath();
+      ctx.moveTo(60, 78);
+      ctx.lineTo(94, 78);
+      ctx.lineTo(108, 90);
+      ctx.lineTo(50, 90);
+      ctx.closePath();
+      ctx.fill();
+      fillCircle(ctx, 48, 108, 11, "#101827");
+      fillCircle(ctx, 108, 108, 11, "#101827");
+      fillCircle(ctx, 48, 108, 5, "#f8fafc");
+      fillCircle(ctx, 108, 108, 5, "#f8fafc");
+      ctx.strokeStyle = alpha("#ffffff", 0.42);
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(12, 100);
+      ctx.lineTo(30, 100);
+      ctx.moveTo(4, 86);
+      ctx.lineTo(22, 86);
+      ctx.stroke();
+    }
+
+    function drawWar(ctx) {
+      ctx.strokeStyle = alpha("#111827", 0.9);
+      ctx.lineWidth = 10;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(46, 42);
+      ctx.lineTo(112, 110);
+      ctx.moveTo(112, 42);
+      ctx.lineTo(46, 110);
+      ctx.stroke();
+      ctx.strokeStyle = "#f8fafc";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(46, 42);
+      ctx.lineTo(112, 110);
+      ctx.moveTo(112, 42);
+      ctx.lineTo(46, 110);
+      ctx.stroke();
+      for (let i = 0; i < 8; i += 1) {
+        const angle = (Math.PI * 2 * i) / 8;
+        ctx.strokeStyle = alpha("#ffd166", 0.82);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(80 + Math.cos(angle) * 12, 76 + Math.sin(angle) * 12);
+        ctx.lineTo(80 + Math.cos(angle) * 26, 76 + Math.sin(angle) * 26);
+        ctx.stroke();
+      }
+      fillCircle(ctx, 80, 76, 14, alpha("#ff7b00", 0.85));
+    }
+
+    function drawRaccoon(ctx, wild = false) {
+      fillCircle(ctx, 80, 82, 34, "#f4d7b8");
+      ctx.fillStyle = "#6b4f3f";
+      ctx.beginPath();
+      ctx.moveTo(48, 56);
+      ctx.lineTo(58, 32);
+      ctx.lineTo(74, 54);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(112, 56);
+      ctx.lineTo(102, 32);
+      ctx.lineTo(86, 54);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = alpha("#1f2937", 0.88);
+      ctx.beginPath();
+      ctx.moveTo(46, 76);
+      ctx.quadraticCurveTo(80, 54, 114, 76);
+      ctx.quadraticCurveTo(102, 94, 80, 92);
+      ctx.quadraticCurveTo(58, 94, 46, 76);
+      ctx.fill();
+      fillCircle(ctx, 67, 78, 5, "#ffffff");
+      fillCircle(ctx, 93, 78, 5, "#ffffff");
+      fillCircle(ctx, 67, 78, 2, "#111827");
+      fillCircle(ctx, 93, 78, 2, "#111827");
+      fillCircle(ctx, 80, 90, 6, "#111827");
+      ctx.strokeStyle = alpha("#111827", 0.9);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(76, 98);
+      ctx.quadraticCurveTo(80, 102, 84, 98);
+      ctx.stroke();
+      if (wild) {
+        ctx.strokeStyle = alpha("#ffd166", 0.9);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(32, 118);
+        ctx.lineTo(44, 94);
+        ctx.lineTo(58, 118);
+        ctx.moveTo(102, 118);
+        ctx.lineTo(116, 94);
+        ctx.lineTo(128, 118);
+        ctx.stroke();
+      }
+    }
+
+    function drawFishing(ctx) {
+      ctx.strokeStyle = "#f8fafc";
+      ctx.lineWidth = 7;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(46, 36);
+      ctx.quadraticCurveTo(98, 32, 96, 84);
+      ctx.stroke();
+      ctx.strokeStyle = alpha("#0f172a", 0.75);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(93, 78);
+      ctx.quadraticCurveTo(112, 98, 94, 118);
+      ctx.stroke();
+      ctx.fillStyle = "#ffcf56";
+      ctx.beginPath();
+      ctx.moveTo(54, 84);
+      ctx.quadraticCurveTo(86, 58, 114, 84);
+      ctx.quadraticCurveTo(86, 110, 54, 84);
+      ctx.fill();
+      ctx.fillStyle = "#0f172a";
+      fillCircle(ctx, 68, 82, 3, "#0f172a");
+      ctx.strokeStyle = alpha("#ffffff", 0.65);
+      ctx.beginPath();
+      ctx.moveTo(28, 114);
+      ctx.quadraticCurveTo(52, 100, 74, 114);
+      ctx.quadraticCurveTo(96, 102, 126, 116);
+      ctx.stroke();
+    }
+
+    function drawMonster(ctx) {
+      fillCircle(ctx, 80, 84, 34, "#f8fafc");
+      ctx.beginPath();
+      ctx.rect(46, 50, 68, 34);
+      ctx.fillStyle = "#ef4444";
+      ctx.fill();
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(46, 84);
+      ctx.lineTo(114, 84);
+      ctx.stroke();
+      fillCircle(ctx, 80, 84, 13, "#f8fafc");
+      fillCircle(ctx, 80, 84, 6, "#0f172a");
+      ctx.strokeStyle = alpha("#ffffff", 0.45);
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(24, 44);
+      ctx.lineTo(38, 58);
+      ctx.moveTo(122, 44);
+      ctx.lineTo(108, 58);
+      ctx.stroke();
+    }
+
+    function drawFactory(ctx) {
+      ctx.fillStyle = alpha("#0f172a", 0.86);
+      ctx.fillRect(32, 72, 94, 42);
+      ctx.fillRect(46, 52, 18, 28);
+      ctx.fillRect(74, 42, 14, 38);
+      ctx.fillRect(98, 60, 16, 20);
+      ctx.fillStyle = alpha("#f8fafc", 0.88);
+      ctx.fillRect(40, 82, 12, 12);
+      ctx.fillRect(58, 82, 12, 12);
+      ctx.fillRect(76, 82, 12, 12);
+      ctx.fillRect(94, 82, 12, 12);
+      fillCircle(ctx, 116, 48, 10, alpha("#ffffff", 0.42));
+      fillCircle(ctx, 126, 34, 14, alpha("#ffffff", 0.34));
+      fillCircle(ctx, 136, 48, 10, alpha("#ffffff", 0.25));
+      ctx.strokeStyle = "#ffd166";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(26, 110);
+      ctx.lineTo(132, 110);
+      ctx.stroke();
+    }
+
+    function drawRobot(ctx) {
+      ctx.fillStyle = alpha("#0f172a", 0.84);
+      roundRect(ctx, 42, 42, 76, 80, 18);
+      ctx.fill();
+      fillCircle(ctx, 58, 72, 8, "#1be7ff");
+      fillCircle(ctx, 102, 72, 8, "#1be7ff");
+      ctx.fillStyle = alpha("#f8fafc", 0.9);
+      roundRect(ctx, 56, 92, 48, 12, 6);
+      ctx.fill();
+      ctx.strokeStyle = "#f8fafc";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(64, 42);
+      ctx.lineTo(64, 28);
+      ctx.moveTo(96, 42);
+      ctx.lineTo(96, 28);
+      ctx.stroke();
+      fillCircle(ctx, 64, 26, 5, "#ff7f50");
+      fillCircle(ctx, 96, 26, 5, "#ff7f50");
+    }
+
+    function drawBaseball(ctx) {
+      fillCircle(ctx, 80, 80, 38, "#fff8f1");
+      ctx.strokeStyle = "#e53e3e";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(66, 80, 22, -1.1, 1.1);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(94, 80, 22, Math.PI - 1.1, Math.PI + 1.1);
+      ctx.stroke();
+      ctx.strokeStyle = alpha("#0f172a", 0.72);
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(34, 118);
+      ctx.lineTo(108, 44);
+      ctx.stroke();
+      ctx.strokeStyle = "#d6b38a";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(34, 118);
+      ctx.lineTo(108, 44);
+      ctx.stroke();
+    }
+
+    function drawFruit(ctx) {
+      fillCircle(ctx, 82, 84, 30, "#ff5f6d");
+      ctx.fillStyle = "#48bb78";
+      ctx.beginPath();
+      ctx.moveTo(78, 48);
+      ctx.quadraticCurveTo(94, 30, 108, 44);
+      ctx.quadraticCurveTo(96, 56, 78, 48);
+      ctx.fill();
+      ctx.strokeStyle = alpha("#ffe66d", 0.95);
+      ctx.lineWidth = 4;
+      for (let i = 0; i < 8; i += 1) {
+        const angle = (Math.PI * 2 * i) / 8;
+        ctx.beginPath();
+        ctx.moveTo(82 + Math.cos(angle) * 36, 84 + Math.sin(angle) * 36);
+        ctx.lineTo(82 + Math.cos(angle) * 52, 84 + Math.sin(angle) * 52);
+        ctx.stroke();
+      }
+      fillCircle(ctx, 82, 84, 10, alpha("#fff8dc", 0.82));
+    }
+
+    function drawBoxing(ctx) {
+      ctx.fillStyle = "#ef476f";
+      roundRect(ctx, 38, 54, 34, 42, 14);
+      ctx.fill();
+      roundRect(ctx, 82, 54, 34, 42, 14);
+      ctx.fill();
+      ctx.fillStyle = alpha("#8b1e3f", 0.95);
+      roundRect(ctx, 46, 92, 20, 20, 8);
+      ctx.fill();
+      roundRect(ctx, 90, 92, 20, 20, 8);
+      ctx.fill();
+      ctx.strokeStyle = alpha("#ffd166", 0.82);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(58, 54);
+      ctx.lineTo(68, 42);
+      ctx.moveTo(98, 54);
+      ctx.lineTo(88, 42);
+      ctx.stroke();
+    }
+
+    function drawCandy(ctx) {
+      ctx.fillStyle = "#d0ff59";
+      roundRect(ctx, 48, 56, 64, 44, 16);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(48, 78);
+      ctx.lineTo(34, 66);
+      ctx.lineTo(34, 90);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(112, 78);
+      ctx.lineTo(126, 66);
+      ctx.lineTo(126, 90);
+      ctx.closePath();
+      ctx.fill();
+      fillCircle(ctx, 68, 76, 4, "#2d3748");
+      fillCircle(ctx, 92, 76, 4, "#2d3748");
+      ctx.strokeStyle = "#2d3748";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(66, 90);
+      ctx.quadraticCurveTo(80, 98, 94, 90);
+      ctx.stroke();
+      ctx.strokeStyle = alpha("#ef476f", 0.78);
+      ctx.beginPath();
+      ctx.moveTo(44, 48);
+      ctx.lineTo(116, 108);
+      ctx.stroke();
+    }
+
+    function drawDeepFish(ctx) {
+      ctx.fillStyle = alpha("#0f172a", 0.9);
+      ctx.beginPath();
+      ctx.moveTo(42, 84);
+      ctx.quadraticCurveTo(78, 48, 114, 84);
+      ctx.quadraticCurveTo(78, 120, 42, 84);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(110, 84);
+      ctx.lineTo(136, 66);
+      ctx.lineTo(136, 102);
+      ctx.closePath();
+      ctx.fill();
+      fillCircle(ctx, 66, 78, 4, "#ffffff");
+      fillCircle(ctx, 66, 78, 2, "#0f172a");
+      ctx.strokeStyle = "#f8fafc";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(72, 60);
+      ctx.quadraticCurveTo(86, 28, 106, 38);
+      ctx.stroke();
+      fillCircle(ctx, 108, 38, 7, "#7fffd4");
+      ctx.strokeStyle = alpha("#7fffd4", 0.9);
+      ctx.beginPath();
+      ctx.moveTo(44, 104);
+      ctx.lineTo(92, 104);
+      ctx.stroke();
+    }
+
+    function drawFoodchain(ctx) {
+      ctx.strokeStyle = "#073b4c";
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(80, 80, 34, 0.2, 1.8);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(80, 80, 34, 2.2, 3.8);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(80, 80, 34, 4.2, 5.7);
+      ctx.stroke();
+      ctx.fillStyle = "#073b4c";
+      ctx.beginPath();
+      ctx.moveTo(106, 106);
+      ctx.lineTo(116, 110);
+      ctx.lineTo(108, 120);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(44, 76);
+      ctx.lineTo(38, 66);
+      ctx.lineTo(28, 74);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(92, 42);
+      ctx.lineTo(104, 40);
+      ctx.lineTo(100, 28);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#fff8dc";
+      ctx.beginPath();
+      ctx.moveTo(80, 70);
+      ctx.quadraticCurveTo(98, 80, 80, 90);
+      ctx.quadraticCurveTo(62, 80, 80, 70);
+      ctx.fill();
+    }
+
+    function drawFootball(ctx) {
+      ctx.fillStyle = "#6b3e26";
+      ctx.beginPath();
+      ctx.ellipse(80, 80, 42, 28, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#f8fafc";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(60, 80);
+      ctx.lineTo(100, 80);
+      ctx.moveTo(80, 68);
+      ctx.lineTo(80, 92);
+      ctx.moveTo(72, 72);
+      ctx.lineTo(72, 88);
+      ctx.moveTo(88, 72);
+      ctx.lineTo(88, 88);
+      ctx.stroke();
+      ctx.strokeStyle = alpha("#f8fafc", 0.8);
+      ctx.beginPath();
+      ctx.arc(80, 80, 50, 2.9, 6.2);
+      ctx.stroke();
+    }
+
+    function drawDash(ctx) {
+      ctx.fillStyle = "#0f172a";
+      ctx.save();
+      ctx.translate(80, 82);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-18, -18, 36, 36);
+      ctx.restore();
+      ctx.fillStyle = "#ff9f1c";
+      ctx.beginPath();
+      ctx.moveTo(110, 110);
+      ctx.lineTo(124, 82);
+      ctx.lineTo(138, 110);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = alpha("#ffffff", 0.78);
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(24, 118);
+      ctx.lineTo(136, 118);
+      ctx.stroke();
+      ctx.strokeStyle = "#18dcff";
+      ctx.beginPath();
+      ctx.moveTo(30, 60);
+      ctx.lineTo(52, 60);
+      ctx.moveTo(20, 44);
+      ctx.lineTo(42, 44);
+      ctx.stroke();
+    }
+
+    function drawShark(ctx) {
+      ctx.fillStyle = alpha("#0f172a", 0.84);
+      ctx.beginPath();
+      ctx.moveTo(34, 96);
+      ctx.quadraticCurveTo(60, 56, 102, 64);
+      ctx.lineTo(118, 44);
+      ctx.lineTo(112, 70);
+      ctx.quadraticCurveTo(132, 78, 126, 102);
+      ctx.quadraticCurveTo(98, 120, 34, 96);
+      ctx.fill();
+      ctx.fillStyle = "#7fffd4";
+      ctx.beginPath();
+      ctx.moveTo(72, 68);
+      ctx.lineTo(86, 36);
+      ctx.lineTo(98, 72);
+      ctx.closePath();
+      ctx.fill();
+      fillCircle(ctx, 74, 82, 3, "#ffffff");
+      fillCircle(ctx, 74, 82, 1.6, "#0f172a");
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(90, 94);
+      ctx.lineTo(104, 100);
+      ctx.lineTo(112, 94);
+      ctx.stroke();
+    }
+
+    function drawAdventure(ctx) {
+      roundRect(ctx, 42, 44, 76, 72, 12);
+      ctx.fillStyle = alpha("#f8fafc", 0.92);
+      ctx.fill();
+      ctx.strokeStyle = "#3b4cca";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(80, 44);
+      ctx.lineTo(80, 116);
+      ctx.stroke();
+      ctx.fillStyle = "#8fd14f";
+      ctx.beginPath();
+      ctx.moveTo(52, 98);
+      ctx.lineTo(64, 78);
+      ctx.lineTo(76, 98);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#ffcb05";
+      fillCircle(ctx, 96, 70, 12, "#ffcb05");
+      ctx.strokeStyle = alpha("#ffffff", 0.7);
+      ctx.beginPath();
+      ctx.moveTo(48, 58);
+      ctx.lineTo(112, 58);
+      ctx.stroke();
+    }
+
+    function drawEye(ctx) {
+      ctx.fillStyle = alpha("#f8fafc", 0.96);
+      ctx.beginPath();
+      ctx.moveTo(30, 80);
+      ctx.quadraticCurveTo(80, 40, 130, 80);
+      ctx.quadraticCurveTo(80, 120, 30, 80);
+      ctx.fill();
+      fillCircle(ctx, 80, 80, 18, "#0ea5e9");
+      fillCircle(ctx, 80, 80, 8, "#0f172a");
+      fillCircle(ctx, 87, 73, 3, "#ffffff");
+      ctx.strokeStyle = "#f44336";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(80, 80, 34, -0.6, 0.6);
+      ctx.stroke();
+    }
+
+    function drawRecycle(ctx) {
+      ctx.strokeStyle = "#065f46";
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(78, 42);
+      ctx.lineTo(48, 84);
+      ctx.lineTo(68, 84);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(44, 94);
+      ctx.lineTo(92, 94);
+      ctx.lineTo(82, 112);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(106, 92);
+      ctx.lineTo(84, 54);
+      ctx.lineTo(116, 54);
+      ctx.stroke();
+      ctx.fillStyle = "#d1fae5";
+      ctx.beginPath();
+      ctx.moveTo(78, 42);
+      ctx.lineTo(70, 58);
+      ctx.lineTo(90, 56);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(82, 112);
+      ctx.lineTo(98, 104);
+      ctx.lineTo(84, 90);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(116, 54);
+      ctx.lineTo(100, 48);
+      ctx.lineTo(102, 66);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawPedia(ctx) {
+      roundRect(ctx, 44, 46, 72, 72, 10);
+      ctx.fillStyle = alpha("#f8fafc", 0.94);
+      ctx.fill();
+      ctx.strokeStyle = "#0f4c81";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(80, 46);
+      ctx.lineTo(80, 118);
+      ctx.stroke();
+      ctx.fillStyle = "#0f4c81";
+      ctx.beginPath();
+      ctx.moveTo(60, 78);
+      ctx.quadraticCurveTo(74, 64, 94, 76);
+      ctx.quadraticCurveTo(80, 94, 60, 78);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(92, 70);
+      ctx.lineTo(110, 56);
+      ctx.lineTo(104, 80);
+      ctx.closePath();
+      ctx.fill();
+      fillCircle(ctx, 69, 76, 2, "#ffffff");
+    }
+
+    function drawCastle(ctx) {
+      ctx.fillStyle = alpha("#111827", 0.88);
+      ctx.fillRect(42, 62, 76, 54);
+      ctx.fillRect(50, 44, 14, 28);
+      ctx.fillRect(73, 36, 14, 36);
+      ctx.fillRect(96, 44, 14, 28);
+      ctx.fillStyle = "#ffd166";
+      ctx.fillRect(73, 86, 14, 30);
+      ctx.fillStyle = alpha("#f8fafc", 0.88);
+      ctx.fillRect(54, 72, 8, 8);
+      ctx.fillRect(99, 72, 8, 8);
+      ctx.strokeStyle = alpha("#ffffff", 0.54);
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(28, 116);
+      ctx.lineTo(132, 116);
+      ctx.stroke();
+    }
+
+    function drawDestroy(ctx) {
+      ctx.fillStyle = alpha("#111827", 0.88);
+      ctx.fillRect(58, 42, 34, 72);
+      ctx.fillRect(94, 56, 18, 58);
+      ctx.save();
+      ctx.translate(104, 64);
+      ctx.rotate(-0.35);
+      ctx.fillRect(0, 0, 18, 56);
+      ctx.restore();
+      fillCircle(ctx, 42, 98, 14, "#ffd166");
+      ctx.strokeStyle = alpha("#ffd166", 0.78);
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(52, 90);
+      ctx.lineTo(66, 82);
+      ctx.moveTo(48, 110);
+      ctx.lineTo(66, 112);
+      ctx.stroke();
+      ctx.fillStyle = alpha("#f8fafc", 0.6);
+      fillCircle(ctx, 114, 46, 6, alpha("#f8fafc", 0.55));
+      fillCircle(ctx, 124, 56, 4, alpha("#f8fafc", 0.45));
+    }
+
+    function drawMotif(ctx, game) {
+      switch (game.motif) {
+        case "car":
+          drawCar(ctx);
+          break;
+        case "war":
+          drawWar(ctx);
+          break;
+        case "raccoon":
+          drawRaccoon(ctx);
+          break;
+        case "fishing":
+          drawFishing(ctx);
+          break;
+        case "monster":
+          drawMonster(ctx);
+          break;
+        case "survival":
+          drawRaccoon(ctx, true);
+          break;
+        case "factory":
+          drawFactory(ctx);
+          break;
+        case "robot":
+          drawRobot(ctx);
+          break;
+        case "baseball":
+          drawBaseball(ctx);
+          break;
+        case "fruit":
+          drawFruit(ctx);
+          break;
+        case "boxing":
+          drawBoxing(ctx);
+          break;
+        case "candy":
+          drawCandy(ctx);
+          break;
+        case "deepfish":
+          drawDeepFish(ctx);
+          break;
+        case "foodchain":
+          drawFoodchain(ctx);
+          break;
+        case "football":
+          drawFootball(ctx);
+          break;
+        case "dash":
+          drawDash(ctx);
+          break;
+        case "shark":
+          drawShark(ctx);
+          break;
+        case "adventure":
+          drawAdventure(ctx);
+          break;
+        case "eye":
+          drawEye(ctx);
+          break;
+        case "recycle":
+          drawRecycle(ctx);
+          break;
+        case "pedia":
+          drawPedia(ctx);
+          break;
+        case "castle":
+          drawCastle(ctx);
+          break;
+        case "destroy":
+          drawDestroy(ctx);
+          break;
+      }
+    }
+
+    function makeIcon(game) {
+      const size = 160;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      const rand = mulberry32(hashText(game.title));
+
+      ctx.save();
+      roundRect(ctx, 0, 0, size, size, 28);
+      ctx.clip();
+      drawBackground(ctx, game, rand, size);
+      drawMotif(ctx, game);
+      ctx.restore();
+
+      return canvas.toDataURL("image/png");
+    }
+
+    for (const game of games) {
+      const card = document.createElement("a");
+      card.className = "game-card";
+      card.href = game.href;
+      card.style.setProperty("--accent", game.palette[0]);
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="tag">${game.tag}</span>
+          <span class="launch">Launch</span>
+        </div>
+        <div class="icon-frame">
+          <img class="game-icon" alt="${game.title} icon" loading="lazy">
+        </div>
+        <h3 class="game-title">${game.title}</h3>
+        <p class="game-desc">${game.desc}</p>
+        <div class="card-footer">
+          <span>Open game</span>
+          <span class="card-line"></span>
+        </div>
+      `;
+      card.querySelector(".game-icon").src = makeIcon(game);
+      grid.appendChild(card);
+    }
+  </script>
+</body>
+</html>
