@@ -100,15 +100,6 @@
       pointer-events: none;
     }
 
-    .eyebrow {
-      margin: 0 0 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.22em;
-      color: #ffb484;
-      font-size: 0.78rem;
-      font-weight: 700;
-    }
-
     h1 {
       margin: 0;
       max-width: 10ch;
@@ -118,41 +109,10 @@
       letter-spacing: -0.05em;
     }
 
-    .hero-copy {
-      max-width: 58rem;
-      margin: 20px 0 28px;
-      color: var(--muted);
-      font-size: clamp(1rem, 2.2vw, 1.15rem);
-      line-height: 1.7;
-    }
-
-    .meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .meta-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .pill {
-      padding: 10px 14px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      color: #dff0ff;
-      font-size: 0.9rem;
-    }
-
-    .hero-note {
-      color: #d8e9fa;
-      font-size: 0.94rem;
-      opacity: 0.86;
+    .hero h1 {
+      position: relative;
+      z-index: 1;
+      text-wrap: balance;
     }
 
     .section-head {
@@ -368,7 +328,6 @@
         border-radius: 26px;
       }
 
-      .meta-row,
       .section-head {
         flex-direction: column;
         align-items: start;
@@ -382,21 +341,9 @@
 </head>
 <body>
   <main>
-    <section class="hero">
-      <p class="eyebrow">Collection Launcher</p>
+    <header class="hero">
       <h1>Super Cool Games</h1>
-      <p class="hero-copy">
-        A single launchpad for every game in this repo. Each card links straight into its own subdirectory and carries a custom PNG icon generated in-browser just for that title.
-      </p>
-      <div class="meta-row">
-        <div class="meta-pills">
-          <span class="pill" id="game-count">23 games</span>
-          <span class="pill">Embedded PNG icons</span>
-          <span class="pill">No external art files</span>
-        </div>
-        <div class="hero-note">Root page: <code>/index.html</code></div>
-      </div>
-    </section>
+    </header>
 
     <div class="section-head">
       <h2>Choose A Game</h2>
@@ -599,7 +546,6 @@
     ];
 
     const grid = document.getElementById("games-grid");
-    document.getElementById("game-count").textContent = `${games.length} games`;
 
     function mulberry32(seed) {
       let t = seed >>> 0;
