@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Eye View</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <!-- 3D World Layer -->
+        <div id="world">
+            <div id="floor"></div>
+            <div id="sky"></div>
+            <!-- Pokemon will be injected here -->
+        </div>
+
+        <!-- UI Layer -->
+        <div id="ui-layer">
+            <div id="hud">
+                <div class="stat-box">Gold: <span id="gold-count">0</span></div>
+                <div class="stat-box">Caught: <span id="caught-count">0</span></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <button id="btn-pokemon" class="corner-btn bottom-left">Pokemon</button>
+            <button id="btn-battle" class="corner-btn bottom-right hidden">Battle</button>
+        </div>
+
+        <!-- Modals -->
+        <div id="pokemon-menu" class="modal hidden">
+            <div class="modal-content">
+                <h2>Your Pokemon</h2>
+                <div id="pokemon-list" class="scroll-container">
+                    <!-- Pokemon Cards go here -->
+                </div>
+                <div id="pokemon-actions" class="hidden">
+                    <h3 id="selected-pokemon-name"></h3>
+                    <div class="action-grid">
+                        <button class="action-btn" data-action="evolve">Evolve (50G)</button>
+                        <button class="action-btn" data-action="mega">Mega Evolve (50G)</button>
+                        <button class="action-btn" data-action="gmax">Gigantamax (50G)</button>
+                        <button class="action-btn" data-action="train">Train</button>
+                    </div>
+                </div>
+                <button class="close-btn">Close</button>
+            </div>
+        </div>
+
+        <div id="battle-interface" class="modal hidden full-screen">
+            <div class="battle-scene">
+                <!-- Battle visual logic here -->
+                <div id="enemy-side">
+                    <div class="battle-spot" id="enemy-1"></div>
+                    <div class="battle-spot" id="enemy-2"></div>
+                    <div class="battle-spot" id="enemy-3"></div>
+                </div>
+                <div id="player-side">
+                    <div class="battle-spot" id="player-1"></div>
+                    <div class="battle-spot" id="player-2"></div>
+                    <div class="battle-spot" id="player-3"></div>
+                </div>
+            </div>
+            <div class="battle-ui">
+                <div id="move-selection">
+                    <!-- Moves buttons injected here -->
+                </div>
+                <div id="battle-log">Validating Battle Systems...</div>
+                <button id="leave-battle" class="hidden">Run</button>
+            </div>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>

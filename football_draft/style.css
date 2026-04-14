@@ -1,0 +1,166 @@
+:root {
+    --primary-color: #004d99;
+    --accent-color: #ffcc00;
+    --text-light: #ffffff;
+    --bg-dark: #1a1a1a;
+    --field-green: #388e3c;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    width: 1024px;
+    height: 768px;
+    background-color: #000;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-light);
+    pointer-events: auto;
+    transition: opacity 0.3s;
+}
+
+.hidden {
+    display: none !important;
+}
+
+h1 {
+    font-size: 4rem;
+    color: var(--accent-color);
+    text-shadow: 2px 2px 0px #000;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+button {
+    background: var(--primary-color);
+    color: var(--text-light);
+    border: 2px solid var(--accent-color);
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    margin: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    transition: transform 0.1s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: #0066cc;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+#team-selection {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 800px;
+}
+
+/* HUD Styling */
+#hud {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    /* Fixed height at bottom */
+    background: linear-gradient(to top, #000 0%, #222 100%);
+    border-top: 4px solid var(--accent-color);
+    display: flex;
+    justify-content: center;
+    /* Center the content */
+    align-items: center;
+    gap: 40px;
+    padding: 0 20px;
+    pointer-events: none;
+    box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
+    /* Retro scoreboard feel */
+    z-index: 10;
+}
+
+.score-board {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    background: transparent;
+    padding: 0;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--text-light);
+}
+
+#timer {
+    font-size: 2.2rem;
+    color: #ff3333;
+    font-weight: bold;
+    border: 2px solid #555;
+    background: #111;
+    padding: 5px 15px;
+    border-radius: 5px;
+}
+
+.game-info {
+    display: flex;
+    gap: 20px;
+    font-size: 1.4rem;
+    color: #fff;
+    text-shadow: none;
+}
+
+#controls-hint {
+    display: none;
+    /* Hide hint to save space, or move to top? Let's hide for clean look */
+}

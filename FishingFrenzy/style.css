@@ -1,0 +1,248 @@
+:root {
+    --bg-color: #0f172a;
+    --text-color: #f8fafc;
+    --primary-color: #38bdf8;
+    --secondary-color: #0ea5e9;
+    --accent-color: #facc15;
+    --danger-color: #ef4444;
+    --success-color: #22c55e;
+    --panel-bg: #1e293b;
+    --border-color: #334155;
+    --font-main: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-main);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#app {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.stats {
+    display: flex;
+    gap: 20px;
+    font-size: 1.2rem;
+}
+
+.stat-item span {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    /* Fixes grid overflow issues */
+}
+
+.game-area {
+    background: var(--panel-bg);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.water-visual {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(180deg, #0ea5e9 0%, #0369a1 100%);
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.float {
+    font-size: 3rem;
+    animation: bob 2s infinite ease-in-out;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes bob {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.action-btn {
+    background-color: var(--primary-color);
+    color: #0f172a;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.5rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.1s, background-color 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.message-log {
+    width: 100%;
+    height: 100px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    padding: 10px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.panel {
+    background: var(--panel-bg);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.inventory-panel {
+    max-height: 50%;
+}
+
+#inventory-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+    overflow-y: auto;
+}
+
+#inventory-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+}
+
+.secondary-btn {
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.secondary-btn:hover {
+    opacity: 0.9;
+}
+
+.shop-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.shop-item h3,
+.shop-item h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--accent-color);
+}
+
+.shop-item p.desc {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 2px 0 5px 0;
+}
+
+.shop-item button {
+    background-color: var(--primary-color);
+    border: none;
+    padding: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 5px;
+    color: #0f172a;
+    font-weight: bold;
+}
+
+.shop-item button:disabled {
+    background-color: #475569;
+    cursor: not-allowed;
+    color: #94a3b8;
+}

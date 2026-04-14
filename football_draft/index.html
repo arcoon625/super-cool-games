@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Football Draft Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- Error Log -->
+        <div id="error-log"
+            style="position: absolute; top: 10px; right: 10px; color: red; background: rgba(0,0,0,0.8); padding: 10px; display: none;">
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui-layer">
+            <div id="main-menu" class="screen">
+                <h1>ARCHER'S FOOTBALL DRAFT</h1>
+                <p>Select Your Team</p>
+                <div id="team-selection">
+                    <!-- Javascript will populate this -->
+                </div>
+            </div>
+            <div id="coin-toss" class="screen hidden">
+                <h2>Coin Toss</h2>
+                <div class="coin-buttons">
+                    <button id="btn-heads">Heads</button>
+                    <button id="btn-tails">Tails</button>
+                </div>
+                <div id="coin-result"></div>
+            </div>
+            <div id="play-calling" class="screen hidden">
+                <h2>Choose Play</h2>
+                <div id="play-categories" class="play-options">
+                    <button id="btn-run-cat">Run Plays</button>
+                    <button id="btn-pass-cat">Pass Plays</button>
+                    <button id="btn-kick">Kick FG / Punt</button>
+                </div>
+                <div id="play-list-container" class="play-options hidden" style="margin-top: 20px; flex-wrap: wrap;">
+                    <!-- Specific plays will be injected here -->
+                </div>
+                <button id="btn-back-to-cat" class="hidden" style="margin-top: 10px; background: #666;">Back</button>
+            </div>
+            <div id="post-td-choice" class="screen hidden">
+                <h2 id="td-announcement">TOUCHDOWN!</h2>
+                <p>Select Point After Touchdown</p>
+                <div class="play-options">
+                    <button id="btn-extra-point">Extra Point (1pt)</button>
+                    <button id="btn-two-point">2-Point Conv (2pt)</button>
+                </div>
+            </div>
+            <div id="hud" class="hidden">
+                <div class="score-board">
+                    <div id="team-home">HOME</div>
+                    <div id="score-home">0</div>
+                </div>
+
+                <div id="timer">05:00</div>
+
+                <div class="score-board">
+                    <div id="score-away">0</div>
+                    <div id="team-away">AWAY</div>
+                </div>
+
+                <div class="game-info">
+                    <div id="down-yard">1st & 10</div>
+                    <div id="quarter">Q1</div>
+                    <div id="timeouts" style="font-size: 1rem; color: #aaa;">TO: 3</div>
+                </div>
+                <button id="btn-replay"
+                    style="position: absolute; bottom: 10px; right: 10px; padding: 10px 20px; font-size: 16px; background: gold; border: 2px solid white; cursor: pointer; display: none;">REPLAY
+                    PLAY</button>
+            </div>
+        </div>
+    </div>
+    <!-- Load scripts in order of dependency -->
+    <script src="src/constants.js"></script>
+    <script src="src/InputHandler.js"></script>
+    <script src="src/Entities.js"></script>
+    <script src="src/Renderer.js"></script>
+    <script src="src/PlayManager.js"></script>
+    <script src="src/Game.js"></script>
+    <script src="src/main.js"></script>
+</body>
+
+</html>

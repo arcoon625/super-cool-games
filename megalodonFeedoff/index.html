@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Megalodon Survival</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+  <div id="app"></div>
+  <div id="ui">
+    <div id="stats">
+      <div class="stat-row">
+        <span class="label">SIZE</span>
+        <div class="bar-container">
+          <div id="size-bar" class="bar-fill" style="width: 10%; background: #00ff00;"></div>
+        </div>
+        <span id="size-val">50ft</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">HUNGER</span>
+        <div class="bar-container">
+          <div id="hunger-bar" class="bar-fill" style="width: 100%; background: #ffaa00;"></div>
+        </div>
+      </div>
+    </div>
+    <div id="controls-hint">
+      Arrows to move | <b>Hold Shift to Sprint</b> | Space to go Up | C to Dive | J to Jump | A to Attack
+    </div>
+    <div id="game-over" class="hidden">
+      <h1>YOU DIED</h1>
+      <p>You starved to death.</p>
+      <button onclick="location.reload()">Respawn</button>
+    </div>
+  </div>
+  <script type="module" src="/main.js"></script>
+</body>
+
+</html>

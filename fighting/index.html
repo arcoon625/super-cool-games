@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ring Rivals — Boxing Arena</title>
+    <meta name="description" content="A 2D fighting game set in a boxing arena — fight through 8 boss wrestlers!">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui-overlay">
+        <!-- Title Screen -->
+        <div id="title-screen">
+            <h1 id="game-title">RING RIVALS</h1>
+            <p id="game-subtitle">CHAMPIONSHIP BOUT</p>
+            <p id="mode-label">CREATE A USERNAME</p>
+            <input type="text" id="username-input" maxlength="8" placeholder="ENTER USERNAME" autocomplete="off" spellcheck="false">
+            <p id="username-error" class="hidden"></p>
+            <div id="btn-group">
+                <button id="start-btn">START BOSS LADDER</button>
+                <button id="local-mp-btn">LOCAL MULTIPLAYER</button>
+            </div>
+            <div id="controls-hint">
+                <p>CONTROLS</p>
+                <div class="split-controls">
+                    <div class="control-col">
+                        <strong>PLAYER 1 (LEFT)</strong><br>
+                        WASD to Move<br>
+                        F Punch, G Kick, H Smash<br>
+                        T Jump On, Y Dodge<br>
+                        <strong>SPACE Special</strong>
+                    </div>
+                    <div class="control-col">
+                        <strong>PLAYER 2 (RIGHT)</strong><br>
+                        ARROWS to Move<br>
+                        P Punch, K Kick, L Smash<br>
+                        I Jump On, O Dodge<br>
+                        <strong>U Special</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Fighter Selection Screen -->
+        <div id="fighter-select" class="hidden">
+            <h2 class="select-title">SELECT YOUR CHAMPION</h2>
+            <div id="roster-grid"></div>
+            <div id="fighter-preview-pane">
+                <div id="preview-display"></div>
+                <div id="preview-info">
+                    <h3 id="preview-name">WYATT</h3>
+                    <p id="preview-title">The Brawler</p>
+                    <p id="preview-special">SPECIAL: seismic stomp</p>
+                </div>
+            </div>
+            <button id="select-confirm-btn">CONFIRM FIGHTER</button>
+        </div>
+        <!-- Boss Intro -->
+        <div id="boss-intro" class="hidden">
+            <p id="boss-round-label">BOSS 1 / 7</p>
+            <div id="boss-intro-card">
+                <div id="boss-intro-preview"></div>
+                <h2 id="boss-intro-name"></h2>
+                <p id="boss-intro-title"></p>
+                <div id="boss-stats">
+                    <span id="boss-stat-hp"></span>
+                    <span id="boss-stat-diff"></span>
+                </div>
+            </div>
+            <button id="boss-fight-btn">FIGHT!</button>
+        </div>
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="hud-left">
+                <span id="p1-name">WYATT</span>
+                <div class="health-bar-container">
+                    <div class="health-bar" id="p1-health"></div>
+                </div>
+            </div>
+            <div id="hud-center">
+                <div id="match-timer">99</div>
+                <div id="round-info">BOSS 1</div>
+                <div id="boss-label"></div>
+            </div>
+            <div id="hud-right">
+                <span id="p2-name">KOBA</span>
+                <div class="health-bar-container">
+                    <div class="health-bar enemy" id="p2-health"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Combo Display -->
+        <div id="combo-display" class="hidden">
+            <span id="combo-count">3</span>
+            <span id="combo-label">HIT COMBO!</span>
+        </div>
+        <!-- KO Overlay -->
+        <div id="ko-overlay" class="hidden">
+            <h2 id="ko-text">K.O.!</h2>
+            <p id="winner-text"></p>
+            <div id="ko-buttons">
+                <button id="next-boss-btn" class="hidden">NEXT BOSS →</button>
+                <button id="rematch-btn">REMATCH</button>
+                <button id="menu-btn">MENU</button>
+            </div>
+        </div>
+        <!-- Victory Screen -->
+        <div id="victory-screen" class="hidden">
+            <div id="confetti-container"></div>
+            <h2 id="victory-title">🏆 CHAMPION! 🏆</h2>
+            <p id="victory-subtitle">YOU DEFEATED ALL BOSSES</p>
+            <button id="victory-menu-btn">BACK TO MENU</button>
+        </div>
+        <!-- Action Text -->
+        <div id="action-text" class="hidden"></div>
+        <!-- Settings Gear Button -->
+        <button id="settings-gear" title="Settings">⚙</button>
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="hidden">
+            <div id="settings-inner">
+                <h3 id="settings-title">⚙ SETTINGS</h3>
+                <div class="setting-row">
+                    <span>Crowd Cheering</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="setting-cheering" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>Crowd Singing</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="setting-singing" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>Damage Numbers</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="setting-dmgnums" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>Screen Shake</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="setting-screenshake" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>Hit Particles</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="setting-particles" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>AI Difficulty</span>
+                    <select id="setting-difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <span>Singing Volume</span>
+                    <input type="range" id="setting-volume" min="1" max="10" value="3">
+                    <span id="volume-label">3</span>
+                </div>
+                <button id="settings-close">DONE</button>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

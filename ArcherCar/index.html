@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcherCar: Velocity Rush</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- Selection Screen -->
+        <div id="selection-screen" class="screen active">
+            <h1 class="title">ArcherCar<br><span class="subtitle">Velocity Rush</span></h1>
+            <p class="instruction">Select Your Machine</p>
+
+            <div class="car-selection-container">
+                <!-- Car 1: Speedster -->
+                <div class="car-card" data-car="speedster">
+                    <div class="car-preview speedster-color"></div>
+                    <h2>The Bolt</h2>
+                    <div class="stats">
+                        <div class="stat"><span class="label">SPD</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 90%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat"><span class="label">ACC</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 70%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat"><span class="label">HND</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 50%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Car 2: Balanced -->
+                <div class="car-card" data-car="balanced">
+                    <div class="car-preview balanced-color"></div>
+                    <h2>Phantom</h2>
+                    <div class="stats">
+                        <div class="stat"><span class="label">SPD</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 70%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat"><span class="label">ACC</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 70%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat"><span class="label">HND</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 70%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Car 3: Tank -->
+                <div class="car-card" data-car="heavy">
+                    <div class="car-preview heavy-color"></div>
+                    <h2>Titan</h2>
+                    <div class="stats">
+                        <div class="stat"><span class="label">SPD</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 60%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat"><span class="label">ACC</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 60%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat"><span class="label">HND</span>
+                            <div class="bar">
+                                <div class="fill" style="width: 90%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Race Screen -->
+        <div id="race-screen" class="screen">
+            <div id="hud">
+                <div class="score-board">POS: <span id="position">1</span>/3</div>
+                <div class="speed-board"><span id="speed">0</span> KM/H</div>
+                <div class="distance-board">GOAL: <span id="distance">0</span>%</div>
+            </div>
+            <div id="controls-hint">Controls: Arrow Keys / WASD</div>
+            <canvas id="game-canvas"></canvas>
+
+            <div id="countdown-overlay" class="overlay hidden">
+                <div class="counter">3</div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="screen">
+            <h1 class="result-title">FINISH!</h1>
+            <p class="result-position">You placed <span id="final-rank">1st</span></p>
+            <button id="restart-btn" class="btn">Race Again</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+
+</html>

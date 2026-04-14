@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Tycoon</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Hybrid Tycoon</h1>
+            <div class="stats-container">
+                <div class="stat-box">
+                    <span class="label">Balance</span>
+                    <span id="money-display">$0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Income/Sec</span>
+                    <span id="income-display">$0/s</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div id="game-grid" class="grid-container">
+                <!-- Hybrids will be inserted here -->
+            </div>
+        </main>
+
+        <footer>
+            <div class="control-panel">
+                <button id="buy-btn" class="action-btn">
+                    <div class="btn-content">
+                        <span class="btn-title">CREATE HYBRID</span>
+                        <span id="cost-display" class="btn-cost">$10</span>
+                    </div>
+                </button>
+            </div>
+        </footer>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>

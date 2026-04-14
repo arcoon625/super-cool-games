@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        canvas {
+            background-color: #2a2a2a;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            border: 2px solid #444;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = 1024;
+        canvas.height = 768;
+
+        // Game Constants
+        const KEYS = {
+            LEFT: 'ArrowLeft',
+            UP: 'ArrowUp',
+            RIGHT: 'ArrowRight',
+            DOWN: 'ArrowDown',
+            SHIFT: 'Shift',
+            SHOOT: 's',
+            SHOOT_CAP: 'S',
+            RELOAD: 'r',
+            RELOAD_CAP: 'R',
+            GRENADE: 'g',
+            GRENADE_CAP: 'G',
+            KEY_1: '1',
+            KEY_2: '2',
+            KEY_3: '3',
+            ESC: 'Escape'
+        };
+
+        const BLOCK_SIZE = 40;
+        const FOV = Math.PI / 3;
+        const SCREEN_DIST = (canvas.width / 2) / Math.tan(FOV / 2);
+
+        // Define Types for clarity
+        // types: infantry, tank, plane, mecha, command_mecha, armed_tank, nuke_sub, nuke_tank
+
+        // Image Loading (Procedural Fallback since GenAI is busy)
+        const soldierImg = new Image();
+
+        function generateSoldierTexture() {
+            const size = 128; // High res sprite
+            const c = document.createElement('canvas');
+            c.width = size;
+            c.height = size;
+            const ctx = c.getContext('2d');
+
+            // 1. Camo Pattern Background
+            ctx.fillStyle = '#C2B280'; // Desert Base
+            ctx.fillRect(0, 0, size, size);
+            // Noise
+            for (let i = 0; i < 500; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#8b4513' : '#a0522d';
+                ctx.globalAlpha = 0.4;
+                ctx.beginPath();
+                ctx.arc(Math.random() * size, Math.random() * size, Math.random() * 10, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Masking for body shape to keep camo only on body? 
+            // Better: Draw body parts using Camo Pattern
+            const camoPattern = ctx.createPattern(c, 'no-repeat');
+
+            ctx.clearRect(0, 0, size, size); // Clear temp noise
+
+            // Helper to draw camo rect
+            function drawCamoRect(x, y, w, h) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.fillStyle = '#8B4513'; // Fallback
+                // Re-generate local noise or just nice colors
+                ctx.fillStyle = '#6d5e48'; // Darker sand
+                ctx.fillRect(0, 0, w, h);
+                // Add detail
+                ctx.fillStyle = '#8b4513';
+                for (let k = 0; k < 10; k++) ctx.fillRect(Math.random() * w, Math.random() * h, 4, 4);
+                ctx.restore();
+            }
+
+            // Draw Structure (Front View)
+            const cx = size / 2;
+
+            // Boots
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(cx - 20, size - 20, 15, 20);
+            ctx.fillRect(cx + 5, size - 20, 15, 20);
+
+            // Legs (Camo)
+            drawCamoRect(cx - 20, size - 60, 18, 40);
+            drawCamoRect(cx + 2, size - 60, 18, 40);
+
+            // Torso (Camo + Vest)
+            drawCamoRect(cx - 22, size - 100, 44, 45);
+            // Tactical Vest
+            ctx.fillStyle = '#2F4F4F'; // Dark Slate Gray
+            ctx.fillRect(cx - 20, size - 95, 40, 25);
+            // Pouches
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(cx - 15, size - 90, 8, 10);
+            ctx.fillRect(cx - 2, size - 90, 8, 10);
+            ctx.fillRect(cx + 10, size - 90, 8, 10);
+
+            // Head
+            ctx.fillStyle = '#eec'; // Skin
+            ctx.fillRect(cx - 10, size - 125, 20, 25);
+
+            // Helmet
+            ctx.fillStyle = '#4b5320'; // Army Green
+            ctx.beginPath();
+            ctx.arc(cx, size - 120, 14, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(cx - 14, size - 120, 28, 5);
+            // Goggles
+            ctx.fillStyle = '#111';
+            ctx.fillRect(cx - 10, size - 117, 20, 6);
+            ctx.fillStyle = '#555'; // Lens reflection
+            ctx.fillRect(cx - 8, size - 116, 6, 3);
+            ctx.fillRect(cx + 2, size - 116, 6, 3);
+
+            // Arms
+            drawCamoRect(cx - 35, size - 98, 12, 35); // Left
+            drawCamoRect(cx + 23, size - 98, 12, 35); // Right
+
+            // Gun (Black Rifle)
+            ctx.fillStyle = '#080808';
+            ctx.save();
+            ctx.translate(cx - 20, size - 75);
+            ctx.rotate(-0.1);
+            ctx.fillRect(0, 0, 50, 8); // Main body
+            ctx.fillRect(10, 8, 5, 8); // Mag
+            ctx.fillRect(35, 0, 2, -4); // Sight
+            ctx.fillRect(0, 0, -10, 4); // Stock
+            ctx.restore();
+
+            // Hands
+            ctx.fillStyle = '#222'; // Gloves
+            ctx.fillRect(cx - 15, size - 75, 10, 10);
+            ctx.fillRect(cx + 15, size - 70, 10, 10);
+
+            return c.toDataURL();
+        }
+
+        soldierImg.src = generateSoldierTexture();
+        let soldierImgLoaded = true; // Data URL loads instantly usually, but onload handles async if needed
+        soldierImg.onload = () => { soldierImgLoaded = true; };
+
+        function buyItem(id) {
+            // Debounce or simple click
+            if (id === 1) { // Heal $1
+                if (game.money >= 1) {
+                    game.money -= 1;
+                    const p = getPlayer();
+                    if (p) {
+                        if (p.type === 'nuke_tank') p.health = 50000;
+                        else if (p.type === 'nuke_sub') p.health = 20000;
+                        else if (p.type === 'armed_tank') p.health = 10000;
+                        else if (p.type === 'command_mecha') p.health = 5000;
+                        else if (p.type === 'mecha') p.health = 2000;
+                        else if (p.type === 'plane') p.health = 1000;
+                        else if (p.type === 'tank') p.health = 500;
+                        else p.health = 100;
+                    }
+                }
+            }
+            if (id === 2) { // Reinforcement $3
+                if (game.money >= 3) {
+                    game.money -= 3;
+                    game.soldiers.push(new Soldier(100, 100 + Math.random() * 500, 'green', true));
+                }
+            }
+            if (id === 3) { // Machine Gun $5
+                if (game.money >= 5 && !game.hasMachineGun) {
+                    game.money -= 5;
+                    game.hasMachineGun = true;
+                    const p = getPlayer();
+                    if (p) {
+                        p.fireRate = 50;
+                        p.maxAmmo = 100;
+                        p.ammo = 100;
+                    }
+                }
+            }
+            if (id === 4) { // Grenade Refill $2
+                if (game.money >= 2) {
+                    game.money -= 2;
+                    const p = getPlayer();
+                    if (p) p.grenades = 3;
+                }
+            }
+            if (id === 5) { // Speed Boost $4
+                if (game.money >= 4) {
+                    game.money -= 4;
+                    const p = getPlayer();
+                    if (p) p.speed += 1;
+                }
+            }
+            if (id === 6) { // Max HP Upgrade $6
+                if (game.money >= 6) {
+                    game.money -= 6;
+                    const p = getPlayer();
+                    if (p) {
+                        // Should we track base Max HP separately to persist through transformations? 
+                        // For simplicity, just add to current. 
+                        // Ideally, Soldier has a permanent stat buffer.
+                        // Let's just buff current health and " overheal"
+                        p.health += 50;
+                        // Hacky permanent max HP tracking? 
+                        // Use a custom prop.
+                        if (!p.extraMaxHp) p.extraMaxHp = 0;
+                        p.extraMaxHp += 50;
+                    }
+                }
+            }
+            if (id === 7) { // Air Strike $10
+                if (game.money >= 10) {
+                    game.money -= 10;
+                    // Wipe enemies
+                    game.soldiers.forEach(s => {
+                        if (s.team === 'red') s.takeDamage(9999);
+                    });
+                }
+            }
+            if (id === 8) { // Land Mine $2
+                if (game.money >= 2) {
+                    game.money -= 2;
+                    const p = getPlayer();
+                    if (p) {
+                        game.mines.push(new Mine(p.pos.x, p.pos.y, p.team));
+                    }
+                }
+            }
+            if (id === 9) { // Deploy Turret $6
+                if (game.money >= 6) {
+                    game.money -= 6;
+                    const p = getPlayer();
+                    if (p) {
+                        const t = new Soldier(p.pos.x, p.pos.y, 'green', true);
+                        t.type = 'turret'; // Custom type for visuals/logic
+                        t.speed = 0;
+                        t.health = 500;
+                        t.fireRate = 100; // Fast
+                        t.maxAmmo = 9999;
+                        t.ammo = 9999;
+                        // Push away from player slightly so they don't get stuck
+                        t.pos.x += 30;
+                        game.soldiers.push(t);
+                    }
+                }
+            }
+            if (id === 10) { // Invincibility $8
+                if (game.money >= 8) {
+                    game.money -= 8;
+                    const p = getPlayer();
+                    if (p) {
+                        p.invincibleTimer += 10000; // 10 seconds
+                    }
+                }
+            }
+        }
+
+        // Game State
+        const game = {
+            keys: {},
+            lastTime: 0,
+            active: true,
+            width: 1024,
+            height: 768,
+            bullets: [],
+            grenades: [],
+            mines: [], // NEW
+            walls: [],
+            soldiers: [],
+            // Economy & Shop
+            money: 0,
+            shopActive: false,
+            hasMachineGun: false,
+            wave: 1,
+            waveState: 'active', // active, waiting
+            viewMode: '3d', // top or 3d
+            waveTimer: 0,
+
+            // Game Flow
+            started: false,
+            mode: 'desert', // 'land', 'sea', 'desert'
+
+            // Weapon System
+            weaponShopActive: false,
+            ownedWeapons: ['pistol'], // Start with pistol
+            currentWeapon: 'pistol'   // pistol, machinegun, shotgun, sniper, rpg, minigun, laser, plasma, flamethrower, autocannon, homing, railgun
+        };
+
+        const WEAPONS = {
+            pistol: { name: 'Pistol', price: 0, fireRate: 400, damage: 25, speed: 15, color: 'yellow' },
+            machinegun: { name: 'Machine Gun', price: 5, fireRate: 100, damage: 20, speed: 18, color: 'orange' },
+            shotgun: { name: 'Shotgun', price: 15, fireRate: 800, damage: 15, speed: 15, count: 5, spread: 0.3, color: 'gray' },
+            sniper: { name: 'Sniper Rifle', price: 20, fireRate: 1000, damage: 200, speed: 40, color: 'white' },
+            rpg: { name: 'RPG', price: 30, fireRate: 1500, damage: 300, speed: 12, isRocket: true, radius: 8, color: 'darkred' },
+            minigun: { name: 'Minigun', price: 50, fireRate: 40, damage: 15, speed: 20, color: 'yellow' },
+            laser: { name: 'Laser Gun', price: 75, fireRate: 600, damage: 150, speed: 60, color: 'cyan' },
+            rpg: { name: 'RPG', price: 30, fireRate: 1500, damage: 300, speed: 12, isRocket: true, radius: 8, color: 'darkred' },
+            minigun: { name: 'Minigun', price: 50, fireRate: 40, damage: 15, speed: 20, color: 'yellow' },
+            laser: { name: 'Laser Gun', price: 75, fireRate: 600, damage: 150, speed: 60, color: 'cyan' },
+            plasma: { name: 'Plasma Gun', price: 100, fireRate: 500, damage: 400, speed: 8, radius: 10, color: 'magenta' },
+            flamethrower: { name: 'Flamethrower', price: 45, fireRate: 30, damage: 5, speed: 10, isFlamethrower: true, radius: 20, color: 'orange' },
+            autocannon: { name: 'Auto-Cannon', price: 55, fireRate: 300, damage: 60, speed: 25, isExplosive: true, radius: 4, color: 'red' },
+            homing: { name: 'Homing Launcher', price: 65, fireRate: 1200, damage: 120, speed: 15, isHoming: true, radius: 6, color: 'lime' },
+            railgun: { name: 'Railgun', price: 85, fireRate: 1500, damage: 500, speed: 60, isPiercing: true, radius: 3, color: 'white' }
+        };
+
+        function buyWeapon(key) {
+            const w = WEAPONS[key];
+            if (!w) return;
+
+            if (game.ownedWeapons.includes(key)) {
+                // Already own, just equip
+                game.currentWeapon = key;
+                return;
+            }
+
+            if (game.money >= w.price) {
+                game.money -= w.price;
+                game.ownedWeapons.push(key);
+                game.currentWeapon = key;
+
+                // Stats update for machinegun logic fallback
+                if (key === 'machinegun') game.hasMachineGun = true;
+            }
+        }
+
+        class Wall {
+            constructor(x, y, width, height) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = '#555';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+                // Details to make it look like a wall
+                ctx.strokeStyle = '#444';
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + this.width, this.y + this.height);
+                ctx.moveTo(this.x + this.width, this.y);
+                ctx.lineTo(this.x, this.y + this.height);
+                ctx.stroke();
+            }
+        }
+
+        // Initialize Game
+        function createWalls() {
+            game.walls = [];
+
+            if (game.mode === 'sea') {
+                // Sea Map: Islands
+                // Randomly generate some islands
+                for (let i = 0; i < 6; i++) {
+                    const w = 50 + Math.random() * 100;
+                    const h = 50 + Math.random() * 100;
+                    const x = 100 + Math.random() * (game.width - 200);
+                    const y = 100 + Math.random() * (game.height - 200);
+                    const island = new Wall(x, y, w, h);
+                    island.type = 'island'; // New type
+                    island.color = '#c2b280'; // Sand
+                    game.walls.push(island);
+                }
+            } else if (game.mode === 'desert') {
+                // Desert Map: Scattered Rocks and Cactus
+                // Rocks (mountains)
+                for (let i = 0; i < 8; i++) {
+                    const w = 40 + Math.random() * 80;
+                    const h = 40 + Math.random() * 80;
+                    const x = 100 + Math.random() * (game.width - 200);
+                    const y = 100 + Math.random() * (game.height - 200);
+                    const rock = new Wall(x, y, w, h);
+                    rock.type = 'mountain';
+                    rock.color = '#8b4513'; // SaddleBrown
+                    game.walls.push(rock);
+                }
+
+                // Cactus (small tall walls)
+                for (let i = 0; i < 15; i++) {
+                    const w = 10;
+                    const h = 40; // in top down, wall height is y-dim. In 3D logic we need a way to say this is thin but tall?
+                    // our wall class is 2D footprint.
+                    // Let's make small 10x10 footprint walls that render tall in 3D
+                    const x = 50 + Math.random() * (game.width - 100);
+                    const y = 50 + Math.random() * (game.height - 100);
+                    const cactus = new Wall(x, y, 15, 15);
+                    cactus.type = 'cactus';
+                    cactus.color = '#2e8b57'; // SeaGreen
+                    game.walls.push(cactus);
+                }
+
+            } else {
+                // Land Map
+                game.walls.push(new Wall(200, 200, 50, 200));
+                game.walls.push(new Wall(500, 400, 200, 50));
+                game.walls.push(new Wall(700, 100, 50, 300));
+                game.walls.push(new Wall(100, 600, 300, 50));
+                game.walls.push(new Wall(600, 600, 50, 50));
+
+                // Add Water Zone (Bottom River)
+                const river = new Wall(0, 700, 1024, 68);
+                river.type = 'water';
+                river.color = '#3366ff';
+                game.walls.push(river);
+            }
+        }
+
+        function initGame(mode) {
+            game.mode = mode || 'land';
+            game.started = true;
+            game.wave = 1;
+            game.money = 0;
+            // Walls are persistent
+            createWalls();
+
+            // ... rest of init logic (reset soldiers etc) but need to support new types
+            // Clear entities
+            game.soldiers = [];
+            game.bullets = [];
+            game.grenades = [];
+
+            // Spawn Player (Type based on mode)
+            let pType = 'infantry';
+            if (game.mode === 'sea') pType = 'gunboat';
+            // if desert, standard infantry is fine
+
+            const player = new Soldier(100, 384, 'green', false);
+            player.type = pType; // Set initial type
+            if (game.mode === 'sea') { player.health = 200; player.radius = 20; }
+            game.soldiers.push(player);
+
+            // Spawn Allies
+            const a1 = new Soldier(100, 150, 'green', true); a1.type = pType;
+            const a2 = new Soldier(100, 500, 'green', true); a2.type = pType;
+            game.soldiers.push(a1);
+            game.soldiers.push(a2);
+
+            startWave();
+        }
+
+        function startWave() {
+            // Reward for clearing previous wave (if wave > 1)
+            if (game.wave > 1) {
+                game.money += 1;
+            }
+
+            // Cleanup dead enemies to prevent performance issues
+            game.soldiers = game.soldiers.filter(s => s.team === 'green');
+
+            // Difficulty Tuning: Slower progression
+            // Wave 1-2: 3 enemies
+            // Wave 3-4: 4 enemies
+            // etc.
+            // Reset Walls (Respawn destroyed walls)
+            createWalls();
+
+            // Regular Spawn Loop (Restored)
+            const enemyCount = 3 + Math.floor((game.wave - 1) / 2);
+            for (let i = 0; i < enemyCount; i++) {
+                // Random spawn on right side
+                // Ensure not inside wall (simple range check)
+                let ex = 800 + Math.random() * 200;
+                let ey = 100 + Math.random() * 600;
+                const e = new Soldier(ex, ey, 'red', true);
+                if (game.mode === 'sea') {
+                    e.type = 'gunboat'; // Default Sea Enemy
+                    e.radius = 20;
+                }
+                game.soldiers.push(e);
+            }
+
+            // Revive and Reset Green Team
+            let allyIndex = 0;
+            game.soldiers.forEach(s => {
+                if (s.team === 'green') {
+                    // Revive
+                    s.active = true;
+                    // Reset HP based on type? Or just full heal.
+                    if (s.type === 'nuke_tank' || (game.mode === 'sea' && game.wave >= 100)) s.health = 50000;
+                    else if (s.type === 'nuke_sub') s.health = 20000;
+                    else if (s.type === 'armed_tank' || (game.mode === 'sea' && game.wave >= 50)) s.health = 10000;
+                    else if (s.type === 'command_mecha' || (game.mode === 'sea' && game.wave >= 40)) s.health = 5000;
+                    else if (s.type === 'mecha') s.health = 2000;
+                    else if (s.type === 'plane' || (game.mode === 'sea' && game.wave >= 20)) s.health = 1000;
+                    else if (s.type === 'tank' || (game.mode === 'sea' && game.wave >= 5)) s.health = 500;
+                    else s.health = 100;
+
+                    if (game.mode === 'sea' && s.health === 100) s.health = 200; // Base Gunboat hp
+
+                    s.ammo = s.maxAmmo;
+                    s.grenades = 3;
+
+                    // Reset Position
+                    if (!s.isAi) {
+                        // Player
+                        s.pos.x = 100;
+                        s.pos.y = 384;
+                        // Transform Logic
+                        if (game.mode === 'land') {
+                            if (game.wave >= 100) s.transformToNuclearTank();
+                            else if (game.wave >= 75) s.transformToNuclearSubmarine();
+                            else if (game.wave >= 50) s.transformToArmedTank();
+                            else if (game.wave >= 40) s.transformToCommandMecha();
+                            else if (game.wave >= 30) s.transformToMecha();
+                            else if (game.wave >= 20) s.transformToPlane();
+                            else if (game.wave >= 5) s.transformToTank();
+                        } else {
+                            // SEA MODE TRANSFORMATIONS
+                            if (game.wave >= 100) s.transformToSuperCarrier();
+                            else if (game.wave >= 75) s.transformToNuclearSubmarine(); // Stays same
+                            else if (game.wave >= 50) s.transformToAircraftCarrier();
+                            else if (game.wave >= 40) s.transformToBattleship();
+                            else if (game.wave >= 20) s.transformToCruiser();
+                            else if (game.wave >= 5) s.transformToDestroyer();
+                        }
+                    } else {
+                        // Allies
+                        if (allyIndex === 0) {
+                            s.pos.x = 100;
+                            s.pos.y = 150;
+                        } else {
+                            s.pos.x = 100;
+                            s.pos.y = 500;
+                        }
+                        allyIndex++;
+                    }
+                }
+            });
+
+            game.waveState = 'active';
+        }
+
+        function update(deltaTime) {
+            // Check for Shop Access
+            // Handled via Shift+S toggle in event listener now.
+
+            if (game.shopActive) {
+                // GAME IS PAUSED IN SHOP
+                return;
+            }
+            // ... rest of the update logic would go here ...
+        }
+
+        class Bullet {
+            constructor(x, y, angle, owner) {
+                this.pos = { x: x, y: y };
+                this.speed = 15;
+                this.angle = angle;
+                this.velocity = {
+                    x: Math.cos(angle) * this.speed,
+                    y: Math.sin(angle) * this.speed
+                };
+                this.active = true;
+                this.radius = 2;
+                this.owner = owner;
+                this.active = true;
+                this.radius = 2;
+                this.owner = owner;
+                this.active = true;
+                this.radius = 2;
+                this.owner = owner;
+                this.isExplosive = false; // Default
+                this.isNuclear = false; // New
+                this.isRocket = false;
+                this.isPlasma = false;
+                this.damage = 10; // Default damage carried by bullet
+
+                // New Properties
+                this.isFlamethrower = false;
+                this.isHoming = false;
+                this.isPiercing = false;
+                this.penetration = 0; // Hits before destroying
+                this.lifeTimer = 0; // For flamethrower
+            }
+
+            update() {
+                if (this.isHoming && this.active) {
+                    // Find nearest target
+                    let closest = null;
+                    let record = Infinity;
+                    const targets = game.soldiers; // Simplified: target anyone not owner. Actually need to filter by team.
+                    for (let s of targets) {
+                        if (s.active && s.team !== this.owner.team) {
+                            const d = Math.hypot(s.pos.x - this.pos.x, s.pos.y - this.pos.y);
+                            if (d < record && d < 600) { // Range check
+                                record = d;
+                                closest = s;
+                            }
+                        }
+                    }
+                    if (closest) {
+                        const desiredAngle = Math.atan2(closest.pos.y - this.pos.y, closest.pos.x - this.pos.x);
+                        // Steer
+                        const steerRate = 0.1;
+                        let delta = desiredAngle - this.angle;
+                        // Normalize delta
+                        while (delta <= -Math.PI) delta += Math.PI * 2;
+                        while (delta > Math.PI) delta -= Math.PI * 2;
+
+                        this.angle += Math.max(-steerRate, Math.min(steerRate, delta));
+                        this.velocity.x = Math.cos(this.angle) * this.speed;
+                        this.velocity.y = Math.sin(this.angle) * this.speed;
+                    }
+                }
+
+                this.pos.x += this.velocity.x;
+                this.pos.y += this.velocity.y;
+
+                if (this.isFlamethrower) {
+                    this.lifeTimer++;
+                    this.radius += 0.5; // Expand
+                    if (this.lifeTimer > 40) this.active = false; // Short range
+                }
+
+                // Bounds check
+                if (this.pos.x < 0 || this.pos.x > game.width || this.pos.y < 0 || this.pos.y > game.height) {
+                    this.active = false;
+                }
+
+                // Wall Collision
+                for (let i = 0; i < game.walls.length; i++) {
+                    let wall = game.walls[i];
+                    if (this.pos.x > wall.x && this.pos.x < wall.x + wall.width &&
+                        this.pos.y > wall.y && this.pos.y < wall.y + wall.height) {
+
+                        // Bullets fly OVER water!
+                        if (this.type === 'water' && !this.isExplosive && !this.isRocket) {
+                            // Simple bullets pass over. Explosive ones (tank shells)?
+                            // Let's say all bullets pass over water for now.
+                            continue;
+                        }
+
+                        if (!this.isPiercing) {
+                            this.active = false; // Bullet is destroyed on impact unless it's water
+                        }
+
+                        if (this.isExplosive || this.isRocket || this.isPlasma) {
+                            this.explode();
+                        }
+
+                        if (wall.type !== 'mountain' && wall.type !== 'water') {
+                            wall.hp -= 25; // Damage destructible walls
+                            if (this.isExplosive) wall.hp -= 200; // Big damage to walls
+                            if (wall.hp <= 0) {
+                                game.walls.splice(i, 1);
+                                i--; // Adjust index after removal
+                            }
+                        }
+                        break; // Bullet hit something, stop checking walls
+                    }
+                }
+
+                // Soldier Collision
+                if (this.active) {
+                    for (let s of game.soldiers) {
+                        if (s.active && s !== this.owner) { // Friendly Fire Enabled: Removed team check
+                            const dx = this.pos.x - s.pos.x;
+                            const dy = this.pos.y - s.pos.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < s.radius + this.radius) {
+                                if (this.isExplosive || this.isRocket || this.isPlasma) {
+                                    this.explode();
+                                } else {
+                                    s.takeDamage(this.damage);
+                                }
+
+                                if (this.isPiercing) {
+                                    this.penetration--;
+                                    if (this.penetration <= 0) this.active = false;
+                                } else {
+                                    this.active = false;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            explode() {
+                // Reuse Grenade explosion visual or logic?
+                // For simplicity, spawn a Grenade object at this location and make it explode instantly
+                // or just apply damage here.
+                let explosionRadius = this.isNuclear ? 300 : 60;
+                let damage = this.isNuclear ? 5000 : 50;
+
+                if (this.isRocket) { explosionRadius = 100; damage = 300; }
+                if (this.isPlasma) { explosionRadius = 80; damage = 400; }
+
+                for (let s of game.soldiers) {
+                    if (s.active) {
+                        const dx = this.pos.x - s.pos.x;
+                        const dy = this.pos.y - s.pos.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < explosionRadius) {
+                            s.takeDamage(damage);
+                        }
+                    }
+                }
+                // Visual effect: We can push a "Grenade" that is already exploded with negative timer
+                const g = new Grenade(this.pos.x, this.pos.y, this.pos.x, this.pos.y);
+                if (this.isNuclear) g.isNuclear = true;
+                if (this.isPlasma) g.isPlasma = true; // Add visual for plasma
+                g.explode();
+                game.grenades.push(g);
+            }
+
+            draw(ctx) {
+                if (this.isNuclear) ctx.fillStyle = '#00ff00'; // Green nuke
+                else if (this.isPlasma) ctx.fillStyle = 'magenta';
+                else if (this.isRocket) ctx.fillStyle = 'darkred';
+                else if (this.isFlamethrower) ctx.fillStyle = `rgba(255, 100, 0, ${1 - this.lifeTimer / 40})`;
+                else if (this.isHoming) ctx.fillStyle = 'lime';
+                else if (this.isPiercing) ctx.fillStyle = 'white';
+                else ctx.fillStyle = this.isExplosive ? '#ff4400' : '#ffcc00';
+
+                // Bullet shape
+                ctx.beginPath();
+                if (this.isRocket || this.isHoming) {
+                    // Draw little rocket
+                    ctx.save();
+                    ctx.translate(this.pos.x, this.pos.y);
+                    ctx.rotate(this.angle);
+                    ctx.fillStyle = this.isHoming ? 'lime' : '#555';
+                    ctx.fillRect(-5, -2, 10, 4);
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(0, -2, 5, 4);
+                    ctx.restore();
+                } else if (this.isPiercing) {
+                    // Railgun trail effect
+                    ctx.save();
+                    ctx.translate(this.pos.x, this.pos.y);
+                    ctx.rotate(this.angle);
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(-20, -1, 40, 2); // Long beam line
+                    ctx.restore();
+                } else {
+                    ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        class Grenade {
+            constructor(x, y, targetX, targetY, owner) {
+                this.pos = { x: x, y: y };
+                this.target = { x: targetX, y: targetY };
+                this.active = true;
+                this.exploded = false;
+                this.timer = 60; // Frames until explosion (approx 1 sec)
+                this.explosionRadius = 60;
+                this.isNuclear = false;
+                this.owner = owner;
+
+                // Parabolic movement simulation
+                const dx = targetX - x;
+                const dy = targetY - y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const steps = 30; // Frames to reach target
+                this.velocity = {
+                    x: dx / steps,
+                    y: dy / steps
+                };
+                this.stepsRemaining = steps;
+            }
+
+            update() {
+                if (this.stepsRemaining > 0) {
+                    this.pos.x += this.velocity.x;
+                    this.pos.y += this.velocity.y;
+                    this.stepsRemaining--;
+
+                    // Simple wall bounce could go here, but grenades often go OVER walls in top down.
+                    // We'll let them fly over for now.
+                } else {
+                    this.timer--;
+                    if (this.timer <= 0) {
+                        this.explode();
+                    }
+                }
+            }
+
+            explode() {
+                this.exploded = true;
+                // Area Damage
+                for (let s of game.soldiers) {
+                    if (s.active) {
+                        const dx = this.pos.x - s.pos.x;
+                        const dy = this.pos.y - s.pos.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < (this.isNuclear ? 300 : this.explosionRadius)) {
+                            s.takeDamage(this.isNuclear ? 5000 : 50); // High damage
+                        }
+                    }
+                }
+
+                // Leave explosion visual for a few frames then remove
+                this.active = true;
+                if (this.timer < -20) this.active = false; // Remove after explosion animation
+            }
+
+            draw(ctx) {
+                if (this.exploded) {
+                    // Draw Explosion
+                    let color = `rgba(255, 100, 0, ${1 - (this.timer / -20)})`;
+                    if (this.isNuclear) color = `rgba(50, 255, 50, ${1 - (this.timer / -50)})`;
+                    if (this.isPlasma) color = `rgba(255, 0, 255, ${1 - (this.timer / -20)})`;
+
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(this.pos.x, this.pos.y, this.isNuclear ? 300 : this.explosionRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Draw Grenade
+                    ctx.fillStyle = '#333';
+                    ctx.beginPath();
+                    ctx.arc(this.pos.x, this.pos.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#555';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        class Mine {
+            constructor(x, y, team) {
+                this.x = x;
+                this.y = y;
+                this.team = team;
+                this.active = true;
+                this.radius = 10;
+                this.triggerRadius = 30;
+            }
+
+            update() {
+                if (!this.active) return;
+                // Check collision with enemies
+                for (let s of game.soldiers) {
+                    if (s.active && s.team !== this.team) {
+                        const d = Math.hypot(s.pos.x - this.x, s.pos.y - this.y);
+                        if (d < this.triggerRadius + s.radius) {
+                            this.explode();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            explode() {
+                this.active = false;
+                // Re-use Grenade explosion visual/damage logic
+                // Create a dummy grenade active=false but trigger its effect?
+                // Or just manual damage loop
+                game.soldiers.forEach(s => {
+                    const dist = Math.hypot(s.pos.x - this.x, s.pos.y - this.y);
+                    if (dist < 100) { // Explosion radius
+                        s.takeDamage(100);
+                    }
+                });
+
+                // Visual effect (Reuse Grenade for now or add Game.explosions later)
+                // Just creating a grenade that explodes immediately for visual
+                const g = new Grenade(this.x, this.y, this.x, this.y, null);
+                g.timer = 0; // Explode next frame
+                game.grenades.push(g);
+            }
+
+            draw(ctx) {
+                if (!this.active) return;
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'red';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.triggerRadius, 0, Math.PI * 2);
+                ctx.stroke(); // Draw trigger zone slightly
+            }
+        }
+
+        class Soldier {
+            constructor(x, y, team, isAi) {
+                this.pos = { x: x, y: y };
+                this.velocity = { x: 0, y: 0 };
+                this.angle = 0;
+                this.aimDist = 100; // Distance of reticle from player
+
+                this.team = team; // 'red' or 'green'
+                this.isAi = isAi;
+
+                this.active = true;
+                this.health = 100;
+                this.radius = 15;
+                this.speed = 2;
+
+                // Weapon Stats
+                this.ammo = 30;
+                this.maxAmmo = 30;
+                this.grenades = 3;
+                this.lastShotTime = 0;
+                this.reloading = false;
+                this.reloadTime = 2000;
+                this.reloadStartTime = 0;
+
+                this.invincibleTimer = 0;
+
+                // Machine Gun check
+                this.fireRate = isAi ? 300 : 100;
+                if (!isAi && game.hasMachineGun && this.type === 'infantry') {
+                    this.fireRate = 50; // Super fast
+                    this.maxAmmo = 100;
+                    this.ammo = 100;
+                }
+
+                // AI State
+                this.aiState = 'idle'; // idle, chase, attack
+                this.target = null;
+                this.reactionTimer = 0;
+            }
+
+            transformToMecha() {
+                this.type = 'mecha';
+                this.health = 2000;
+                this.maxAmmo = 5000;
+                this.ammo = 5000;
+                this.radius = 30; // Tall and bulky
+                this.speed = 4; // Faster than tank
+                this.fireRate = 150; // Rapid fire
+            }
+
+            transformToCommandMecha() {
+                this.type = 'command_mecha';
+                this.health = 5000; // Ultimate
+                this.maxAmmo = 99999;
+                this.ammo = 99999;
+                this.radius = 40; // Massive
+                this.speed = 3; // Steady
+                this.fireRate = 200; // Dual Cannons
+            }
+
+            transformToTank() {
+                this.type = 'tank';
+                this.health = 500;
+                this.maxAmmo = 1000;
+                this.ammo = 1000;
+                this.radius = 25;
+                this.speed = 2;
+                this.fireRate = 500;
+            }
+
+            transformToDestroyer() {
+                this.type = 'destroyer';
+                this.health = 600;
+                this.maxAmmo = 2000;
+                this.ammo = 2000;
+                this.radius = 30;
+                this.speed = 3;
+                this.fireRate = 200;
+            }
+
+            transformToCruiser() {
+                this.type = 'cruiser';
+                this.health = 1500;
+                this.maxAmmo = 5000;
+                this.ammo = 5000;
+                this.radius = 35;
+                this.speed = 2.5;
+                this.fireRate = 150;
+            }
+
+            transformToBattleship() {
+                this.type = 'battleship';
+                this.health = 6000;
+                this.maxAmmo = 9999;
+                this.ammo = 9999;
+                this.radius = 45;
+                this.speed = 2;
+                this.fireRate = 400; // Big guns logic needed?
+            }
+
+            transformToAircraftCarrier() {
+                this.type = 'aircraft_carrier';
+                this.health = 12000;
+                this.maxAmmo = 99999;
+                this.ammo = 99999;
+                this.radius = 50;
+                this.speed = 1.5;
+                this.fireRate = 80; // Rapid
+            }
+
+            transformToSuperCarrier() {
+                this.type = 'super_carrier';
+                this.health = 60000;
+                this.maxAmmo = 99999;
+                this.ammo = 99999;
+                this.radius = 60;
+                this.speed = 1.2;
+                this.fireRate = 60;
+            }
+
+            transformToPlane() {
+                this.type = 'plane';
+                this.health = 1000; // Moderate-High, but hard to hit
+                this.maxAmmo = 9999;
+                this.ammo = 9999;
+                this.radius = 20;
+                this.speed = 8; // Very Fast
+                this.fireRate = 100; // Rapid fire bombs
+            }
+
+            transformToArmedTank() {
+                this.type = 'armed_tank';
+                this.health = 10000;
+                this.maxAmmo = 99999;
+                this.ammo = 99999;
+                this.radius = 35;
+                this.speed = 2.5;
+                this.fireRate = 50; // Machine gun tank
+            }
+
+            transformToNuclearSubmarine() {
+                this.type = 'nuke_sub';
+                this.health = 20000;
+                this.maxAmmo = 99999;
+                this.ammo = 99999;
+                this.radius = 40;
+                this.speed = 1.5;
+                this.fireRate = 300; // Slow nuke launch
+            }
+
+            transformToNuclearTank() {
+                this.type = 'nuke_tank';
+                this.health = 50000;
+                this.maxAmmo = 99999;
+                this.ammo = 99999;
+                this.radius = 50;
+                this.speed = 1.0;
+                this.fireRate = 200;
+            }
+
+            takeDamage(amount) {
+                if (this.invincibleTimer > 0) return; // Invincible!
+
+                // Tank armor (optional, just high HP is enough usually)
+                this.health -= amount;
+                if (this.health <= 0) {
+                    this.active = false;
+                    // Kill Reward
+                    if (this.team === 'red') {
+                        game.money += 3;
+                    }
+                }
+            }
+
+            update(timestamp) {
+                if (!this.active) return;
+
+                if (this.invincibleTimer > 0) {
+                    this.invincibleTimer -= 16.6; // approx per frame
+                }
+
+                // Reload Logic
+                if (this.reloading) {
+                    if (timestamp - this.reloadStartTime >= this.reloadTime) {
+                        this.ammo = this.maxAmmo;
+                        this.reloading = false;
+                    }
+                }
+
+                if (this.isAi) {
+                    this.updateAi(timestamp);
+                } else {
+                    this.updatePlayer(timestamp);
+                }
+
+                // Constrain to map
+                this.pos.x = Math.max(this.radius, Math.min(game.width - this.radius, this.pos.x));
+                this.pos.y = Math.max(this.radius, Math.min(game.height - this.radius, this.pos.y));
+            }
+
+            updatePlayer(timestamp) {
+                // Actions input
+                if (!this.reloading) {
+                    if (game.keys[KEYS.SHOOT] || game.keys[KEYS.SHOOT_CAP]) {
+                        this.shoot(timestamp);
+                    }
+                    if (game.keys[KEYS.RELOAD] || game.keys[KEYS.RELOAD_CAP]) {
+                        this.reload(timestamp);
+                    }
+                    // G key handling for single throw needed (debounce)
+                    // For now, simple check, better: handle in keydown event
+                }
+
+                // Movement
+                let dx = 0;
+                let dy = 0;
+
+                // Check for aiming mode (Shift key)
+                const isAiming = game.keys[KEYS.SHIFT];
+
+                if (game.keys[KEYS.LEFT]) dx -= 1;
+                if (game.keys[KEYS.RIGHT]) dx += 1;
+                if (game.keys[KEYS.UP]) dy -= 1;
+                if (game.keys[KEYS.DOWN]) dy += 1;
+
+                if (isAiming) {
+                    // In aiming mode, arrow keys change aim direction, not movement
+                    if (dx !== 0 || dy !== 0) {
+                        this.angle = Math.atan2(dy, dx);
+                    }
+                } else {
+                    // Normal movement
+                    if (dx !== 0 || dy !== 0) {
+                        // Normalize vector to prevent faster diagonal movement
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        dx /= length;
+                        dy /= length;
+
+                        // Predict new position
+                        const newX = this.pos.x + dx * this.speed;
+                        const newY = this.pos.y + dy * this.speed;
+
+                        // Check collision with walls (Skip if Plane)
+                        if (this.type === 'plane') {
+                            this.pos.x = newX;
+                            this.pos.y = newY;
+                        } else {
+                            if (!this.checkWallCollision(newX, this.pos.y)) {
+                                this.pos.x = newX;
+                            }
+                            if (!this.checkWallCollision(this.pos.x, newY)) {
+                                this.pos.y = newY;
+                            }
+                        }
+
+                        // Face movement direction
+                        this.angle = Math.atan2(dy, dx);
+                    }
+                }
+            }
+
+            updateAi(timestamp) {
+                // Existing AI logic is fine for now, they are infantry/standard
+                if (!this.target || !this.target.active) {
+                    this.findTarget();
+                }
+
+                if (this.target && this.target.active) {
+                    const dx = this.target.pos.x - this.pos.x;
+                    const dy = this.target.pos.y - this.pos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    this.angle = Math.atan2(dy, dx);
+
+                    // Movement Logic
+                    let moveX = 0;
+                    let moveY = 0;
+                    const aiSpeed = this.speed * 0.85;
+
+                    if (dist > 150) {
+                        moveX += Math.cos(this.angle) * aiSpeed;
+                        moveY += Math.sin(this.angle) * aiSpeed;
+                    } else if (dist < 100) {
+                        moveX -= Math.cos(this.angle) * aiSpeed;
+                        moveY -= Math.sin(this.angle) * aiSpeed;
+                    }
+
+                    if (dist < 400) {
+                        const strafeDir = Math.sin(timestamp / 500 + this.pos.x) > 0 ? 1 : -1;
+                        moveX += Math.cos(this.angle + Math.PI / 2) * aiSpeed * 0.5 * strafeDir;
+                        moveY += Math.sin(this.angle + Math.PI / 2) * aiSpeed * 0.5 * strafeDir;
+                    }
+
+                    const newX = this.pos.x + moveX;
+                    const newY = this.pos.y + moveY;
+
+                    if (!this.checkWallCollision(newX, this.pos.y)) this.pos.x = newX;
+                    if (!this.checkWallCollision(this.pos.x, newY)) this.pos.y = newY;
+
+                    if (dist < 500 && !this.reloading) {
+                        this.shoot(timestamp);
+                    }
+
+                    if (this.ammo === 0) this.reload(timestamp);
+                }
+            }
+
+            findTarget() {
+                let minDist = Infinity;
+                let closest = null;
+                for (let s of game.soldiers) {
+                    if (s.active && s.team !== this.team) {
+                        const d = Math.hypot(s.pos.x - this.pos.x, s.pos.y - this.pos.y);
+                        if (d < minDist) {
+                            minDist = d;
+                            closest = s;
+                        }
+                    }
+                }
+                this.target = closest;
+            }
+
+            checkWallCollision(x, y) {
+                // SEA MODE: Soldiers/Boats are blocked by Islands (Land), but fine in Water (default background in sea mode).
+                // Actually in SEA MODE, background is water, Islands are obstacles.
+                // In LAND MODE, background is land, walls are obstacles.
+
+                // Existing Wall Check
+                for (let wall of game.walls) {
+                    // Special case: In SEA mode, 'water' walls (river) from land mode don't exist.
+                    // But if we are in Sea mode, the obstacles are islands.
+                    // Boats cannot go on islands.
+
+                    if (game.mode === 'sea') {
+                        if (x + this.radius > wall.x && x - this.radius < wall.x + wall.width &&
+                            y + this.radius > wall.y && y - this.radius < wall.y + wall.height) {
+                            return true;
+                        }
+                    } else {
+                        // LAND MODE
+                        if (wall.type === 'water') continue; // Infantry can wade/swim river
+                        if (x + this.radius > wall.x && x - this.radius < wall.x + wall.width &&
+                            y + this.radius > wall.y && y - this.radius < wall.y + wall.height) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            shoot(timestamp) {
+                // Determine Fire Rate based on weapon or type
+                let currentFireRate = this.fireRate;
+
+                if (!this.isAi && game.currentWeapon && game.currentWeapon !== 'pistol') {
+                    // Use Equipped Weapon Stats override
+                    const w = WEAPONS[game.currentWeapon];
+                    if (w) currentFireRate = w.fireRate;
+                }
+
+                if (this.ammo > 0 && timestamp - this.lastShotTime > currentFireRate) {
+                    this.ammo--;
+                    this.lastShotTime = timestamp;
+
+                    const gunOffset = (this.type === 'mecha' || this.type === 'command_mecha' || this.type === 'nuke_tank' || this.type === 'nuke_sub') ? 50 : (this.type === 'tank' || this.type === 'plane' || this.type === 'armed_tank' ? 40 : 25);
+                    const bx = this.pos.x + Math.cos(this.angle) * gunOffset;
+                    const by = this.pos.y + Math.sin(this.angle) * gunOffset;
+
+                    const spread = this.isAi ? (Math.random() - 0.5) * 0.2 : 0;
+
+                    // PLAYER WEAPON OVERRIDE
+                    if (!this.isAi && game.currentWeapon && game.currentWeapon !== 'pistol') {
+                        const w = WEAPONS[game.currentWeapon];
+
+                        if (game.currentWeapon === 'shotgun') {
+                            for (let i = 0; i < w.count; i++) {
+                                const s = (Math.random() - 0.5) * w.spread;
+                                const b = new Bullet(bx, by, this.angle + s, this);
+                                b.speed = w.speed;
+                                b.damage = w.damage;
+                                game.bullets.push(b);
+                            }
+                        } else {
+                            const b = new Bullet(bx, by, this.angle + spread, this);
+                            b.speed = w.speed;
+                            b.damage = w.damage;
+
+
+                            if (w.isRocket) { b.isRocket = true; b.radius = w.radius || 5; }
+                            if (w.isFlamethrower) { b.isFlamethrower = true; b.radius = w.radius || 5; }
+                            if (w.isHoming) { b.isHoming = true; b.radius = w.radius || 5; }
+                            if (w.isPiercing) { b.isPiercing = true; b.radius = w.radius || 3; b.penetration = 5; }
+                            if (w.isExplosive) { b.isExplosive = true; b.radius = w.radius || 4; }
+
+                            if (game.currentWeapon === 'plasma') { b.isPlasma = true; b.radius = w.radius || 5; }
+
+                            game.bullets.push(b);
+                        }
+                        return; // Skip default logic
+                    }
+
+                    // ... Default Type Logic ...
+                    if (this.type === 'command_mecha') {
+                        // Dual Fire (Twin Cannons)
+                        const offset = 15;
+                        const x1 = bx + Math.cos(this.angle + Math.PI / 2) * offset;
+                        const y1 = by + Math.sin(this.angle + Math.PI / 2) * offset;
+                        const x2 = bx - Math.cos(this.angle + Math.PI / 2) * offset;
+                        const y2 = by - Math.sin(this.angle + Math.PI / 2) * offset;
+
+                        const b1 = new Bullet(x1, y1, this.angle + spread, this);
+                        b1.isExplosive = true; b1.radius = 6;
+                        const b2 = new Bullet(x2, y2, this.angle + spread, this);
+                        b2.isExplosive = true; b2.radius = 6;
+
+                        game.bullets.push(b1);
+                        game.bullets.push(b2);
+
+                    } else if (this.type === 'mecha' || this.type === 'tank' || this.type === 'plane') {
+                        // Explosive ammo (Tank shell or Bomber Bomb)
+                        const b = new Bullet(bx, by, this.angle + spread, this);
+                        b.isExplosive = true;
+                        b.radius = this.type === 'plane' ? 10 : 5; // Bigger bombs for plane
+                        if (this.type === 'mecha') b.radius = 7;
+                        // Make plane bombs super powerful/large explosion?
+                        // Handled in Bullet update/explode. 
+                        game.bullets.push(b);
+                    } else if (this.type === 'armed_tank') {
+                        // Rapid fire explosive shells
+                        const b = new Bullet(bx, by, this.angle + spread, this);
+                        b.isExplosive = true;
+                        b.radius = 6;
+                        game.bullets.push(b);
+                    } else if (this.type === 'nuke_sub' || this.type === 'nuke_tank') {
+                        // NUKE Launch
+                        const b = new Bullet(bx, by, this.angle + spread, this);
+                        b.isExplosive = true;
+                        b.isNuclear = true;
+                        b.speed = 8; // Slower nuke missile
+                        b.radius = 15; // Big missile
+                        game.bullets.push(b);
+                    } else {
+                        game.bullets.push(new Bullet(bx, by, this.angle + spread, this));
+                    }
+                }
+            }
+
+            reload(timestamp) {
+                if (this.ammo < this.maxAmmo) {
+                    this.reloading = true;
+                    this.reloadStartTime = timestamp;
+                }
+            }
+
+            throwGrenade() {
+                if (this.grenades > 0) {
+                    this.grenades--;
+                    const targetX = this.pos.x + Math.cos(this.angle) * this.aimDist;
+                    const targetY = this.pos.y + Math.sin(this.angle) * this.aimDist;
+                    game.grenades.push(new Grenade(this.pos.x, this.pos.y, targetX, targetY, this));
+                }
+            }
+
+            draw(ctx) {
+                if (!this.active) {
+                    ctx.save();
+                    ctx.translate(this.pos.x, this.pos.y);
+                    ctx.fillStyle = '#333';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                    return;
+                }
+
+                ctx.save();
+                ctx.translate(this.pos.x, this.pos.y);
+                ctx.rotate(this.angle);
+
+                if (this.type === 'command_mecha') {
+                    // COMMAND MECHA VISUALS (Gold/Black Massive)
+                    // Legs
+                    ctx.fillStyle = '#333'; // Black legs
+                    ctx.fillRect(-30, -35, 30, 70);
+                    ctx.fillRect(10, -35, 30, 70);
+
+                    // Torso
+                    ctx.fillStyle = '#DAA520'; // GoldenRod
+                    ctx.fillRect(-35, -25, 70, 50);
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(-35, -25, 70, 50);
+
+                    // Head
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(-15, -10, 30, 20);
+
+                    // Dual Cannons
+                    ctx.fillStyle = '#222';
+                    ctx.fillRect(20, -40, 60, 15); // Right arm gun
+                    ctx.fillRect(20, 25, 60, 15); // Left arm gun
+
+                } else if (this.type === 'mecha') {
+                    // MECHA VISUALS (Legs + Torso)
+                    // Legs
+                    ctx.fillStyle = '#222';
+                    ctx.fillRect(-20, -25, 20, 50); // Left/Right relative to rotation is mostly side?
+                    // Let's simplify: Draw legs sticking out back? No top down.
+                    // Top down legs: Two rectangles on side?
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(-20, -30, 40, 20); // Rear/Legs area
+                    ctx.fillRect(-20, 10, 40, 20);
+
+                    // Torso
+                    ctx.fillStyle = this.team === 'green' ? '#4a6b4a' : '#8b3a3a';
+                    ctx.fillRect(-15, -15, 50, 30);
+
+                    // Gun Arm
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(10, -5, 50, 10);
+
+                } else if (this.type === 'tank') {
+                    // TANK VISUALS
+                    // Body (Rectangle)
+                    ctx.fillStyle = this.team === 'green' ? '#2a4b2a' : '#5b1a1a';
+                    ctx.fillRect(-25, -20, 50, 40);
+                    ctx.strokeStyle = '#111';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(-25, -20, 50, 40);
+
+                    // Turret
+                    ctx.fillStyle = this.team === 'green' ? '#3a5b3a' : '#6b2a2a';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Barrel
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(0, -6, 40, 12);
+                } else if (this.type === 'plane') {
+                    // PLANE VISUALS (Triangle)
+                    ctx.fillStyle = this.team === 'green' ? '#4a6b8a' : '#8b3a3a'; // Blueish for plane
+                    ctx.beginPath();
+                    ctx.moveTo(30, 0);
+                    ctx.lineTo(-20, 20);
+                    ctx.lineTo(-10, 0);
+                    ctx.lineTo(-20, -20);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Wings detal
+                    ctx.strokeStyle = '#222';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Shadow (to indicate flying)
+                    // Hard to draw shadow with current transform/clip, maybe just offset later
+                } else if (this.type === 'turret') {
+                    // TURRET VISUALS
+                    ctx.fillStyle = '#444';
+                    ctx.fillRect(-20, -20, 40, 40); // Base
+                    ctx.fillStyle = this.team === 'green' ? '#2a4b2a' : '#8b3a3a';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Gun
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(0, -8, 35, 16);
+                } else if (this.type === 'armed_tank') {
+                    // ARMED TANK (Bigger, Spike Armor)
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(-30, -25, 60, 50); // Body
+                    ctx.fillStyle = '#555'; // Tracks
+                    ctx.fillRect(-30, -30, 60, 5);
+                    ctx.fillRect(-30, 25, 60, 5);
+
+                    // Turret
+                    ctx.fillStyle = '#8b0000'; // Dark Red
+                    ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.fill();
+                    // Barrel
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, -8, 50, 16);
+                } else if (this.type === 'nuke_sub') {
+                    // SUBMARINE (Long shape)
+                    ctx.fillStyle = '#222';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 50, 20, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Tower
+                    ctx.fillStyle = '#444';
+                    ctx.fillRect(-10, -10, 20, 20);
+                    // Nuke Symbol
+                    ctx.fillStyle = '#0f0';
+                    ctx.font = '12px Arial';
+                    ctx.fillText('☢', -6, 4);
+                } else if (this.type === 'nuke_tank') {
+                    // NUCLEAR TANK (Massive, Green Glow)
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(-40, -35, 80, 70); // Body
+
+                    // Glow
+                    ctx.strokeStyle = '#0f0';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(-40, -35, 80, 70);
+
+                    // Turret
+                    ctx.fillStyle = '#003300';
+                    ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.fill();
+
+                    // Twin Barrels
+                    ctx.fillStyle = '#0f0';
+                    ctx.fillRect(10, -15, 60, 10);
+                    ctx.fillRect(10, 5, 60, 10);
+                } else if (this.type === 'gunboat') {
+                    // GUNBOAT
+                    ctx.fillStyle = '#555';
+                    ctx.beginPath(); ctx.ellipse(0, 0, 20, 10, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = this.team === 'green' ? 'lime' : 'red';
+                    ctx.fillRect(0, -5, 15, 10);
+                } else if (this.type === 'destroyer') {
+                    // DESTROYER
+                    ctx.fillStyle = '#444';
+                    ctx.fillRect(-30, -10, 60, 20); // Hull
+                    // Guns
+                    ctx.fillStyle = '#222';
+                    ctx.beginPath(); ctx.arc(10, 0, 8, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillRect(10, -3, 20, 6);
+                } else if (this.type === 'battleship') {
+                    // BATTLESHIP
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(-45, -15, 90, 30);
+                    ctx.fillStyle = '#111';
+                    ctx.beginPath(); ctx.arc(-10, 0, 12, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(20, 0, 12, 0, Math.PI * 2); ctx.fill();
+                } else if (this.type === 'aircraft_carrier' || this.type === 'super_carrier') {
+                    // CARRIER
+                    ctx.fillStyle = '#222';
+                    ctx.fillRect(-50, -25, 100, 50);
+                    if (this.type === 'super_carrier') ctx.strokeStyle = 'cyan';
+                    else ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(-45, -20, 90, 40); // Runway
+                    // Tower
+                    ctx.fillStyle = '#444';
+                    ctx.fillRect(10, -35, 20, 15); // Side tower
+                } else {
+                    // SOLDIER VISUALS (HUMANOID)
+
+                    // Walking Animation
+                    let swing = 0;
+                    if (this.velocity && (Math.abs(this.velocity.x) > 0.1 || Math.abs(this.velocity.y) > 0.1)) {
+                        swing = Math.sin(performance.now() / 100) * 10;
+                    }
+
+                    // Legs (Oscillating)
+                    ctx.fillStyle = '#222'; // Boots/Pants
+                    ctx.save();
+                    ctx.rotate(swing * Math.PI / 180);
+                    ctx.fillRect(-10, -10, 20, 10); // Left Leg
+                    ctx.restore();
+                    ctx.save();
+                    ctx.rotate(-swing * Math.PI / 180);
+                    ctx.fillRect(-10, 0, 20, 10); // Right leg
+                    ctx.restore();
+
+                    // Body/Uniform
+                    const color = this.team === 'green' ? '#4a6b4a' : '#8b3a3a';
+                    ctx.fillStyle = color;
+                    if (this.reloading) ctx.fillStyle = '#6b6b4a';
+
+                    // Shoulders/Torso
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 15, 10, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Helmet/Head
+                    ctx.fillStyle = this.team === 'green' ? '#3a5b3a' : '#6b2a2a';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 9, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Arms holding gun
+                    ctx.fillStyle = color;
+                    // Right Arm
+                    ctx.beginPath(); ctx.arc(10, 10, 5, 0, Math.PI * 2); ctx.fill();
+                    // Left Arm
+                    ctx.beginPath(); ctx.arc(10, -10, 5, 0, Math.PI * 2); ctx.fill();
+
+                    // Gun
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(10, -4, 30, 8); // Gun Barrel
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(5, -4, 10, 8); // Gun Stock
+                }
+
+                // Invincibility Aura
+                if (this.invincibleTimer > 0) {
+                    ctx.strokeStyle = `rgba(0, 255, 255, ${(Math.sin(performance.now() / 100) + 1) / 2})`; // Pulsing cyan
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+
+                // Health Bar (same as before)
+                ctx.fillStyle = 'red';
+                let barWidth = 30;
+                let maxHp = 100;
+                if (this.type === 'tank') { barWidth = 60; maxHp = 500; }
+                if (this.type === 'plane') { barWidth = 50; maxHp = 1000; }
+                if (this.type === 'mecha') { barWidth = 70; maxHp = 2000; }
+                if (this.type === 'command_mecha') { barWidth = 100; maxHp = 5000; }
+                if (this.type === 'armed_tank') { barWidth = 80; maxHp = 10000; }
+                if (this.type === 'nuke_sub') { barWidth = 90; maxHp = 20000; }
+                if (this.type === 'nuke_tank') { barWidth = 110; maxHp = 50000; }
+                if (this.type === 'turret') { barWidth = 40; maxHp = 500; }
+
+                if (this.extraMaxHp) maxHp += this.extraMaxHp;
+
+                const barY = (this.type === 'tank' || this.type === 'plane' || this.type === 'mecha' || this.type === 'command_mecha' || this.type === 'turret') ? -this.radius - 20 : -35;
+                ctx.fillRect(this.pos.x - barWidth / 2, this.pos.y + barY, barWidth, 4);
+                ctx.fillStyle = 'lime';
+                ctx.fillRect(this.pos.x - barWidth / 2, this.pos.y + barY, barWidth * (this.health / maxHp), 4);
+
+                // Player specific UI
+                if (!this.isAi) {
+                    // Reticle
+                    const aimX = this.pos.x + Math.cos(this.angle) * this.aimDist;
+                    const aimY = this.pos.y + Math.sin(this.angle) * this.aimDist;
+
+                    ctx.strokeStyle = this.reloading ? 'rgba(255, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(aimX, aimY, 10, 0, Math.PI * 2);
+                    ctx.moveTo(aimX - 15, aimY);
+                    ctx.lineTo(aimX + 15, aimY);
+                    ctx.moveTo(aimX, aimY - 15);
+                    ctx.lineTo(aimX, aimY + 15);
+                    ctx.stroke();
+
+                    // Aim line
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(this.pos.x, this.pos.y);
+                    ctx.lineTo(aimX, aimY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Ammo
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    const ammoText = this.reloading ? 'RELOADING...' : `${this.ammo} / ${this.maxAmmo}`;
+                    ctx.fillText(ammoText, this.pos.x, this.pos.y - 45);
+                }
+            }
+        }
+
+        // Initialize first time (Don't init straight away, wait for start screen)
+        // initGame();
+
+        // Helper to get player easily
+        function getPlayer() {
+            return game.soldiers.find(s => !s.isAi && s.team === 'green');
+        }
+
+        // Single press handling for Grenade
+        let gKeyPressed = false;
+        window.addEventListener('keydown', (e) => {
+            if (!game.started) {
+                if (e.key === '1') initGame('land');
+                if (e.key === '2') initGame('sea');
+                if (e.key === '3') initGame('desert');
+                return;
+            }
+
+            game.keys[e.key] = true;
+            const player = getPlayer();
+
+            // Grenade (G)
+            if ((e.key === 'g' || e.key === 'G') && !gKeyPressed && player && player.active) {
+                player.throwGrenade();
+                gKeyPressed = true;
+            }
+
+            // Shop Toggle (Shift + S)
+            if ((e.key === 's' || e.key === 'S') && e.shiftKey) {
+                game.shopActive = !game.shopActive;
+                game.weaponShopActive = false; // Close other shop
+                game.keys[e.key] = false;
+            }
+
+            // Weapon Shop Toggle (Shift + G)
+            if ((e.key === 'g' || e.key === 'G') && e.shiftKey) {
+                game.weaponShopActive = !game.weaponShopActive;
+                game.shopActive = false; // Close other shop
+                game.keys[e.key] = false;
+            }
+
+            // Weapon Shop Interactions
+            if (game.weaponShopActive) {
+                if (e.key === '1') buyWeapon('machinegun');
+                if (e.key === '2') buyWeapon('shotgun');
+                if (e.key === '3') buyWeapon('sniper');
+                if (e.key === '4') buyWeapon('rpg');
+                if (e.key === '5') buyWeapon('minigun');
+                if (e.key === '6') buyWeapon('laser');
+                if (e.key === '7') buyWeapon('plasma');
+                if (e.key === '8') buyWeapon('flamethrower');
+                if (e.key === '9') buyWeapon('autocannon');
+                if (e.key === '0') buyWeapon('homing');
+                if (e.key === '-') buyWeapon('railgun');
+                if (e.key === 'Escape') game.weaponShopActive = false;
+            }
+
+            // Normal Shop Interactions (Only if Shop is Active)
+            if (game.shopActive) {
+                if (e.key === '1') buyItem(1);
+                if (e.key === '2') buyItem(2);
+                if (e.key === '3') buyItem(3);
+                if (e.key === '4') buyItem(4);
+                if (e.key === '5') buyItem(5);
+                if (e.key === '6') buyItem(6);
+                if (e.key === '7') buyItem(7);
+                if (e.key === '8') buyItem(8);
+                if (e.key === '9') buyItem(9);
+                if (e.key === '0') buyItem(10);
+                if (e.key === 'Escape') game.shopActive = false;
+            }
+
+            // View Toggle (V)
+            if (e.key === 'v' || e.key === 'V') {
+                game.viewMode = game.viewMode === '3d' ? 'top' : '3d';
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            game.keys[e.key] = false;
+            if (e.key === 'g' || e.key === 'G') {
+                gKeyPressed = false;
+            }
+        });
+
+        // Game Loop
+        function loop(timestamp) {
+            if (!game.active) return;
+            const deltaTime = timestamp - game.lastTime;
+            game.lastTime = timestamp;
+
+            update(deltaTime);
+            draw();
+
+            requestAnimationFrame(loop);
+        }
+
+        function update(deltaTime) {
+            const now = performance.now();
+
+            // Update all soldiers
+            let redCount = 0;
+            for (let s of game.soldiers) {
+                s.update(game.lastTime);
+                if (s.active && s.team === 'red') redCount++;
+            }
+
+            // Wave Logic
+            if (redCount === 0 && game.waveState === 'active') {
+                game.waveState = 'waiting';
+                game.waveTimer = performance.now();
+            }
+
+            if (game.waveState === 'waiting') {
+                if (performance.now() - game.waveTimer > 3000) { // 3 seconds wait
+                    game.wave++;
+                    startWave();
+                }
+            }
+
+            // Revive Logic
+            // If player is dead, check for R key
+            const player = getPlayer();
+            // Note: getPlayer finds active player usually? Checking init code:
+            // function getPlayer() { return game.soldiers.find(s => !s.isAi && s.team === 'green'); }
+            // If player is dead (active=false), they are still in game.soldiers list? 
+            // Yes, update() loops over all soldiers. But takeDamage sets active=false.
+            // So getPlayer() still returns the object.
+
+            if (player && !player.active) {
+                if (game.keys['r'] || game.keys['R']) {
+                    player.active = true;
+                    // Restore correct HP
+                    if (player.type === 'nuke_tank') player.health = 50000;
+                    else if (player.type === 'nuke_sub') player.health = 20000;
+                    else if (player.type === 'armed_tank') player.health = 10000;
+                    else if (player.type === 'command_mecha') player.health = 5000;
+                    else if (player.type === 'mecha') player.health = 2000;
+                    else if (player.type === 'plane') player.health = 1000;
+                    else if (player.type === 'tank') player.health = 500;
+                    else player.health = 100;
+
+                    player.ammo = player.maxAmmo;
+                    player.grenades = 3;
+                    // Reset position to start zone to be safe?
+                    player.pos.x = 100;
+                    player.pos.y = 384;
+                }
+            }
+
+            // Update Bullets
+            for (let i = game.bullets.length - 1; i >= 0; i--) {
+                const b = game.bullets[i];
+                b.update();
+                if (!b.active) {
+                    game.bullets.splice(i, 1);
+                }
+            }
+
+            // Update Grenades
+            for (let i = game.grenades.length - 1; i >= 0; i--) {
+                const g = game.grenades[i];
+                g.update();
+                // Grenade Physics
+            }
+            // Filter inactive grenades (exploded)
+            game.grenades = game.grenades.filter(g => g.active);
+
+            // Update Mines
+            for (let m of game.mines) {
+                if (m.active) m.update();
+            }
+            game.mines = game.mines.filter(m => m.active);
+        }
+
+        // 3D CONSTANTS
+
+
+        function draw() {
+            if (!game.started) {
+                drawStartScreen();
+                return;
+            }
+
+            if (game.viewMode === '3d') {
+                draw3D();
+            } else {
+                drawTopDown();
+            }
+        }
+
+        function drawTopDown() {
+            // Draw Background (Grass/Dirt or Water)
+            if (game.mode === 'sea') {
+                ctx.fillStyle = '#006994'; // Ocean Blue
+            } else {
+                ctx.fillStyle = '#1a1a1a'; // Dark ground
+            }
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid lines for terrain feel
+            ctx.strokeStyle = '#2a2a2a';
+            ctx.lineWidth = 1;
+            const gridSize = 50;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // Draw Walls
+            game.walls.forEach(w => w.draw(ctx));
+
+            // Draw Mines
+            game.mines.forEach(m => m.draw(ctx));
+
+            // Draw Projectiles
+            game.bullets.forEach(b => b.draw(ctx));
+            game.grenades.forEach(g => g.draw(ctx));
+
+            // Draw Soldiers
+            game.soldiers.forEach(s => s.draw(ctx));
+
+            drawUI();
+        }
+
+        function castRay(angle) {
+            const player = getPlayer();
+            if (!player) return { dist: 1000, color: '#000', heightInfo: 0 }; // Fallback if player is dead
+
+            let dx = Math.cos(angle);
+            let dy = Math.sin(angle);
+            let x = player.pos.x;
+            let y = player.pos.y;
+
+            // Simple raymarching step
+            for (let i = 0; i < 1000; i++) { // Max distance
+                x += dx * 2;
+                y += dy * 2;
+
+                // Hit wall?
+                for (const w of game.walls) {
+                    if (x > w.x && x < w.x + w.width && y > w.y && y < w.y + w.height) {
+                        const dist = Math.sqrt((x - player.pos.x) ** 2 + (y - player.pos.y) ** 2);
+                        // Fix fisheye
+                        const ca = angle - player.angle;
+                        let correctedDist = dist * Math.cos(ca);
+
+                        let heightInfo = 100; // Default wall height
+                        if (w.type === 'water') heightInfo = 20;
+                        if (w.type === 'mountain') heightInfo = 300;
+                        if (w.type === 'cactus') heightInfo = 150; // Tall cactus
+
+                        return {
+                            dist: correctedDist,
+                            color: w.color || '#8b4513', // Use specific wall color
+                            heightInfo: heightInfo,  // Return height info
+                            type: w.type
+                        };
+                    }
+                }
+            }
+            return { dist: 1000, color: '#000', heightInfo: 0, type: 'void' }; // Sky/Void
+        }
+
+        function draw3D() {
+            const player = getPlayer();
+            if (!player) {
+                drawTopDown(); // Fallback if dead
+                return;
+            }
+
+            // Draw Floor & Ceiling
+            // Sky
+            ctx.fillStyle = game.mode === 'desert' ? '#87CEEB' : '#333'; // Sky Blue only in Desert? Or maybe simpler lighter grey? Let's go Blue.
+            ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+            // Floor
+            ctx.fillStyle = game.mode === 'desert' ? '#C2B280' : '#222'; // Sand or Dark
+            ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+            const startAngle = player.angle - FOV / 2;
+            const rayCount = canvas.width / 4;
+            const stepAngle = FOV / rayCount;
+
+            for (let i = 0; i < rayCount; i++) {
+                const angle = startAngle + i * stepAngle;
+                const result = castRay(angle);
+                const dist = result.dist;
+
+                // Projected Height
+                // ProjH = (ActualH / Dist) * ScreenDist
+                const projH = (result.heightInfo / dist) * SCREEN_DIST;
+
+                // Vertical Pos (Player eye height = 50)
+                const eyeHeight = 50;
+
+                // Project floor (z=0) to screen Y
+                // Y_floor = CenterY + (EyeH / Dist) * ScreenDist
+                const floorY = (canvas.height / 2) + (eyeHeight / dist) * SCREEN_DIST;
+                const topY = floorY - projH;
+
+                const x = i * 4;
+
+                ctx.fillStyle = result.color;
+                if (dist > 600) ctx.globalAlpha = 0.5;
+                else if (dist > 300) ctx.globalAlpha = 0.8;
+
+                ctx.fillRect(x, topY, 4, floorY - topY);
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Sprites
+            let sprites = [];
+            [...game.soldiers, ...game.bullets, ...game.mines].forEach(ent => {
+                if (ent === player) return;
+                sprites.push(ent);
+            });
+            sprites.forEach(s => s.dist = Math.hypot(s.pos.x - player.pos.x, s.pos.y - player.pos.y));
+            sprites.sort((a, b) => b.dist - a.dist);
+            sprites.forEach(s => drawSprite3D(ctx, player, s));
+
+            drawUI();
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'right';
+            ctx.font = '16px Arial';
+            ctx.fillText("View: 3D (Press V)", canvas.width - 20, 100);
+        }
+
+        function drawSprite3D(ctx, player, sprite) {
+            // Calculate angle to sprite relative to player
+            const dx = sprite.pos.x - player.pos.x;
+            const dy = sprite.pos.y - player.pos.y;
+
+            let spriteAngle = Math.atan2(dy, dx) - player.angle;
+
+            // Normalize angle -PI to PI
+            while (spriteAngle < -Math.PI) spriteAngle += 2 * Math.PI;
+            while (spriteAngle > Math.PI) spriteAngle -= 2 * Math.PI;
+
+            // Check if in FOV (plus margin)
+            if (Math.abs(spriteAngle) < FOV / 1.5) {
+                const dist = Math.hypot(dx, dy);
+                const screenH = (BLOCK_SIZE * SCREEN_DIST) / dist; // Height scales with distance
+                const screenW = screenH; // Square sprites approximations
+
+                const screenX = (0.5 * (spriteAngle / (FOV / 2)) + 0.5) * canvas.width;
+
+                // Draw Sprite Rect
+                // Color based on team/type
+                if (sprite.team === 'red') ctx.fillStyle = 'red';
+                else if (sprite.team === 'green') ctx.fillStyle = 'lime';
+                else if (sprite.velocity) ctx.fillStyle = 'yellow'; // bullet
+
+                if (sprite.type === 'tank' || sprite.type === 'armed_tank' || sprite.type === 'nuke_tank') {
+                    // TANK BASES
+                    if (sprite.type === 'nuke_tank') ctx.fillStyle = '#0f0'; // Glowing Green
+                    else if (sprite.type === 'armed_tank') ctx.fillStyle = '#500'; // Dark Red
+                    else ctx.fillStyle = sprite.team === 'green' ? 'darkgreen' : 'darkred';
+
+                    // Bigger sprite (Tank)
+                    const widthScale = sprite.type === 'nuke_tank' ? 2.5 : 2;
+                    ctx.fillRect(screenX - screenW, canvas.height / 2 - screenH / 2, screenW * widthScale, screenH);
+
+                    // Turret
+                    ctx.fillStyle = '#222';
+                    if (sprite.type === 'nuke_tank') ctx.fillStyle = '#050';
+                    ctx.fillRect(screenX - screenW / 2, canvas.height / 2 - screenH * 0.7, screenW, screenH * 0.3);
+                } else if (sprite.type === 'nuke_sub') {
+                    // SUBMARINE
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(screenX - screenW * 1.5, canvas.height / 2, screenW * 3, screenH * 0.5); // Low profile
+                    // Periscope/Tower
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(screenX - screenW * 0.2, canvas.height / 2 - screenH * 0.4, screenW * 0.4, screenH * 0.4);
+                } else if (sprite.type === 'mecha' || sprite.type === 'command_mecha') {
+                    // MECHAS
+                    ctx.fillStyle = sprite.type === 'command_mecha' ? '#DAA520' : (sprite.team === 'green' ? '#4a6b4a' : '#8b3a3a');
+                    const hScale = sprite.type === 'command_mecha' ? 2.0 : 1.5;
+                    const wScale = sprite.type === 'command_mecha' ? 1.5 : 1.0;
+
+                    // Legs
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(screenX - screenW * 0.5 * wScale, canvas.height / 2, screenW * 0.3 * wScale, screenH * 0.5 * hScale);
+                    ctx.fillRect(screenX + screenW * 0.2 * wScale, canvas.height / 2, screenW * 0.3 * wScale, screenH * 0.5 * hScale);
+
+                    // Body
+                    ctx.fillStyle = sprite.type === 'command_mecha' ? '#DAA520' : '#444';
+                    ctx.fillRect(screenX - screenW * 0.5 * wScale, canvas.height / 2 - screenH * 0.5 * hScale, screenW * wScale, screenH * 0.6 * hScale);
+
+                    // Head
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(screenX - screenW * 0.2 * wScale, canvas.height / 2 - screenH * 0.7 * hScale, screenW * 0.4 * wScale, screenH * 0.2 * hScale);
+
+                } else if (sprite.type === 'turret') {
+                    ctx.fillStyle = '#555';
+                    ctx.fillRect(screenX - screenW / 2, canvas.height / 2, screenW, screenH / 2);
+                    ctx.fillStyle = sprite.team === 'green' ? 'lime' : 'red';
+                    ctx.beginPath(); ctx.arc(screenX, canvas.height / 2, screenW / 2, 0, Math.PI * 2); ctx.fill();
+                } else if (sprite.velocity) {
+                    // Bullet / Grenade
+                    ctx.fillStyle = 'yellow';
+                    ctx.beginPath();
+                    ctx.arc(screenX, canvas.height / 2 + (screenH * 0.2), screenW / 4, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // HUMANOID SOLDIER 3D
+                    // USE IMAGE IF LOADED
+                    if (soldierImgLoaded && sprite.type === 'infantry') {
+                        ctx.drawImage(soldierImg, screenX - screenW / 2, canvas.height / 2 - screenH / 2, screenW, screenH);
+                        return;
+                    }
+
+                    // ... Fallback to procedural ...
+                    const isGreen = sprite.team === 'green';
+
+                    // Dimensions relative to screenH
+                    const h = screenH;
+                    const w = screenW * 0.8; // High aspect ratio
+                    const x = screenX - w / 2;
+                    const y = canvas.height / 2 - h / 2;
+
+                    // BOOTS (Black)
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(x + w * 0.1, y + h * 0.85, w * 0.3, h * 0.15); // Left Boot
+                    ctx.fillRect(x + w * 0.6, y + h * 0.85, w * 0.3, h * 0.15); // Right Boot
+
+                    // PANTS (Camo Green/Red)
+                    ctx.fillStyle = isGreen ? '#3f5f3f' : '#6f2f2f'; // Darker shade
+                    ctx.fillRect(x + w * 0.1, y + h * 0.5, w * 0.3, h * 0.35); // Left Leg
+                    ctx.fillRect(x + w * 0.6, y + h * 0.5, w * 0.3, h * 0.35); // Right Leg
+                    ctx.fillStyle = 'black'; // Crotch gap
+                    ctx.fillRect(x + w * 0.4, y + h * 0.5, w * 0.2, h * 0.15);
+
+                    // TORSO (Uniform)
+                    ctx.fillStyle = isGreen ? '#4a6b4a' : '#8b3a3a';
+                    ctx.fillRect(x + w * 0.1, y + h * 0.25, w * 0.8, h * 0.25); // Main Body
+
+                    // BELT (Brown)
+                    ctx.fillStyle = '#3d2b1f';
+                    ctx.fillRect(x + w * 0.1, y + h * 0.48, w * 0.8, h * 0.04);
+                    // Buckle
+                    ctx.fillStyle = '#ffd700'; // works as yellow/goldish or fallback
+                    ctx.fillRect(x + w * 0.45, y + h * 0.48, w * 0.1, h * 0.04);
+
+                    // HEAD / FACE
+                    ctx.fillStyle = '#eec'; // Skin
+                    ctx.fillRect(x + w * 0.35, y + h * 0.05, w * 0.3, h * 0.2);
+
+                    // EYES (Sunglasses?)
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(x + w * 0.38, y + h * 0.12, w * 0.1, h * 0.03); // Left eye
+                    ctx.fillRect(x + w * 0.52, y + h * 0.12, w * 0.1, h * 0.03); // Right eye
+
+                    // HELMET
+                    ctx.fillStyle = isGreen ? '#2f4f2f' : '#5f2f2f'; // Darker helmet
+                    // Dome
+                    ctx.beginPath();
+                    ctx.arc(x + w * 0.5, y + h * 0.08, w * 0.18, Math.PI, 0); // Top half
+                    ctx.fill();
+                    ctx.fillRect(x + w * 0.32, y + h * 0.08, w * 0.36, h * 0.05); // Rim
+
+                    // ARMS & GUN
+                    ctx.fillStyle = isGreen ? '#4a6b4a' : '#8b3a3a';
+                    // Shoulders
+                    ctx.fillRect(x, y + h * 0.25, w * 0.15, h * 0.2); // Left arm start
+                    ctx.fillRect(x + w * 0.85, y + h * 0.25, w * 0.15, h * 0.2); // Right arm start
+
+                    // GUN (Rifle held across chest)
+                    ctx.fillStyle = '#1a1a1a'; // Gun Metal
+                    ctx.fillRect(x - w * 0.1, y + h * 0.35, w * 1.2, h * 0.08); // Barrel/Stock
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(x + w * 0.2, y + h * 0.43, w * 0.1, h * 0.08); // Grip (Magazine)
+
+                    // Hands holding gun
+                    ctx.fillStyle = '#eec'; // Skin hand
+                    ctx.fillRect(x + w * 0.1, y + h * 0.35, w * 0.15, h * 0.08); // Left Hand
+                    ctx.fillRect(x + w * 0.7, y + h * 0.35, w * 0.15, h * 0.08); // Right Hand
+                }
+            }
+        }
+
+        function drawUI() {
+            // UI drawing code extracted
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'left';
+
+            const player = getPlayer();
+            if (player && player.active) {
+                ctx.fillText(`Grenades: ${player.grenades}`, 20, 40);
+                if (player.invincibleTimer > 0) {
+                    ctx.fillStyle = 'cyan';
+                    ctx.fillText(`INVINCIBLE: ${(player.invincibleTimer / 1000).toFixed(1)}s`, 20, 100);
+                }
+                ctx.fillStyle = 'white';
+                ctx.fillText(`Wave: ${game.wave}`, 20, 70);
+            } else {
+                ctx.fillStyle = 'red';
+                ctx.fillText('YOU DIED - Press R to Revive', 20, 40);
+            }
+
+            if (game.waveState === 'waiting') {
+                ctx.fillStyle = 'yellow';
+                ctx.font = '40px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`WAVE ${game.wave} COMPLETE!`, canvas.width / 2, canvas.height / 2);
+                ctx.font = '20px Arial';
+                ctx.fillText(`Next wave starting...`, canvas.width / 2, canvas.height / 2 + 40);
+            }
+
+            // Draw Money
+            ctx.fillStyle = '#ffd700'; // Gold
+            ctx.textAlign = 'right';
+            ctx.font = '24px Arial';
+            ctx.fillText(`$${game.money}`, canvas.width - 20, 40);
+
+            // Draw Shop Overlay (Same as before)
+            if (game.shopActive) {
+                drawShopOverlay();
+            } else if (game.weaponShopActive) {
+                drawWeaponShopOverlay();
+            } else {
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'left';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Weapon: ${game.currentWeapon.toUpperCase()}`, 20, 720);
+                ctx.font = '20px Arial';
+                ctx.fillText('Controls: Move(Arrows) Aim(Shift) Shoot(S) Items(Shift+S) Weapons(Shift+G)', 20, 750);
+            }
+        }
+
+        function drawStartScreen() {
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.font = '50px Arial';
+            ctx.fillText("WAR GAME", canvas.width / 2, 200);
+
+            ctx.font = '30px Arial';
+            ctx.fillText("Select Mode:", canvas.width / 2, 350);
+
+            ctx.fillStyle = 'lime';
+            ctx.fillText("[1] LAND BATTLE", canvas.width / 2, 450);
+
+            ctx.fillStyle = 'cyan';
+            ctx.fillText("[2] SEA BATTLE", canvas.width / 2, 550);
+
+            ctx.fillStyle = '#C2B280';
+            ctx.fillText("[3] DESERT BATTLE", canvas.width / 2, 650);
+        }
+
+        function drawShopOverlay() {
+            ctx.fillStyle = 'rgba(0,0,0,0.85)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'white';
+            ctx.font = '40px Arial';
+            ctx.fillText("SHOP", canvas.width / 2, 80);
+
+            ctx.font = '20px Arial';
+            ctx.fillText("Press Number Keys to Buy/Equip", canvas.width / 2, 120);
+
+            ctx.textAlign = 'left';
+            ctx.font = '24px Arial';
+            const startX = canvas.width / 2 - 200;
+            // Items...
+            // (Copying previous item drawing logic for brevity)
+            ctx.fillStyle = game.money >= 1 ? 'lime' : 'gray'; ctx.fillText(`[1] Full Heal - $1`, startX, 200);
+            ctx.fillStyle = game.money >= 3 ? 'lime' : 'gray'; ctx.fillText(`[2] Reinforcements - $3`, startX, 250);
+            const mgText = game.hasMachineGun ? "Owned" : "$5";
+            ctx.fillStyle = game.money >= 5 ? 'lime' : 'gray'; ctx.fillText(`[3] Machine Gun - ${mgText}`, startX, 300);
+            ctx.fillStyle = game.money >= 2 ? 'lime' : 'gray'; ctx.fillText(`[4] Refill Grenades - $2`, startX, 350);
+            ctx.fillStyle = game.money >= 4 ? 'lime' : 'gray'; ctx.fillText(`[5] Speed Boost - $4`, startX, 400);
+
+            const col2X = startX + 300;
+            ctx.fillStyle = game.money >= 6 ? 'lime' : 'gray'; ctx.fillText(`[6] Max HP +50 - $6`, col2X, 200);
+            ctx.fillStyle = game.money >= 10 ? 'red' : 'gray'; ctx.fillText(`[7] AIR STRIKE - $10`, col2X, 250);
+            ctx.fillStyle = game.money >= 2 ? 'lime' : 'gray'; ctx.fillText(`[8] Land Mine - $2`, col2X, 300);
+            ctx.fillStyle = game.money >= 6 ? 'lime' : 'gray'; ctx.fillText(`[9] Turret - $6`, col2X, 350);
+            ctx.fillStyle = game.money >= 8 ? 'cyan' : 'gray'; ctx.fillText(`[0] Invincibility (10s) - $8`, col2X, 400);
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Current Money: $${game.money}`, canvas.width / 2, 600);
+            ctx.font = '16px Arial';
+            ctx.fillText("Press Shift+S or ESC to Close", canvas.width / 2, 650);
+        }
+
+        function drawWeaponShopOverlay() {
+            ctx.fillStyle = 'rgba(0,0,0,0.9)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'white';
+            ctx.font = '40px Arial';
+            ctx.fillText("WEAPON SHOP", canvas.width / 2, 80);
+            ctx.font = '20px Arial';
+            ctx.fillText("Press Number Keys to Buy/Equip", canvas.width / 2, 120);
+
+            ctx.textAlign = 'left';
+            ctx.font = '24px Arial';
+            const x = canvas.width / 2 - 250;
+            const y = 200;
+            const step = 40;
+
+            const list = ['machinegun', 'shotgun', 'sniper', 'rpg', 'minigun', 'laser', 'plasma', 'flamethrower', 'autocannon', 'homing', 'railgun'];
+
+            // Draw in two columns
+            list.forEach((key, i) => {
+                const w = WEAPONS[key];
+                const owned = game.ownedWeapons.includes(key);
+                const equipped = game.currentWeapon === key;
+
+                let color = 'gray';
+                // Hotkey mapping display
+                let hotkey = i + 1;
+                if (i === 9) hotkey = '0';
+                if (i === 10) hotkey = '-';
+
+                let text = `[${hotkey}] ${w.name} - $${w.price}`;
+
+                if (owned) {
+                    color = 'lime';
+                    text = `[${hotkey}] ${w.name} - OWNED`;
+                }
+                if (equipped) {
+                    color = 'cyan';
+                    text = `[${hotkey}] ${w.name} - EQUIPPED`;
+                }
+                if (!owned && game.money >= w.price) color = 'white'; // Affordable
+
+                ctx.fillStyle = color;
+
+                // Column logic
+                let dx = 0;
+                let dy = i * step;
+                if (i > 6) {
+                    dx = 300;
+                    dy = (i - 7) * step;
+                }
+
+                ctx.fillText(text, x + dx, y + dy);
+            });
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Current Money: $${game.money}`, canvas.width / 2, 600);
+            ctx.font = '16px Arial';
+            ctx.fillText("Press Shift+G or ESC to Close", canvas.width / 2, 650);
+        }
+
+        requestAnimationFrame(loop);
+    </script>
+</body>
+
+</html>

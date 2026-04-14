@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Power: Boss Battle</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <div id="ui-layer">
+            <header>
+                <div class="stat-box">
+                    <span class="label">Money</span>
+                    <span id="money-display">$0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Fruit</span>
+                    <span id="fruit-display">Rocket</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Player HP</span>
+                    <div class="hp-bar-outer">
+                        <div id="player-hp-bar" class="hp-bar-inner player-hp"></div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Level</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="level-display">1</span>
+                        <button id="level-up-btn" class="level-up-btn disabled">UPGRADE</button>
+                    </div>
+                    <div class="hp-bar-outer" style="height: 4px; margin-top: 8px;">
+                        <div id="xp-bar" class="hp-bar-inner xp-bar"></div>
+                    </div>
+                </div>
+                <div class="stat-box" id="boss-health-container">
+                    <span class="label">Boss HP</span>
+                    <div class="hp-bar-outer">
+                        <div id="boss-hp-bar" class="hp-bar-inner"></div>
+                    </div>
+                </div>
+            </header>
+
+            <div id="quest-log" class="quest-log">
+                <div class="quest-header">Active Quests</div>
+                <div id="quest-list">
+                    <!-- Quests injected here -->
+                </div>
+            </div>
+
+            <main id="game-container">
+                <canvas id="game-canvas"></canvas>
+
+                <div id="overlay" class="hidden">
+                    <div class="modal">
+                        <h2 id="modal-title">Victory!</h2>
+                        <p id="modal-text">You defeated the boss and earned $100.</p>
+                        <div class="shop-items" id="shop-items">
+                            <!-- Shop items injected here -->
+                        </div>
+                        <button id="next-boss-btn">Next Boss</button>
+                    </div>
+                </div>
+            </main>
+
+            <footer>
+                <div class="controls-hint">
+                    WASD/Arrows to Move | Space/Click to Attack
+                </div>
+            </footer>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+
+</html>

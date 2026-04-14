@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recycler - Fast Sorting Game</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <div class="stat-box">
+                <span class="label">SCORE</span>
+                <span id="score">0</span>
+            </div>
+            <h1>RECYCLER</h1>
+            <div class="stat-box">
+                <span class="label">HIGH SCORE</span>
+                <span id="high-score">0</span>
+            </div>
+        </header>
+
+        <main id="game-board">
+            <div class="belt-lane" data-lane="0" id="lane-0">
+                <div class="belt-texture"></div>
+                <div class="bin black" id="bin-black">
+                    <div class="bin-label">TRASH</div>
+                </div>
+            </div>
+            <div class="belt-lane" data-lane="1" id="lane-1">
+                <div class="belt-texture"></div>
+                <div class="bin blue" id="bin-blue">
+                    <div class="bin-label">RECYCLING</div>
+                </div>
+            </div>
+            <div class="belt-lane" data-lane="2" id="lane-2">
+                <div class="belt-texture"></div>
+                <div class="bin green" id="bin-green">
+                    <div class="bin-label">ORGANICS</div>
+                </div>
+            </div>
+            <div id="items-container"></div>
+        </main>
+
+        <div id="overlay" class="visible">
+            <div class="overlay-content">
+                <h2 id="overlay-title">RECYCLER</h2>
+                <p id="overlay-message">Drag items to the correct belt before they hit the bins!</p>
+                <div class="legend">
+                    <div class="legend-item"><span class="swatch black"></span> Trash</div>
+                    <div class="legend-item"><span class="swatch blue"></span> Recyclables</div>
+                    <div class="legend-item"><span class="swatch green"></span> Organics</div>
+                </div>
+                <button id="start-btn">START GAME</button>
+            </div>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>

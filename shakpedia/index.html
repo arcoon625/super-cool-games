@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sharkpedia - Your AI Shark Expert</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+        <div class="bubble bubble-3"></div>
+        <div class="bubble bubble-4"></div>
+        <div class="bubble bubble-5"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.5 7 6 12 4 15C3 16.5 4 18 6 18C7 18 8 17 9 16C10 17.5 11.5 19 13.5 19C15.5 19 17 17.5 18 16C19 17 20 18 21 18C23 18 24 16.5 23 15C21 12 18.5 7 15 2L12 2Z" fill="#00D2FF"/>
+                    <path d="M9 13C9.55228 13 10 12.5522 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5522 8.44772 13 9 13Z" fill="#0A192F"/>
+                </svg>
+                <h1>Sharkpedia AI</h1>
+            </div>
+            <p class="subtitle">Ask me anything about the ocean's greatest predators</p>
+        </header>
+
+        <main class="chat-container">
+            <div class="chat-box" id="chatBox">
+                <div class="message ai-message">
+                    <div class="avatar">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#00D2FF"><path d="M12 2C8.5 7 6 12 4 15C3 16.5 4 18 6 18C7 18 8 17 9 16C10 17.5 11.5 19 13.5 19C15.5 19 17 17.5 18 16C19 17 20 18 21 18C23 18 24 16.5 23 15C21 12 18.5 7 15 2L12 2Z"/></svg>
+                    </div>
+                    <div class="message-content">
+                        Hello! I am Sharkpedia AI. What would you like to know about sharks today? You can ask me about their speed, diet, specific species like Great Whites, or even myths about them!
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="input-area">
+            <form id="chatForm">
+                <input type="text" id="userInput" placeholder="E.g., How long do Great White sharks live?" autocomplete="off" required>
+                <button type="submit" id="sendBtn" title="Send message">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

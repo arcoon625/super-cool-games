@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball Dream 2026</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Canvas for the Pitcher's View -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Overlay for UI -->
+        <div id="ui-overlay">
+            <!-- HUD -->
+            <div id="hud" class="hidden">
+                <div class="score-board glass">
+                    <div class="team-score">
+                        <span id="away-name">AWAY</span>
+                        <span id="away-score">0</span>
+                    </div>
+                    <div class="team-score">
+                        <span id="home-name">HOME</span>
+                        <span id="home-score">0</span>
+                    </div>
+                    <div class="inning-info">
+                        <span id="inning">1ST ⚾</span>
+                        <div class="outs-indicators">
+                            <div class="dot" id="out-1"></div>
+                            <div class="dot" id="out-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="controls-hint glass">
+                    <p id="pitch-hint">F: Fastball | S: Slider | C: Curve | Shift+C: Changeup</p>
+                    <p id="bat-hint" class="hidden">S: Swing | Shift+S: Steal</p>
+                </div>
+                <button id="settings-btn" class="glass">SETTINGS</button>
+            </div>
+
+            <!-- Team Selection Screen -->
+            <div id="team-selection" class="screen">
+                <h1 class="logo">BASEBALL DREAM 2026</h1>
+                <p>CHOOSE YOUR TEAM</p>
+                <div id="team-carousel" class="carousel">
+                    <!-- Teams will be injected here -->
+                </div>
+                <button id="start-game" class="btn-primary">PLAY BALL</button>
+            </div>
+
+            <!-- Settings Modal -->
+            <div id="settings-modal" class="modal hidden">
+                <div class="modal-content glass">
+                    <h2>SETTINGS</h2>
+                    <div class="setting-item">
+                        <button id="pitching-change">PITCHING CHANGE</button>
+                    </div>
+                    <div class="setting-item">
+                        <button id="batting-practice">BATTING PRACTICE</button>
+                    </div>
+                    <div class="setting-item">
+                        <button id="resume-game">RESUME</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Notifications (Out, Safe, Home Run!) -->
+            <div id="announcement" class="hidden">
+                <h1 id="announcement-text">HOME RUN!</h1>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

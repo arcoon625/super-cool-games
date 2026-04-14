@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clash Raccoon</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen active">
+            <header class="top-bar">
+                <div class="stat-box xp-box">
+                    <span class="icon">⭐</span>
+                    <span id="player-level">1</span>
+                    <div class="xp-bar-container">
+                        <div id="xp-bar-fill" class="xp-bar-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-box coin-box">
+                    <span class="icon">🪙</span>
+                    <span id="player-coins">0</span>
+                </div>
+                <div class="stat-box trophy-box">
+                    <span class="icon">🏆</span>
+                    <span id="player-trophies">0</span>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <div class="arena-display">
+                    <div id="arena-image" class="arena-image"></div>
+                    <h1 id="arena-num">ARENA 1</h1>
+                    <h2 id="arena-name">Raccoon Forest</h2>
+                </div>
+
+                <div class="chests-container">
+                    <h3>Chest Slots</h3>
+                    <div class="chest-slots" id="chest-slots">
+                        <!-- Chests will be rendered here -->
+                        <div class="chest-slot empty">Empty</div>
+                        <div class="chest-slot empty">Empty</div>
+                        <div class="chest-slot empty">Empty</div>
+                        <div class="chest-slot empty">Empty</div>
+                    </div>
+                </div>
+
+                <div class="battle-button-container">
+                    <button id="battle-btn" class="battle-btn">BATTLE</button>
+                    <button id="reset-btn" class="reset-btn">Reset Progress</button>
+                </div>
+            </main>
+
+            <footer class="bottom-nav">
+                <button class="nav-btn active" data-tab="home">Battle</button>
+                <button class="nav-btn" data-tab="deck">Deck</button>
+                <button class="nav-btn" data-tab="shop">Shop</button>
+            </footer>
+        </div>
+
+        <div id="deck-screen" class="screen">
+            <div class="deck-header">
+                <h2>Battle Deck</h2>
+                <div id="avg-elixir-container" class="avg-elixir-display">Avg Elixir: <span
+                        id="avg-elixir-value">0.0</span> 💧</div>
+            </div>
+            <div id="battle-deck" class="card-grid"></div>
+            <h2>Collection</h2>
+            <div id="card-collection" class="card-grid"></div>
+            <button class="nav-return-btn">Back</button>
+        </div>
+
+        <!-- Battle Screen -->
+        <div id="battle-screen" class="screen">
+            <div class="battle-ui top">
+                <div class="health-bar opponent-king">
+                    <div class="hp-fill" style="width: 100%"></div>
+                    <span>Enemy King</span>
+                </div>
+            </div>
+
+            <div id="battlefield" class="battlefield">
+                <!-- Game elements will be here -->
+                <div class="river"></div>
+                <div class="bridge left"></div>
+                <div class="bridge right"></div>
+            </div>
+
+            <div class="battle-ui bottom">
+                <div id="next-card-container">
+                    <span class="label">Next:</span>
+                    <div id="next-card-slot"></div>
+                </div>
+                <div class="elixir-bar">
+                    <div class="elixir-fill" id="elixir-fill" style="width: 50%"></div>
+                    <span id="elixir-count">5</span>
+                </div>
+                <div id="hand-cards" class="hand-cards">
+                    <!-- Cards in hand -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Screen -->
+        <div id="shop-screen" class="screen">
+            <header class="top-bar">
+                <div class="stat-box">🪙 <span id="coin-display-shop">0</span></div>
+                <div class="stat-box">💎 <span>0</span></div>
+            </header>
+            <div class="main-content" style="overflow-y: auto; padding-bottom: 80px;">
+                <div class="arena-display">
+                    <h1>Daily Deals</h1>
+                </div>
+                <div class="shop-content">
+                    <section class="shop-section">
+                        <h3>DAILY DEALS</h3>
+                        <div id="shop-container" class="shop-grid"></div>
+                    </section>
+
+                    <section class="shop-section">
+                        <h3>CHESTS</h3>
+                        <div id="shop-chests-container" class="shop-grid"></div>
+                    </section>
+
+                    <section class="shop-section">
+                        <h3>TREASURY</h3>
+                        <div id="shop-gold-container" class="shop-grid"></div>
+                    </section>
+                </div>
+            </div>
+            <footer class="bottom-nav">
+                <button class="nav-btn" data-tab="home">Battle</button>
+                <button class="nav-btn" data-tab="deck">Deck</button>
+                <button class="nav-btn active" data-tab="shop">Shop</button>
+            </footer>
+        </div>
+
+        <!-- Chest Opening Modal -->
+        <div id="chest-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Chest Opened!</h2>
+                <div id="chest-rewards" class="chest-rewards"></div>
+                <button id="close-chest-btn">Collect</button>
+            </div>
+        </div>
+
+        <!-- Card Details & Upgrade Modal -->
+        <div id="card-details-modal" class="modal hidden">
+            <div class="modal-content card-details-content">
+                <div id="details-rarity" class="rarity-tag">EPIC</div>
+                <h2 id="details-name">Card Name</h2>
+                <div id="details-image" class="card-image-large"></div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">❤️ HP: <span id="details-hp">0</span></div>
+                    <div class="stat-item">⚔️ DMG: <span id="details-dmg">0</span></div>
+                    <div class="stat-item">💧 Elixir: <span id="details-elixir">0</span></div>
+                </div>
+
+                <div class="upgrade-section">
+                    <div class="progress-container">
+                        <div id="upgrade-progress-fill" class="progress-fill"></div>
+                        <span id="upgrade-progress-text">0/5</span>
+                    </div>
+                    <button id="upgrade-btn" class="upgrade-btn">UPGRADE <span id="upgrade-cost">🪙 100</span></button>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="toggle-deck-btn" class="action-btn">ADD TO DECK</button>
+                    <button id="close-details-btn" class="close-btn secondary">CLOSE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arena Info Modal -->
+        <div id="arena-modal" class="modal hidden">
+            <div class="modal-content arena-info-content">
+                <h2 id="modal-arena-name">Arena Info</h2>
+                <p>Cards unlocking in this arena:</p>
+                <div id="arena-unlocks-grid" class="card-grid mini"></div>
+                <button id="close-arena-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="cards.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>

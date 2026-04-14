@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishing Frenzy</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>Fishing Frenzy</h1>
+            <div class="stats">
+                <div class="stat-item">Money: <span id="money-display">$0</span></div>
+                <div class="stat-item">Hook: <span id="hook-display">Basic Hook</span></div>
+                <div class="stat-item">Bait: <span id="bait-display">Worms (x5)</span></div>
+            </div>
+        </header>
+
+        <main>
+            <div class="game-area">
+                <div class="water-visual">
+                    <div id="float-indicator" class="float hidden">🎣</div>
+                </div>
+                <button id="cast-btn" class="action-btn">Cast Line</button>
+                <div id="message-log" class="message-log">Welcome to Fishing Frenzy! Start fishing to earn money.</div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="panel inventory-panel">
+                    <h2>Inventory</h2>
+                    <ul id="inventory-list">
+                        <!-- Items go here -->
+                        <li class="empty-msg">No fish caught yet.</li>
+                    </ul>
+                    <button id="sell-all-btn" class="secondary-btn">Sell All Fish</button>
+                </div>
+
+                <div class="panel shop-panel">
+                    <h2>Shop</h2>
+                    <div id="shop-items">
+                        <!-- Shop items injected here -->
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

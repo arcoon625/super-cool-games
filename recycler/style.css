@@ -1,0 +1,308 @@
+:root {
+    --bg-dark: #0f1115;
+    --panel-bg: #1a1d23;
+    --accent-color: #f39c12;
+    --trash-black: #333333;
+    --recycle-blue: #3498db;
+    --organic-green: #2ecc71;
+    --text-main: #e0e0e0;
+    --text-dim: #a0a0a0;
+    --font-family: 'Outfit', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-family);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-container {
+    width: 100%;
+    max-width: 600px;
+    height: 100vh;
+    background-color: var(--panel-bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    border-left: 1px solid #333;
+    border-right: 1px solid #333;
+}
+
+header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(180deg, #222 0%, #1a1d23 100%);
+    border-bottom: 2px solid #333;
+    z-index: 10;
+}
+
+h1 {
+    font-size: 1.5rem;
+    letter-spacing: 4px;
+    color: var(--accent-color);
+    text-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+}
+
+#score, #high-score {
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+#game-board {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    background: #111;
+}
+
+.belt-lane {
+    flex: 1;
+    position: relative;
+    border-right: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.belt-lane:last-child {
+    border-right: none;
+}
+
+.belt-texture {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 1;
+}
+
+/* Belt sides/guides */
+.belt-lane::before, .belt-lane::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #333;
+    box-shadow: inset 1px 0 2px rgba(0,0,0,0.5);
+    z-index: 2;
+}
+
+.belt-lane::before { left: 0; }
+.belt-lane::after { right: 0; }
+
+.bin {
+    height: 120px;
+    width: 100%;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.1s;
+}
+
+.bin::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    right: 10%;
+    height: 100px;
+    border-radius: 5px 5px 0 0;
+    box-shadow: inset 0 20px 30px rgba(0,0,0,0.5);
+}
+
+.bin.black::before { background-color: var(--trash-black); }
+.bin.blue::before { background-color: var(--recycle-blue); }
+.bin.green::before { background-color: var(--organic-green); }
+
+.bin-label {
+    z-index: 4;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.5);
+    transform: translateY(20px);
+}
+
+#items-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.trash-item {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    cursor: grab;
+    pointer-events: auto;
+    transition: transform 0.1s ease-out;
+    z-index: 6;
+}
+
+.trash-item:active {
+    cursor: grabbing;
+    transform: scale(1.1);
+    z-index: 100;
+}
+
+/* Overlays */
+#overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+#overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.overlay-content {
+    text-align: center;
+    padding: 40px;
+    max-width: 80%;
+}
+
+h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: var(--accent-color);
+}
+
+#overlay-message {
+    margin-bottom: 30px;
+    color: var(--text-dim);
+    line-height: 1.6;
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+.swatch.black { background: var(--trash-black); }
+.swatch.blue { background: var(--recycle-blue); }
+.swatch.green { background: var(--organic-green); }
+
+#start-btn {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
+}
+
+#start-btn:hover {
+    background: #e67e22;
+    transform: translateY(-2px);
+}
+
+#start-btn:active {
+    transform: translateY(0);
+}
+
+/* Animations */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.wrong-bin {
+    animation: shake 0.2s ease-in-out 0s 2;
+    background-color: rgba(231, 76, 60, 0.3) !important;
+}
+
+.plus-five {
+    position: absolute;
+    color: var(--organic-green);
+    font-weight: 700;
+    font-size: 1.5rem;
+    pointer-events: none;
+    z-index: 50;
+    animation: float-up 0.8s ease-out forwards;
+}
+
+@keyframes float-up {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-50px); opacity: 0; }
+}

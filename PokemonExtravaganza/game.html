@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon World</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            user-select: none;
+            z-index: 10;
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-sizing: border-box;
+            z-index: 5;
+        }
+
+        /* Battle UI */
+        #battleUI {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: #222;
+            color: white;
+            border-top: 4px solid #fff;
+            box-sizing: border-box;
+            padding: 20px;
+            z-index: 20;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #battleText {
+            font-size: 20px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #moveInput {
+            width: 60%;
+            padding: 10px;
+            font-size: 20px;
+            font-family: inherit;
+            border: 2px solid white;
+            background: #444;
+            color: white;
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="instructions">
+        <h1>Pokemon World</h1>
+        <p>Click to Start</p>
+        <p>WASD to Move | Mouse to Look</p>
+        <p>SPACE to Throw Ball | B to Battle</p>
+        <p><br>West: Mountains | East: Ocean</p>
+    </div>
+
+    <div id="crosshair"></div>
+
+    <div id="battleUI">
+        <div id="battleText">Wild Pokemon appeared! Type your move!</div>
+        <input type="text" id="moveInput" placeholder="Type move (e.g., tackle, ember, run)..." autocomplete="off">
+    </div>
+
+    <!-- Import Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+        let camera, scene, renderer, controls;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false;
+        let prevTime = performance.now();
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+
+        // Game State
+        const wildPokemon = [];
+        const balls = [];
+        let isBattling = false;
+        let currentEnemy = null;
+        let battleCameraPos = new THREE.Vector3(0, 1005, 10);
+        let lastPlayerPos = new THREE.Vector3();
+
+        // Pokemon Data
+        const BIOMES = {
+            FOREST: ['Bulbasaur', 'Skwovet', 'Caterpie', 'Weedle', 'Pidgey', 'Pikachu', 'Oddish', 'Paras', 'Mankey'],
+            OCEAN: ['Squirtle', 'Magikarp', 'Psyduck', 'Poliwag', 'Tentacool', 'Slowpoke', 'Seel', 'Shellder', 'Krabby', 'Horsea', 'Goldeen', 'Staryu'],
+            MOUNTAIN: ['Charmander', 'Geodude', 'Onix', 'Sandshrew', 'Clefairy', 'Vulpix', 'Diglett', 'Machop', 'Cubone', 'Rhyhorn']
+        };
+
+        const POKEDEX = {
+            'Bulbasaur': 1, 'Skwovet': 819, 'Caterpie': 10, 'Weedle': 13, 'Pidgey': 16, 'Pikachu': 25, 'Oddish': 43, 'Paras': 46, 'Mankey': 56,
+            'Squirtle': 7, 'Magikarp': 129, 'Psyduck': 54, 'Poliwag': 60, 'Tentacool': 72, 'Slowpoke': 79, 'Seel': 86, 'Shellder': 90, 'Krabby': 98, 'Horsea': 116, 'Goldeen': 118, 'Staryu': 120,
+            'Charmander': 4, 'Geodude': 74, 'Onix': 95, 'Sandshrew': 27, 'Clefairy': 35, 'Vulpix': 37, 'Diglett': 50, 'Machop': 66, 'Cubone': 104, 'Rhyhorn': 111
+        };
+
+        // Battle Assets
+        let battleArena, battleOpponentSprite;
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 10, 80);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.y = 1.6;
+
+            // Lights
+            const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
+            scene.add(ambient);
+            const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+            sun.position.set(10, 20, 10);
+            scene.add(sun);
+
+            createWorld();
+
+            // Controls
+            controls = new PointerLockControls(camera, document.body);
+            const instructions = document.getElementById('instructions');
+
+            instructions.addEventListener('click', () => {
+                if (!isBattling) controls.lock();
+            });
+
+            controls.addEventListener('lock', () => {
+                instructions.style.display = 'none';
+                document.getElementById('moveInput').blur(); // Ensure input is blurred
+            });
+
+            controls.addEventListener('unlock', () => {
+                if (!isBattling) instructions.style.display = 'block';
+            });
+
+            scene.add(controls.getObject());
+
+            // Inputs
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            window.addEventListener('resize', onWindowResize);
+
+            // Battle Input
+            const input = document.getElementById('moveInput');
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    handleBattleInput(input.value);
+                    input.value = '';
+                }
+            });
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+        }
+
+        function createWorld() {
+            // --- FOREST (Center) ---
+            const floorGeo = new THREE.PlaneGeometry(100, 200, 10, 10);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            // Trees
+            for (let i = 0; i < 100; i++) {
+                const height = 3 + Math.random() * 3;
+                const tree = createTree(height);
+                const x = Math.random() * 90 - 45;
+                const z = Math.random() * 190 - 95;
+                if (Math.abs(x) < 5 && Math.abs(z) < 5) continue;
+                tree.position.set(x, 0, z);
+                scene.add(tree);
+            }
+
+            // --- OCEAN (East, x > 50) ---
+            const oceanGeo = new THREE.PlaneGeometry(100, 200, 10, 10);
+            const oceanMat = new THREE.MeshStandardMaterial({ color: 0x006994, roughness: 0.1 });
+            const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+            ocean.rotation.x = -Math.PI / 2;
+            ocean.position.set(100, 0.1, 0); // Offset East
+            scene.add(ocean);
+
+            // --- MOUNTAINS (West, x < -50) ---
+            const mtnFloorGeo = new THREE.PlaneGeometry(100, 200, 10, 10);
+            const mtnFloorMat = new THREE.MeshStandardMaterial({ color: 0x696969 }); // Dim Gray
+            const mtnFloor = new THREE.Mesh(mtnFloorGeo, mtnFloorMat);
+            mtnFloor.rotation.x = -Math.PI / 2;
+            mtnFloor.position.set(-100, 0, 0); // Offset West
+            scene.add(mtnFloor);
+
+            // Rocks/Mountains
+            for (let i = 0; i < 40; i++) {
+                const width = 5 + Math.random() * 10;
+                const height = 10 + Math.random() * 20;
+                const mtn = new THREE.Mesh(
+                    new THREE.ConeGeometry(width, height, 4),
+                    new THREE.MeshStandardMaterial({ color: 0x555555, flatShading: true })
+                );
+                const x = -55 - Math.random() * 90; // Ensure in West zone
+                const z = Math.random() * 190 - 95;
+                mtn.position.set(x, height / 2, z);
+                scene.add(mtn);
+            }
+
+            // --- BATTLE ARENA (Sky High) ---
+            const arenaGeo = new THREE.CylinderGeometry(20, 20, 1, 32);
+            const arenaMat = new THREE.MeshStandardMaterial({ color: 0xCCCCCC });
+            battleArena = new THREE.Mesh(arenaGeo, arenaMat);
+            battleArena.position.set(0, 1000, 0);
+            scene.add(battleArena);
+
+            // Spawning
+            spawnPokemonInBiome(BIOMES.FOREST, -45, 45, 20); // Center Forest
+            spawnPokemonInBiome(BIOMES.OCEAN, 55, 145, 15);  // East Ocean
+            spawnPokemonInBiome(BIOMES.MOUNTAIN, -145, -55, 15); // West Mountain
+        }
+
+        function createTree(height) {
+            const group = new THREE.Group();
+            const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.3, 0.4, height / 2, 8),
+                new THREE.MeshStandardMaterial({ color: 0x5C4033 })
+            );
+            trunk.position.y = height / 4;
+            const leaves = new THREE.Mesh(
+                new THREE.ConeGeometry(2, height / 1.5, 8),
+                new THREE.MeshStandardMaterial({ color: 0x005500 })
+            );
+            leaves.position.y = height * 0.75;
+            group.add(trunk);
+            group.add(leaves);
+            return group;
+        }
+
+        function loadPokemonSprite(name, id) {
+            const textureLoader = new THREE.TextureLoader();
+            const url = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+            const map = textureLoader.load(url);
+            map.minFilter = THREE.NearestFilter;
+            map.magFilter = THREE.NearestFilter;
+            const material = new THREE.SpriteMaterial({ map: map });
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(2, 2, 1);
+            return sprite;
+        }
+
+        function spawnPokemonInBiome(list, minX, maxX, count) {
+            for (let i = 0; i < count; i++) {
+                const name = list[Math.floor(Math.random() * list.length)];
+                const id = POKEDEX[name];
+                const sprite = loadPokemonSprite(name, id);
+
+                const x = minX + Math.random() * (maxX - minX);
+                const z = Math.random() * 180 - 90;
+
+                sprite.position.set(x, 1, z);
+                sprite.userData = {
+                    name: name,
+                    id: id,
+                    caught: false,
+                    velocity: new THREE.Vector3(),
+                    state: 'IDLE',
+                    timer: 0
+                };
+                scene.add(sprite);
+                wildPokemon.push(sprite);
+            }
+        }
+
+        function onKeyDown(event) {
+            if (isBattling) return; // Ignore movement keys during battle
+            switch (event.code) {
+                case 'ArrowUp': case 'KeyW': moveForward = true; break;
+                case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+                case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+                case 'ArrowRight': case 'KeyD': moveRight = true; break;
+                case 'Space':
+                    if (controls.isLocked) {
+                        if (canJump) velocity.y += 15;
+                        throwBall();
+                    }
+                    break;
+                case 'KeyB':
+                    if (controls.isLocked) checkBattle();
+                    break;
+            }
+        }
+
+        function onKeyUp(event) {
+            switch (event.code) {
+                case 'ArrowUp': case 'KeyW': moveForward = false; break;
+                case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+                case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+                case 'ArrowRight': case 'KeyD': moveRight = false; break;
+            }
+        }
+
+        function throwBall() {
+            const ball = new THREE.Mesh(
+                new THREE.SphereGeometry(0.15, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0xFF0000 })
+            );
+            const startPos = new THREE.Vector3();
+            const dir = new THREE.Vector3();
+            camera.getWorldPosition(startPos);
+            camera.getWorldDirection(dir);
+
+            ball.position.copy(startPos).add(dir.clone().multiplyScalar(0.8));
+            ball.userData = { velocity: dir.multiplyScalar(25), active: true };
+            scene.add(ball);
+            balls.push(ball);
+        }
+
+        function checkBattle() {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects(wildPokemon);
+            if (intersects.length > 0) startBattle(intersects[0].object);
+        }
+
+        // --- BATTLE SYSTEM ---
+        function startBattle(pokemon) {
+            isBattling = true;
+            currentEnemy = pokemon;
+
+            // Save pos
+            lastPlayerPos.copy(controls.getObject().position);
+
+            // Setup Arena Opponent
+            if (battleOpponentSprite) scene.remove(battleOpponentSprite);
+            battleOpponentSprite = loadPokemonSprite(pokemon.userData.name, pokemon.userData.id);
+            battleOpponentSprite.scale.set(5, 5, 1);
+            battleOpponentSprite.position.set(0, 1003, -5); // On arena
+            scene.add(battleOpponentSprite);
+
+            // Teleport Player
+            controls.unlock();
+            controls.getObject().position.set(0, 1004, 10);
+            camera.lookAt(0, 1003, -5);
+
+            // UI
+            document.getElementById('instructions').style.display = 'none';
+            const ui = document.getElementById('battleUI');
+            ui.style.display = 'flex';
+            document.getElementById('battleText').textContent = `Wild ${pokemon.userData.name} appeared!`;
+
+            // Focus Input
+            setTimeout(() => document.getElementById('moveInput').focus(), 100);
+        }
+
+        function handleBattleInput(move) {
+            move = move.toLowerCase().trim();
+            const log = document.getElementById('battleText');
+
+            if (move === 'run') {
+                log.textContent = "Got away safely!";
+                setTimeout(endBattle, 1000);
+                return;
+            }
+
+            // Simple move logic
+            const moves = ['tackle', 'scratch', 'ember', 'water gun', 'vine whip', 'thundershock', 'rock throw', 'bubble', 'peck', 'punch'];
+
+            if (moves.includes(move) || move.length > 0) { // Accept any non-empty input as a 'move' for fun
+                log.textContent = `You used ${move.toUpperCase()}! It's super effective!`;
+
+                // Shake effect
+                battleOpponentSprite.position.x += 0.5;
+                setTimeout(() => battleOpponentSprite.position.x -= 0.5, 100);
+
+                setTimeout(() => {
+                    log.textContent = `${currentEnemy.userData.name} fainted!`;
+                    // Remove from wild
+                    scene.remove(currentEnemy);
+                    wildPokemon.splice(wildPokemon.indexOf(currentEnemy), 1);
+                    setTimeout(endBattle, 1500);
+                }, 1000);
+            } else {
+                log.textContent = "What? That's not a move!";
+            }
+        }
+
+        function endBattle() {
+            isBattling = false;
+            currentEnemy = null;
+
+            // Teleport back
+            controls.getObject().position.copy(lastPlayerPos);
+
+            // Hide UI
+            document.getElementById('battleUI').style.display = 'none';
+            if (battleOpponentSprite) scene.remove(battleOpponentSprite);
+
+            controls.lock();
+        }
+
+        function updatePokemonAI(delta) {
+            wildPokemon.forEach(poke => {
+                poke.userData.timer -= delta;
+                if (poke.userData.timer <= 0) {
+                    if (poke.userData.state === 'IDLE') {
+                        poke.userData.state = 'MOVE';
+                        poke.userData.timer = 1 + Math.random() * 3;
+                        const angle = Math.random() * Math.PI * 2;
+                        poke.userData.velocity.set(Math.cos(angle), 0, Math.sin(angle)).multiplyScalar(2);
+                    } else {
+                        poke.userData.state = 'IDLE';
+                        poke.userData.timer = 2 + Math.random() * 4;
+                        poke.userData.velocity.set(0, 0, 0);
+                    }
+                }
+                if (poke.userData.state === 'MOVE') {
+                    poke.position.add(poke.userData.velocity.clone().multiplyScalar(delta));
+                }
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = performance.now();
+            const delta = (time - prevTime) / 1000;
+            prevTime = time;
+
+            if (controls.isLocked && !isBattling) {
+                // Physics
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+                velocity.y -= 9.8 * 100.0 * delta;
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.normalize();
+                if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+                if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+                controls.moveRight(-velocity.x * delta);
+                controls.moveForward(-velocity.z * delta);
+                controls.getObject().position.y += (velocity.y * delta);
+                if (controls.getObject().position.y < 1.6) {
+                    velocity.y = 0;
+                    controls.getObject().position.y = 1.6;
+                    canJump = true;
+                }
+            }
+
+            if (!isBattling) {
+                updatePokemonAI(delta);
+
+                // Balls
+                for (let i = balls.length - 1; i >= 0; i--) {
+                    const ball = balls[i];
+                    if (!ball.userData.active) continue;
+                    ball.position.add(ball.userData.velocity.clone().multiplyScalar(delta));
+                    ball.userData.velocity.y -= 9.8 * delta;
+                    if (ball.position.y < 0) {
+                        ball.userData.active = false;
+                        scene.remove(ball);
+                        balls.splice(i, 1);
+                        continue;
+                    }
+                    // Catch
+                    for (let j = 0; j < wildPokemon.length; j++) {
+                        if (wildPokemon[j].position.distanceTo(ball.position) < 1.0) {
+                            scene.remove(wildPokemon[j]);
+                            wildPokemon.splice(j, 1);
+                            ball.userData.active = false;
+                            scene.remove(ball);
+                            balls.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Boss Sour: The Game</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui-layer">
+            <div id="start-screen" class="screen active">
+                <h1 class="title">FINAL BOSS SOUR</h1>
+                <p class="subtitle">CHOOSE YOUR FIGHTER</p>
+                <div class="character-select">
+                    <div class="char-option" data-char="hank">
+                        <div class="char-preview hank-preview"></div>
+                        <span>HANK</span>
+                    </div>
+                    <div class="char-option" data-char="quinny">
+                        <div class="char-preview quinny-preview"></div>
+                        <span>QUINNY</span>
+                    </div>
+                </div>
+                <p class="instructions">ARROWS to Move • J to Jump • A to Attack</p>
+            </div>
+            <div id="hud" class="screen hidden">
+                <div class="stat-box health">HP: <span id="hp-val">100</span></div>
+                <div class="stat-box stats">
+                    SPEED: <span id="speed-val">1</span> | 
+                    ATTACK: <span id="atk-val">1</span> | 
+                    DEFENSE: <span id="def-val">1</span>
+                </div>
+                <div class="stat-box inventory">Collect: <span id="fruit-val">None</span></div>
+                <div class="boss-bar hidden" id="boss-hud">
+                    <span id="boss-name">BOSS</span>
+                    <div class="boss-health-bar"><div class="boss-health-fill" id="boss-hp-fill"></div></div>
+                </div>
+            </div>
+            <div id="win-screen" class="screen hidden">
+                <h1>LEVEL COMPLETE!</h1>
+                <p>REWARD: <span id="reward-name">FRUIT</span></p>
+                <button id="next-level-btn">NEXT LEVEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="inputs.js"></script>
+    <script src="player.js"></script>
+    <script src="enemies.js"></script>
+    <script src="levels.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
