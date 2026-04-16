@@ -117,6 +117,66 @@
       text-wrap: balance;
     }
 
+    .hero-search {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      max-width: 720px;
+      margin-top: 22px;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 0;
+      padding: 15px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font: inherit;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .search-input::placeholder {
+      color: #91abc4;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: rgba(97, 231, 255, 0.8);
+      box-shadow: 0 0 0 4px rgba(97, 231, 255, 0.14);
+    }
+
+    .search-button {
+      flex: 0 0 auto;
+      padding: 15px 22px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #61e7ff, #1fa8ff);
+      color: #03111d;
+      font: inherit;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+      box-shadow: 0 14px 28px rgba(31, 168, 255, 0.22);
+    }
+
+    .search-button:hover,
+    .search-button:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 32px rgba(31, 168, 255, 0.28);
+      outline: none;
+    }
+
+    .search-meta {
+      margin: 12px 4px 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
     .section-head {
       display: flex;
       align-items: end;
@@ -284,6 +344,17 @@
       line-height: 1.6;
     }
 
+    .empty-state {
+      display: none;
+      padding: 32px 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      background: rgba(8, 20, 36, 0.7);
+      color: var(--muted);
+      text-align: center;
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.2);
+    }
+
     @keyframes drift {
       from {
         transform: translate3d(0, 0, 0) rotate(0deg);
@@ -330,6 +401,11 @@
         border-radius: 26px;
       }
 
+      .hero-search {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
       .section-head {
         flex-direction: column;
         align-items: start;
@@ -345,6 +421,18 @@
   <main>
     <header class="hero">
       <h1>Super Cool Games</h1>
+      <form class="hero-search" id="search-form" role="search">
+        <input
+          class="search-input"
+          id="search-input"
+          name="q"
+          type="search"
+          placeholder="Search games by name, genre, or vibe"
+          aria-label="Search games"
+        >
+        <button class="search-button" type="submit">Search</button>
+      </form>
+      <p class="search-meta" id="search-meta">Showing all games.</p>
     </header>
 
     <div class="section-head">
@@ -353,6 +441,7 @@
     </div>
 
     <section class="games-grid" id="games-grid" aria-label="Game catalog"></section>
+    <div class="empty-state" id="empty-state">No games matched that search.</div>
 
     <p class="footer-copy">
       Icons are rendered to a canvas and inserted as <code>image/png</code> data URLs, so the page stays self-contained while each game still gets a distinct visual identity.
@@ -482,14 +571,6 @@
         palette: ["#18dcff", "#ff9f1c", "#ff2d95"]
       },
       {
-        title: "Megalodon Survival",
-        href: "megalodonFeedoff/index.html",
-        tag: "Ocean Survival",
-        desc: "A giant shark survival game built around hunger and growth.",
-        motif: "shark",
-        palette: ["#00c2ff", "#0f3460", "#7fffd4"]
-      },
-      {
         title: "Pokemon Adventure",
         href: "pokemon%20adventure/index.html",
         tag: "Retro Adventure",
@@ -514,14 +595,6 @@
         palette: ["#7de76a", "#00b37e", "#c0fdfb"]
       },
       {
-        title: "Sharkpedia",
-        href: "shakpedia/index.html",
-        tag: "Info Experience",
-        desc: "An aquatic encyclopedia interface centered on shark knowledge.",
-        motif: "pedia",
-        palette: ["#64d2ff", "#0f4c81", "#d9f4ff"]
-      },
-      {
         title: "Castle Defense",
         href: "tower%20defense/index.html",
         tag: "Tower Defense",
@@ -540,6 +613,10 @@
     ];
 
     const grid = document.getElementById("games-grid");
+    const searchForm = document.getElementById("search-form");
+    const searchInput = document.getElementById("search-input");
+    const searchMeta = document.getElementById("search-meta");
+    const emptyState = document.getElementById("empty-state");
 
     function mulberry32(seed) {
       let t = seed >>> 0;
@@ -766,26 +843,55 @@
     }
 
     function drawMonster(ctx) {
-      fillCircle(ctx, 80, 84, 34, "#f8fafc");
+      ctx.fillStyle = alpha("#ffffff", 0.22);
       ctx.beginPath();
-      ctx.rect(46, 50, 68, 34);
-      ctx.fillStyle = "#ef4444";
+      ctx.moveTo(24, 116);
+      ctx.quadraticCurveTo(56, 96, 84, 112);
+      ctx.quadraticCurveTo(112, 96, 136, 110);
+      ctx.lineTo(136, 132);
+      ctx.lineTo(24, 132);
+      ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#0f172a";
-      ctx.lineWidth = 6;
+
+      ctx.fillStyle = "#ffcd38";
+      fillCircle(ctx, 80, 82, 30, "#ffcd38");
       ctx.beginPath();
-      ctx.moveTo(46, 84);
-      ctx.lineTo(114, 84);
+      ctx.moveTo(52, 54);
+      ctx.lineTo(40, 22);
+      ctx.lineTo(66, 42);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(108, 54);
+      ctx.lineTo(120, 22);
+      ctx.lineTo(94, 42);
+      ctx.closePath();
+      ctx.fill();
+      fillCircle(ctx, 68, 76, 4.5, "#111827");
+      fillCircle(ctx, 92, 76, 4.5, "#111827");
+      ctx.fillStyle = "#ef4444";
+      fillCircle(ctx, 58, 86, 5.5, "#ef4444");
+      fillCircle(ctx, 102, 86, 5.5, "#ef4444");
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(74, 92);
+      ctx.quadraticCurveTo(80, 97, 86, 92);
       ctx.stroke();
-      fillCircle(ctx, 80, 84, 13, "#f8fafc");
-      fillCircle(ctx, 80, 84, 6, "#0f172a");
-      ctx.strokeStyle = alpha("#ffffff", 0.45);
+      ctx.fillStyle = "#5eead4";
+      ctx.beginPath();
+      ctx.moveTo(106, 118);
+      ctx.quadraticCurveTo(126, 108, 132, 86);
+      ctx.quadraticCurveTo(118, 90, 106, 104);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = alpha("#ffffff", 0.72);
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(24, 44);
-      ctx.lineTo(38, 58);
-      ctx.moveTo(122, 44);
-      ctx.lineTo(108, 58);
+      ctx.lineTo(38, 56);
+      ctx.moveTo(136, 44);
+      ctx.lineTo(122, 56);
       ctx.stroke();
     }
 
@@ -1078,45 +1184,98 @@
     }
 
     function drawAdventure(ctx) {
-      roundRect(ctx, 42, 44, 76, 72, 12);
-      ctx.fillStyle = alpha("#f8fafc", 0.92);
-      ctx.fill();
-      ctx.strokeStyle = "#3b4cca";
-      ctx.lineWidth = 4;
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillRect(22, 110, 116, 26);
+      ctx.fillStyle = "#22c55e";
       ctx.beginPath();
-      ctx.moveTo(80, 44);
-      ctx.lineTo(80, 116);
-      ctx.stroke();
-      ctx.fillStyle = "#8fd14f";
-      ctx.beginPath();
-      ctx.moveTo(52, 98);
-      ctx.lineTo(64, 78);
-      ctx.lineTo(76, 98);
+      ctx.moveTo(20, 110);
+      ctx.lineTo(52, 80);
+      ctx.lineTo(82, 110);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#ffcb05";
-      fillCircle(ctx, 96, 70, 12, "#ffcb05");
-      ctx.strokeStyle = alpha("#ffffff", 0.7);
       ctx.beginPath();
-      ctx.moveTo(48, 58);
-      ctx.lineTo(112, 58);
+      ctx.moveTo(54, 110);
+      ctx.lineTo(84, 70);
+      ctx.lineTo(116, 110);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#ff7f11";
+      fillCircle(ctx, 92, 76, 24, "#ff7f11");
+      ctx.beginPath();
+      ctx.moveTo(74, 56);
+      ctx.lineTo(62, 30);
+      ctx.lineTo(82, 48);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(110, 56);
+      ctx.lineTo(122, 30);
+      ctx.lineTo(102, 48);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#fff7ed";
+      ctx.beginPath();
+      ctx.moveTo(72, 84);
+      ctx.quadraticCurveTo(92, 102, 112, 84);
+      ctx.quadraticCurveTo(104, 108, 92, 112);
+      ctx.quadraticCurveTo(80, 108, 72, 84);
+      ctx.fill();
+      fillCircle(ctx, 82, 74, 4, "#111827");
+      fillCircle(ctx, 102, 74, 4, "#111827");
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(88, 86);
+      ctx.quadraticCurveTo(92, 90, 96, 86);
       ctx.stroke();
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.moveTo(118, 70);
+      ctx.lineTo(138, 60);
+      ctx.lineTo(130, 78);
+      ctx.lineTo(142, 84);
+      ctx.lineTo(122, 92);
+      ctx.lineTo(130, 74);
+      ctx.closePath();
+      ctx.fill();
     }
 
     function drawEye(ctx) {
-      ctx.fillStyle = alpha("#f8fafc", 0.96);
+      ctx.fillStyle = "#8b5cf6";
+      fillCircle(ctx, 82, 82, 28, "#8b5cf6");
+      ctx.fillStyle = "#e9d5ff";
       ctx.beginPath();
-      ctx.moveTo(30, 80);
-      ctx.quadraticCurveTo(80, 40, 130, 80);
-      ctx.quadraticCurveTo(80, 120, 30, 80);
+      ctx.moveTo(62, 66);
+      ctx.lineTo(52, 44);
+      ctx.lineTo(72, 58);
+      ctx.closePath();
       ctx.fill();
-      fillCircle(ctx, 80, 80, 18, "#0ea5e9");
-      fillCircle(ctx, 80, 80, 8, "#0f172a");
-      fillCircle(ctx, 87, 73, 3, "#ffffff");
-      ctx.strokeStyle = "#f44336";
+      ctx.beginPath();
+      ctx.moveTo(102, 66);
+      ctx.lineTo(112, 44);
+      ctx.lineTo(92, 58);
+      ctx.closePath();
+      ctx.fill();
+      fillCircle(ctx, 72, 80, 4, "#111827");
+      fillCircle(ctx, 92, 80, 4, "#111827");
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(74, 92);
+      ctx.quadraticCurveTo(82, 98, 90, 92);
+      ctx.stroke();
+      ctx.fillStyle = alpha("#ffffff", 0.18);
+      fillCircle(ctx, 82, 82, 18, alpha("#ffffff", 0.18));
+      ctx.strokeStyle = "#f472b6";
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(80, 80, 34, -0.6, 0.6);
+      ctx.moveTo(116, 60);
+      ctx.lineTo(134, 44);
+      ctx.moveTo(126, 60);
+      ctx.lineTo(144, 60);
+      ctx.moveTo(126, 70);
+      ctx.lineTo(138, 82);
       ctx.stroke();
     }
 
@@ -1319,29 +1478,61 @@
       return canvas.toDataURL("image/png");
     }
 
-    for (const game of games) {
-      const card = document.createElement("a");
-      card.className = "game-card";
-      card.href = game.href;
-      card.style.setProperty("--accent", game.palette[0]);
-      card.innerHTML = `
-        <div class="card-top">
-          <span class="tag">${game.tag}</span>
-          <span class="launch">Launch</span>
-        </div>
-        <div class="icon-frame">
-          <img class="game-icon" alt="${game.title} icon" loading="lazy">
-        </div>
-        <h3 class="game-title">${game.title}</h3>
-        <p class="game-desc">${game.desc}</p>
-        <div class="card-footer">
-          <span>Open game</span>
-          <span class="card-line"></span>
-        </div>
-      `;
-      card.querySelector(".game-icon").src = makeIcon(game);
-      grid.appendChild(card);
+    function renderGames(query = "") {
+      const normalized = query.trim().toLowerCase();
+      const filtered = normalized
+        ? games.filter((game) => {
+            const haystack = `${game.title} ${game.tag} ${game.desc}`.toLowerCase();
+            return haystack.includes(normalized);
+          })
+        : games;
+
+      grid.innerHTML = "";
+
+      for (const game of filtered) {
+        const card = document.createElement("a");
+        card.className = "game-card";
+        card.href = game.href;
+        card.style.setProperty("--accent", game.palette[0]);
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="tag">${game.tag}</span>
+            <span class="launch">Launch</span>
+          </div>
+          <div class="icon-frame">
+            <img class="game-icon" alt="${game.title} icon" loading="lazy">
+          </div>
+          <h3 class="game-title">${game.title}</h3>
+          <p class="game-desc">${game.desc}</p>
+          <div class="card-footer">
+            <span>Open game</span>
+            <span class="card-line"></span>
+          </div>
+        `;
+        card.querySelector(".game-icon").src = makeIcon(game);
+        grid.appendChild(card);
+      }
+
+      emptyState.style.display = filtered.length ? "none" : "block";
+      if (!normalized) {
+        searchMeta.textContent = "Showing all games.";
+      } else {
+        searchMeta.textContent = filtered.length
+          ? `Showing ${filtered.length} match${filtered.length === 1 ? "" : "es"} for "${query}".`
+          : `No matches for "${query}".`;
+      }
     }
+
+    searchForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      renderGames(searchInput.value);
+    });
+
+    searchInput.addEventListener("input", () => {
+      renderGames(searchInput.value);
+    });
+
+    renderGames();
   </script>
 </body>
 </html>
