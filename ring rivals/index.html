@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ring Rivals — Boxing Arena</title>
     <meta name="description" content="A 2D fighting game set in a boxing arena — fight through 8 boss wrestlers!">
     <link rel="stylesheet" href="style.css">
@@ -169,6 +169,21 @@
                     <span id="volume-label">3</span>
                 </div>
                 <button id="settings-close">DONE</button>
+            </div>
+        </div>
+        <!-- Mobile Controls (Visible on touch devices during fight) -->
+        <div id="mobile-controls" class="hidden">
+            <div id="mc-dpad">
+                <button id="mc-left" class="mc-btn-dir" data-key="a">◄</button>
+                <button id="mc-right" class="mc-btn-dir" data-key="d">►</button>
+            </div>
+            <div id="mc-action-pad">
+                <button id="mc-punch" class="mc-btn round-btn" data-action="punch">P</button>
+                <button id="mc-kick" class="mc-btn round-btn" data-action="kick">K</button>
+                <button id="mc-smash" class="mc-btn round-btn mc-heavy" data-action="smash">S</button>
+                <button id="mc-dodge" class="mc-btn round-btn" data-action="dodge">D</button>
+                <button id="mc-jump" class="mc-btn round-btn" data-action="jumpon">J</button>
+                <button id="mc-special" class="mc-btn round-btn mc-special" data-action="special">SP</button>
             </div>
         </div>
     </div>

@@ -900,3 +900,100 @@ canvas {
     50% { transform: scale(1.2); opacity: 1; }
     100% { transform: scale(1); opacity: 1; }
 }
+
+/* ---- Mobile Controls ---- */
+#mobile-controls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 80;
+}
+#mobile-controls:not(.hidden) {
+    display: flex;
+}
+
+/* DPAD Left side */
+#mc-dpad {
+    position: absolute;
+    left: 20px;
+    bottom: 30px;
+    display: flex;
+    gap: 20px;
+}
+.mc-btn-dir {
+    width: 70px;
+    height: 70px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255,255,255,0.7);
+    font-size: 2rem;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+}
+.mc-btn-dir:active {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0.95);
+}
+
+/* Action Pad Right side */
+#mc-action-pad {
+    position: absolute;
+    right: 20px;
+    bottom: 30px;
+    width: 180px;
+    height: 140px;
+    pointer-events: none;
+}
+.round-btn {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255,255,255,0.8);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+}
+.round-btn:active {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0.95);
+}
+.mc-heavy {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #f59e0b;
+}
+.mc-heavy:active { background: rgba(245, 158, 11, 0.4); }
+.mc-special {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.5);
+    color: #22c55e;
+    width: 60px; height: 60px;
+    font-size: 1.8rem;
+}
+.mc-special:active { background: rgba(34, 197, 94, 0.4); }
+
+/* Position each action button (P, K, S, D, J, SP) */
+#mc-punch { top: 0px; left: 0px; }
+#mc-kick { top: 0px; left: 60px; }
+#mc-smash { top: 0px; left: 120px; }
+#mc-jump { top: 60px; left: 0px; }
+#mc-dodge { top: 60px; left: 60px; }
+#mc-special { top: 50px; left: 120px; }
+
+/* Media Query to hide mobile controls strictly if not touch device */
+@media (pointer: fine) {
+    #mobile-controls {
+        display: none !important;
+    }
+}

@@ -127,7 +127,10 @@ let playerUsername = 'PLAYER';
 let player2Username = 'PLAYER 2';
 let gameMode = 'ladder'; // 'ladder' | 'pvp'
 
-const BANNED_WORDS = ['fuck', 'shit', 'bitch', 'ass', 'damn', 'cunt', 'dick'];
+const BANNED_WORDS = [
+    'fuck', 'shit', 'bitch', 'ass', 'damn', 'cunt', 'dick', 'pussy', 
+    'cock', 'bastard', 'slut', 'whore', 'fag', 'nigger', 'nigga', 'tit', 'twat'
+];
 
 // ---- Fighter Factory ----
 function createFighter(name, x, facing, isPlayer) {
@@ -913,6 +916,7 @@ function checkAttackHit(attacker, defender) {
 
 function triggerKO(winner) {
     gameState = 'ko';
+    document.getElementById('mobile-controls').classList.add('hidden');
     if (settings.crowdCheering) {
         setFansClapping(true);
     }
@@ -1302,6 +1306,9 @@ function startBossFight() {
     document.getElementById('hud').classList.remove('hidden');
     document.getElementById('ko-overlay').classList.add('hidden');
     document.getElementById('victory-screen').classList.add('hidden');
+    
+    // Show mobile controls
+    document.getElementById('mobile-controls').classList.remove('hidden');
 }
 
 function startPvP() {
@@ -1310,8 +1317,15 @@ function startPvP() {
     const username = inputEl.value.trim().toUpperCase() || 'PLAYER 1';
     
     // Simple validation for P1 name
-    if (username.length > 8 || (username.length > 0 && !/^[A-Z0-9]+$/.test(username))) {
+    if (username.length > 8 || (username !== 'PLAYER 1' && !/^[A-Z0-9]+$/.test(username))) {
         errorEl.textContent = "INVALID USERNAME (1-8 LETTERS/NUMS ONLY)";
+        errorEl.classList.remove('hidden');
+        return;
+    }
+    
+    const lowerName = username.toLowerCase();
+    if (BANNED_WORDS.some(word => lowerName.includes(word))) {
+        errorEl.textContent = "INVALID USERNAME (PROFANITY DETECTED)";
         errorEl.classList.remove('hidden');
         return;
     }
@@ -1321,6 +1335,12 @@ function startPvP() {
     if (!p2name) p2name = "PLAYER 2";
     p2name = p2name.trim().toUpperCase().substring(0, 8);
     if (!/^[A-Z0-9 ]*$/.test(p2name)) p2name = "PLAYER 2";
+
+    const lowerP2Name = p2name.toLowerCase();
+    if (BANNED_WORDS.some(word => lowerP2Name.includes(word))) {
+        alert("PLAYER 2 NAME CONTAINS PROFANITY! REVERTING TO DEFAULT.");
+        p2name = "PLAYER 2";
+    }
 
     errorEl.classList.add('hidden');
     playerUsername = username;
@@ -1339,6 +1359,7 @@ function goToMenu() {
     document.getElementById('ko-overlay').classList.add('hidden');
     document.getElementById('boss-intro').classList.add('hidden');
     document.getElementById('victory-screen').classList.add('hidden');
+    document.getElementById('mobile-controls').classList.add('hidden');
 }
 
 // ---- Game Loop ----
@@ -1408,6 +1429,7 @@ function gameLoop() {
 
 function handleTimeOver() {
     gameState = 'ko';
+    document.getElementById('mobile-controls').classList.add('hidden');
     let winner = null;
     if (player.hp > enemy.hp) winner = player;
     else if (enemy.hp > player.hp) winner = enemy;
@@ -1580,3 +1602,31 @@ document.getElementById('setting-volume').addEventListener('input', (e) => {
 // ---- Init ----
 initFans();
 gameLoop();
+
+// ---- Mobile Controls Registration ----
+['mc-left', 'mc-right'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const k = btn.dataset.key;
+    const press = (e) => { if(e.cancelable) e.preventDefault(); keys[k] = true; };
+    const release = (e) => { if(e.cancelable) e.preventDefault(); keys[k] = false; };
+    
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('touchend', release, { passive: false });
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('mouseup', release);
+    btn.addEventListener('mouseleave', release);
+});
+
+['mc-punch', 'mc-kick', 'mc-smash', 'mc-dodge', 'mc-jump', 'mc-special'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const press = (e) => { 
+        if(e.cancelable) e.preventDefault(); 
+        if (gameState === 'fight') handleAction(player, action); 
+    };
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('mousedown', press);
+});
+
