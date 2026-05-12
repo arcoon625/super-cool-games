@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon 3D Forest</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/three@0.160.0/build/three.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="crosshair">+</div>
+    
+    <!-- UI Overlay for interaction/league/raid -->
+    <div id="ui-overlay" class="hidden">
+      <div id="ui-content">
+         <h1 id="ui-title">Encounter</h1>
+         <p id="ui-message"></p>
+         <div id="ui-buttons"></div>
+      </div>
+    </div>
+
+    <!-- UI Overlay for Pokeballs remaining during a raid -->
+    <div id="raid-ui" class="hidden">
+      Pokeballs: <span id="pokeball-count">10</span>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
