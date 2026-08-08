@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rumble Rivals</title>
-    <link rel="stylesheet" href="styles.css?v=win-confetti" />
+    <link rel="stylesheet" href="styles.css?v=mobile-controls" />
     <style>
       .result-card { position: relative; z-index: 1; }
       .win-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -218,6 +218,18 @@
         <div id="controls-card" class="controls-card">
           <strong>Player 1:</strong> Arrow Keys move/jump · <b>A</b> melee · <b>S</b> range · <b>Q</b> special · <b>W</b> Omega · <b>E</b> shield &nbsp; <strong>Player 2:</strong> <b>J/L</b> move · <b>I</b> jump · <b>F</b> melee · <b>G</b> range · <b>R</b> special · <b>U</b> Omega · <b>Y</b> shield
         </div>
+        <div id="touch-controls" class="touch-controls" aria-label="Touch battle controls">
+          <div class="touch-movement">
+            <button type="button" class="touch-button move-button" data-touch-key="ArrowLeft" data-touch-hold="true" aria-label="Move left">◀</button>
+            <button type="button" class="touch-button jump-button" data-touch-key="ArrowUp" aria-label="Jump">JUMP</button>
+            <button type="button" class="touch-button move-button" data-touch-key="ArrowRight" data-touch-hold="true" aria-label="Move right">▶</button>
+          </div>
+          <div class="touch-actions">
+            <button type="button" class="touch-button shield-button" data-touch-key="e" data-touch-hold="true">SHIELD</button>
+            <button type="button" class="touch-button range-button" data-touch-key="s">RANGE</button>
+            <button type="button" class="touch-button melee-button" data-touch-key="a">MELEE</button>
+          </div>
+        </div>
       </section>
 
       <section id="result" class="screen result-screen">
@@ -238,6 +250,6 @@
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
     <script src="online.js?v=online-3"></script>
-    <script src="game.js?v=online-13"></script>
+    <script src="game.js?v=online-14"></script>
   </body>
 </html>

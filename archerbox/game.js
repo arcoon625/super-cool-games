@@ -2217,6 +2217,30 @@ $("back-to-cover").addEventListener("click", () => { playerOneChoice = null; isO
 $("quit-battle").addEventListener("click", returnToCover);
 $("rematch-button").addEventListener("click", () => isOnlineMatch() ? returnToCover() : startBattle(game.player, game.mode === "two-player" ? game.enemy : null));
 $("select-button").addEventListener("click", returnToCover);
+function setBattleKey(key, pressed) {
+  if (pressed && onlineIsGuest() && ["ArrowUp", "a", "s", "q", "w"].includes(key) && !keys[key]) onlineMatch.inputNonce++;
+  keys[key] = pressed;
+  if (onlineIsGuest() && game && !game.ended) window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
+}
+
+document.querySelectorAll("[data-touch-key]").forEach((button) => {
+  const key = button.dataset.touchKey;
+  const held = button.dataset.touchHold === "true";
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
+    setBattleKey(key, true);
+    if (!held) window.setTimeout(() => setBattleKey(key, false), 110);
+  });
+  if (held) {
+    const release = (event) => { event.preventDefault(); setBattleKey(key, false); };
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("lostpointercapture", release);
+  }
+});
+
+window.addEventListener("blur", () => ["ArrowLeft", "ArrowRight", "ArrowUp", "a", "s", "e"].forEach((key) => { keys[key] = false; }));
 window.addEventListener("keydown", (event) => {
   const typingInField = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || event.target.isContentEditable;
   if (typingInField) return;
@@ -2232,16 +2256,13 @@ window.addEventListener("keydown", (event) => {
     return;
   }
   if (["ArrowLeft","ArrowRight","ArrowUp","a","s","q","w","e","j","l","i","f","g","r","u","y"," "].includes(key)) event.preventDefault();
-  if (onlineIsGuest() && ["ArrowUp", "a", "s", "q", "w"].includes(key) && !keys[key]) onlineMatch.inputNonce++;
-  keys[key] = true;
-  if (onlineIsGuest() && game && !game.ended) window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
+  setBattleKey(key, true);
 });
 window.addEventListener("keyup", (event) => {
   const typingInField = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || event.target.isContentEditable;
   if (typingInField) return;
   const key=event.key.length===1 ? event.key.toLowerCase() : event.key;
-  keys[key]=false;
-  if (onlineIsGuest() && game && !game.ended) window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
+  setBattleKey(key, false);
 });
 updateCoinDisplays();
 updateTrophyDisplay();
