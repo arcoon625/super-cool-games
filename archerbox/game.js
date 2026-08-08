@@ -1884,6 +1884,8 @@ $("quit-battle").addEventListener("click", returnToCover);
 $("rematch-button").addEventListener("click", () => isOnlineMatch() ? returnToCover() : startBattle(game.player, game.mode === "two-player" ? game.enemy : null));
 $("select-button").addEventListener("click", returnToCover);
 window.addEventListener("keydown", (event) => {
+  const typingInField = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || event.target.isContentEditable;
+  if (typingInField) return;
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   if ((event.metaKey || event.ctrlKey) && key === "r") {
     event.preventDefault();
@@ -1901,6 +1903,8 @@ window.addEventListener("keydown", (event) => {
   if (onlineIsGuest() && game && !game.ended) window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
 });
 window.addEventListener("keyup", (event) => {
+  const typingInField = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || event.target.isContentEditable;
+  if (typingInField) return;
   const key=event.key.length===1 ? event.key.toLowerCase() : event.key;
   keys[key]=false;
   if (onlineIsGuest() && game && !game.ended) window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
