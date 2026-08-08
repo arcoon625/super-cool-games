@@ -75,6 +75,13 @@
     if (role === "host") await roomRef.child("status").onDisconnect().set("abandoned");
   }
 
+  // The published Firebase rules approve each protected room field separately.
+  // Writing them one at a time also keeps a failed field from hiding the useful
+  // Firebase error behind one large rejected update.
+  async function writeRoomFields(ref, fields) {
+    for (const [path, value] of Object.entries(fields)) await ref.child(path).set(value);
+  }
+
   async function createRoom(nickname) {
     const host = await ready();
     const name = cleanNickname(nickname);
@@ -86,13 +93,12 @@
       // transaction before the rest of the room is filled in.
       const claim = await ref.child("hostUid").transaction((currentHost) => currentHost ? undefined : host.uid);
       if (claim.committed) {
-        await ref.update({
-          version,
-          status: "waiting",
+        await writeRoomFields(ref, {
           hostName: name,
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           expiresAt: now + ROOM_TTL_MS,
-          [`players/${host.uid}`]: { name, slot: "p1", connected: true }
+          [`players/${host.uid}`]: { name, slot: "p1", connected: true },
+          status: "waiting"
         });
         listenToRoom(code);
         await watchDisconnect("host");
@@ -108,12 +114,12 @@
     const name = cleanNickname(nickname);
     const ref = database.ref(`rumbleRivalsRooms/${code}`);
     const beforeJoining = (await ref.once("value")).val();
-    if (!isActive(beforeJoining) || beforeJoining.version !== version || beforeJoining.guestUid || !beforeJoining.hostUid) {
-      throw new Error("That room is unavailable, full, expired, or needs a game update.");
+    if (!isActive(beforeJoining) || beforeJoining.guestUid || !beforeJoining.hostUid) {
+      throw new Error("That room is unavailable, full, or expired.");
     }
     const guestSlot = await ref.child("guestUid").transaction((currentGuest) => currentGuest ? undefined : guest.uid);
     if (!guestSlot.committed || guestSlot.snapshot.val() !== guest.uid) throw new Error("Another friend just joined that room. Ask for a new code.");
-    await ref.update({ guestName: name, [`players/${guest.uid}`]: { name, slot: "p2", connected: true } });
+    await writeRoomFields(ref, { guestName: name, [`players/${guest.uid}`]: { name, slot: "p2", connected: true } });
     listenToRoom(code);
     await watchDisconnect("guest");
     return { code, uid: guest.uid, role: "guest", room: (await ref.once("value")).val() };
@@ -121,7 +127,7 @@
 
   async function updateRoom(changes) {
     if (!roomRef) throw new Error("No friend room is open.");
-    await roomRef.update(changes);
+    await writeRoomFields(roomRef, changes);
   }
 
   function slot() {
@@ -133,7 +139,7 @@
     if (slot() !== "p1") throw new Error("Only the friend who made the room can choose the arena.");
     await updateRoom({
       stageId: setup.stageId,
-      settings: setup.settings,
+      settings: { ...setup.settings, gameVersion: version },
       hostFighter: setup.hostFighter,
       hostWeaponLevel: Number(setup.hostWeaponLevel) || 0,
       status: currentRoom?.guestUid ? "lobby" : "waiting"
@@ -148,11 +154,11 @@
   async function startMatch() {
     if (slot() !== "p1" || !currentRoom?.hostFighter || !currentRoom?.guestFighter) return;
     await updateRoom({
-      status: "playing",
       matchId: `${roomCode}-${Date.now().toString(36)}`,
       startedAt: firebase.database.ServerValue.TIMESTAMP,
       state: null,
-      result: null
+      result: null,
+      status: "playing"
     });
   }
 
@@ -177,7 +183,7 @@
   async function publishResult(result) {
     if (slot() !== "p1" || !roomRef) return;
     await roomRef.child("status").onDisconnect().cancel();
-    await updateRoom({ status: "finished", result });
+    await updateRoom({ result, status: "finished" });
   }
 
   async function leave() {

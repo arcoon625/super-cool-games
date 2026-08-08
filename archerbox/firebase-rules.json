@@ -4,7 +4,6 @@
       "$code": {
         ".read": "auth != null && (data.child('hostUid').val() === auth.uid || data.child('guestUid').val() === auth.uid || (!data.child('guestUid').exists() && data.child('expiresAt').val() > now))",
         "hostUid": { ".write": "auth != null && !data.exists() && newData.val() === auth.uid" },
-        "version": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid", ".validate": "newData.val() === 'online-1'" },
         "hostName": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid", ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 12" },
         "createdAt": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
         "expiresAt": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid", ".validate": "newData.isNumber()" },

@@ -1803,7 +1803,7 @@ function showOnlineGuestResult(result) {
 
 function handleOnlineRoom(room) {
   if (!onlineMatch.role || !room) return;
-  if (room.version !== window.RumbleOnline.version) {
+  if (room.settings?.gameVersion && room.settings.gameVersion !== window.RumbleOnline.version) {
     setOnlineLobbyMessage("Your friend has a different game version. Both players should reload the game.");
     showScreen("online-lobby");
     return;
