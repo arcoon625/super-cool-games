@@ -921,6 +921,19 @@ function doAttack(who, type) {
         sodaCan: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#ff7061", 7);
+    } else if (who.id === "doomgear") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (14 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#ae69ff",
+        life: 70,
+        size: 15 + weaponLevel * 4,
+        electricGear: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#c884ff", 10);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -1655,6 +1668,36 @@ function drawProjectile(projectile) {
       ctx.arc(length * spot, 0, Math.max(1.5, projectile.size * .1), 0, Math.PI * 2);
       ctx.fill();
     });
+  } else if (projectile.electricGear) {
+    const teeth = 8;
+    const size = projectile.size;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.life * .23 * (Math.sign(projectile.vx) || 1));
+    ctx.shadowColor = "#b35cff";
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = "#51317e";
+    ctx.beginPath();
+    for (let tooth = 0; tooth < teeth * 2; tooth += 1) {
+      const angle = (Math.PI * 2 * tooth) / (teeth * 2);
+      const radius = tooth % 2 === 0 ? size : size * .7;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (tooth === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#d68cff";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-size * .55, -size * .1);
+    ctx.lineTo(-size * .1, size * .18);
+    ctx.lineTo(size * .08, -size * .28);
+    ctx.lineTo(size * .52, size * .06);
+    ctx.stroke();
+    ctx.fillStyle = "#f3d8ff";
+    ctx.beginPath();
+    ctx.arc(0, 0, size * .22, 0, Math.PI * 2);
+    ctx.fill();
   } else if (projectile.metalGear) {
     const teeth = 10;
     const size = projectile.size;
