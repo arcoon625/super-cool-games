@@ -89,21 +89,24 @@
       const code = makeCode();
       const ref = database.ref(`rumbleRivalsRooms/${code}`);
       const now = Date.now();
-      // Claim only the host slot first. Firebase can safely approve this tiny
-      // transaction before the rest of the room is filled in.
-      const claim = await ref.child("hostUid").transaction((currentHost) => currentHost ? undefined : host.uid);
-      if (claim.committed) {
-        await writeRoomFields(ref, {
-          hostName: name,
-          createdAt: firebase.database.ServerValue.TIMESTAMP,
-          expiresAt: now + ROOM_TTL_MS,
-          [`players/${host.uid}`]: { name, slot: "p1", connected: true },
-          status: "waiting"
-        });
-        listenToRoom(code);
-        await watchDisconnect("host");
-        return { code, uid: host.uid, role: "host", room: (await ref.once("value")).val() };
-      }
+      let claimed = false;
+      try {
+        // The rules only allow this first write when the code is unused, so a
+        // normal set is enough and avoids transaction permission edge cases.
+        await ref.child("hostUid").set(host.uid);
+        claimed = true;
+      } catch { /* That short code was claimed at the same moment; try another. */ }
+      if (!claimed) continue;
+      await writeRoomFields(ref, {
+        hostName: name,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        expiresAt: now + ROOM_TTL_MS,
+        [`players/${host.uid}`]: { name, slot: "p1", connected: true },
+        status: "waiting"
+      });
+      listenToRoom(code);
+      await watchDisconnect("host");
+      return { code, uid: host.uid, role: "host", room: (await ref.once("value")).val() };
     }
     throw new Error("Could not make a fresh room code. Please try again.");
   }
@@ -117,8 +120,11 @@
     if (!isActive(beforeJoining) || beforeJoining.guestUid || !beforeJoining.hostUid) {
       throw new Error("That room is unavailable, full, or expired.");
     }
-    const guestSlot = await ref.child("guestUid").transaction((currentGuest) => currentGuest ? undefined : guest.uid);
-    if (!guestSlot.committed || guestSlot.snapshot.val() !== guest.uid) throw new Error("Another friend just joined that room. Ask for a new code.");
+    try {
+      await ref.child("guestUid").set(guest.uid);
+    } catch {
+      throw new Error("Another friend just joined that room. Ask for a new code.");
+    }
     await writeRoomFields(ref, { guestName: name, [`players/${guest.uid}`]: { name, slot: "p2", connected: true } });
     listenToRoom(code);
     await watchDisconnect("guest");
