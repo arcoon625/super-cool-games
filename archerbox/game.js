@@ -876,6 +876,25 @@ function doAttack(who, type) {
         bubble: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#a9efff", 8);
+    } else if (who.id === "ironbolt") {
+      [-7, 0, 7].forEach((spread, index) => {
+        const middleBullet = index === 1;
+        game.projectiles.push({
+          x: projectileOrigin.x,
+          y: projectileOrigin.y + spread,
+          vx: who.facing * (18 + weaponLevel * 2),
+          owner: who,
+          damage: middleBullet ? damage : 0,
+          color: "#ffe56e",
+          life: 56,
+          size: 7,
+          gunBullet: true,
+          visualOnly: !middleBullet,
+          bulletColor: "#ffe56e",
+          bulletLength: 1.45
+        });
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#ffe56e", 8);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
