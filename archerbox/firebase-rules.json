@@ -1,0 +1,31 @@
+{
+  "rules": {
+    "rumbleRivalsRooms": {
+      "$code": {
+        ".read": "auth != null && (data.child('hostUid').val() === auth.uid || data.child('guestUid').val() === auth.uid || (!data.child('guestUid').exists() && data.child('expiresAt').val() > now))",
+        ".write": "auth != null && !data.exists() && newData.child('hostUid').val() === auth.uid",
+        ".validate": "newData.hasChildren(['version', 'status', 'hostUid', 'hostName', 'expiresAt']) && newData.child('version').val() === 'online-1' && newData.child('hostName').isString() && newData.child('hostName').val().length <= 12 && newData.child('expiresAt').isNumber()",
+        "guestUid": { ".write": "auth != null && !data.exists() && newData.val() === auth.uid && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() !== auth.uid" },
+        "guestName": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('guestUid').val() === auth.uid && newData.isString() && newData.val().length <= 12" },
+        "guestFighter": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('guestUid').val() === auth.uid" },
+        "guestWeaponLevel": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('guestUid').val() === auth.uid && newData.isNumber()" },
+        "hostFighter": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+        "hostWeaponLevel": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid && newData.isNumber()" },
+        "stageId": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+        "settings": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+        "status": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+        "matchId": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+        "startedAt": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+        "inputs": {
+          "p1": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+          "p2": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('guestUid').val() === auth.uid" }
+        },
+        "state": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+        "result": { ".write": "auth != null && root.child('rumbleRivalsRooms').child($code).child('hostUid').val() === auth.uid" },
+        "players": {
+          "$uid": { ".write": "auth != null && $uid === auth.uid" }
+        }
+      }
+    }
+  }
+}

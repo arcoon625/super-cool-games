@@ -59,6 +59,31 @@
         </div>
       </section>
 
+      <section id="online-lobby" class="screen online-lobby-screen">
+        <div class="online-lobby-card">
+          <p class="eyebrow">FRIEND BATTLE</p>
+          <h2 id="online-lobby-title">Play with a friend</h2>
+          <p id="online-lobby-copy" class="play-menu-copy">Make a room code, then share it with your friend.</p>
+          <label class="online-label" for="online-nickname">YOUR NICKNAME</label>
+          <input id="online-nickname" class="online-input" maxlength="12" autocomplete="nickname" placeholder="Example: Archer" />
+          <div id="online-code-entry" class="online-code-entry">
+            <label class="online-label" for="online-code-input">FRIEND'S CODE</label>
+            <input id="online-code-input" class="online-input online-code-input" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="ABC123" />
+          </div>
+          <div id="online-room-code" class="online-room-code" hidden>
+            <span>YOUR ROOM CODE</span>
+            <strong id="online-room-code-value">------</strong>
+            <button id="online-copy-code" class="small-button" type="button">Copy Code</button>
+          </div>
+          <div class="online-lobby-actions">
+            <button id="online-create-button" class="big-button" type="button">MAKE FRIEND CODE</button>
+            <button id="online-join-button" class="big-button" type="button">JOIN FRIEND</button>
+          </div>
+          <p id="online-lobby-message" class="play-menu-message" aria-live="polite">Only friends with the room code can join.</p>
+          <button id="online-lobby-back" class="small-button" type="button">Back</button>
+        </div>
+      </section>
+
       <section id="settings" class="screen settings-screen">
         <header class="select-header">
           <div>
@@ -208,6 +233,11 @@
         </div>
       </section>
     </main>
-    <script src="game.js?v=screenwide-confetti-blast"></script>
+    <script src="firebase-config.js?v=online-1"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
+    <script src="online.js?v=online-1"></script>
+    <script src="game.js?v=online-1"></script>
   </body>
 </html>

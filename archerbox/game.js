@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-const screens = ["cover", "loading", "play-menu", "settings", "unlocks", "upgrades", "achievements", "stages", "select", "battle", "result"];
+const screens = ["cover", "loading", "play-menu", "online-lobby", "settings", "unlocks", "upgrades", "achievements", "stages", "select", "battle", "result"];
 const canvas = $("game-canvas");
 const ctx = canvas.getContext("2d");
 const fallbackArena = {
@@ -240,12 +240,116 @@ let musicContext = null;
 let musicMasterGain = null;
 let musicTimer = null;
 let musicStep = 0;
+let onlineMatch = {
+  role: null,
+  roomCode: null,
+  remoteInput: {},
+  previousRemoteInput: {},
+  unlistenInput: null,
+  battleStarted: false,
+  lastStateAt: 0,
+  lastInputAt: 0,
+  inputNonce: 0,
+  handledResult: null,
+  hostConfigured: false,
+};
+
+function isOnlineMatch() { return matchMode === "online-host" || matchMode === "online-guest"; }
+function onlineIsHost() { return matchMode === "online-host"; }
+function onlineIsGuest() { return matchMode === "online-guest"; }
+
+function resetOnlineMatch() {
+  if (onlineMatch.unlistenInput) onlineMatch.unlistenInput();
+  onlineMatch = { role: null, roomCode: null, remoteInput: {}, previousRemoteInput: {}, unlistenInput: null, battleStarted: false, lastStateAt: 0, lastInputAt: 0, inputNonce: 0, handledResult: null, hostConfigured: false };
+}
+
+function leaveOnlineMatch() {
+  if (onlineMatch.role) window.RumbleOnline?.leave();
+  resetOnlineMatch();
+}
 
 function showScreen(id) {
   screens.forEach((screen) => $(screen).classList.toggle("active", screen === id));
   const menuVisible = id === "stages" || id === "select";
   $("settings-button").classList.toggle("visible", menuVisible);
   $("boss-button").classList.toggle("visible", id === "stages");
+}
+
+function setOnlineLobbyMessage(message) {
+  $("online-lobby-message").textContent = message;
+}
+
+function showOnlineLobby(flow = "host") {
+  const joining = flow === "join";
+  $("online-lobby-title").textContent = joining ? "Join your friend" : "Play with a friend";
+  $("online-lobby-copy").textContent = joining ? "Type the code your friend made, then pick your fighter." : "Make a room code, share it with a friend, then choose the arena.";
+  $("online-code-entry").hidden = !joining;
+  $("online-room-code").hidden = true;
+  $("online-create-button").hidden = joining;
+  $("online-join-button").hidden = !joining;
+  setOnlineLobbyMessage(window.RumbleOnline?.configured() ? "Only friends with the room code can join. No chat is used." : "Online play needs the free Firebase setup first. Ask Archer to add the Firebase settings file.");
+  showScreen("online-lobby");
+}
+
+function showOnlineWaiting(room = window.RumbleOnline?.getRoom()) {
+  const host = onlineIsHost();
+  $("online-lobby-title").textContent = host ? "Your friend room is ready!" : "You joined the room!";
+  $("online-lobby-copy").textContent = host ? "Share this code. Your friend can enter it from their game." : "Wait for your friend to finish choosing the arena and fighter.";
+  $("online-code-entry").hidden = true;
+  $("online-room-code").hidden = !host;
+  $("online-room-code-value").textContent = onlineMatch.roomCode || "------";
+  $("online-create-button").hidden = true;
+  $("online-join-button").hidden = true;
+  const hostReady = Boolean(room?.hostFighter);
+  const guestReady = Boolean(room?.guestFighter);
+  if (host && !onlineMatch.hostConfigured) {
+    $("online-create-button").hidden = false;
+    $("online-create-button").textContent = "CHOOSE ARENA";
+    setOnlineLobbyMessage("Share the code, then choose your arena and fighter.");
+  } else if (host && hostReady && !guestReady) {
+    setOnlineLobbyMessage("Arena ready! Waiting for your friend to choose Player 2.");
+  } else if (!host && hostReady && !guestReady) {
+    setOnlineLobbyMessage("Your friend chose the arena. Pick Player 2 when the fighter screen opens.");
+  } else {
+    setOnlineLobbyMessage("Getting the arena ready...");
+  }
+  showScreen("online-lobby");
+}
+
+function onlineNickname() { return $("online-nickname").value; }
+
+async function makeFriendRoom() {
+  try {
+    $("online-create-button").disabled = true;
+    setOnlineLobbyMessage("Making your friend room...");
+    const room = await window.RumbleOnline.createRoom(onlineNickname());
+    matchMode = "online-host";
+    resetOnlineMatch();
+    onlineMatch.role = "host";
+    onlineMatch.roomCode = room.code;
+    showOnlineWaiting(room.room);
+  } catch (error) {
+    setOnlineLobbyMessage(error.message || "Could not make a friend room. Try again.");
+  } finally {
+    $("online-create-button").disabled = false;
+  }
+}
+
+async function joinFriendRoom() {
+  try {
+    $("online-join-button").disabled = true;
+    setOnlineLobbyMessage("Finding your friend's room...");
+    const room = await window.RumbleOnline.joinRoom($("online-code-input").value, onlineNickname());
+    matchMode = "online-guest";
+    resetOnlineMatch();
+    onlineMatch.role = "guest";
+    onlineMatch.roomCode = room.code;
+    showOnlineWaiting(room.room);
+  } catch (error) {
+    setOnlineLobbyMessage(error.message || "Could not join that room. Check the code and try again.");
+  } finally {
+    $("online-join-button").disabled = false;
+  }
 }
 
 function chooseSetting(kind, value) {
@@ -261,6 +365,7 @@ function returnToCover() {
   clearInterval(loadingTimer);
   keys = {};
   game = null;
+  if (isOnlineMatch()) leaveOnlineMatch();
   matchMode = "computer";
   playerOneChoice = null;
   $("cover-card").classList.remove("loading");
@@ -563,14 +668,29 @@ function showFighterSelection() {
   const training = matchMode === "training";
   const boss = matchMode === "boss";
   const choosingPlayerTwo = matchMode === "two-player" && playerOneChoice;
-  $("fighter-select-eyebrow").textContent = boss ? "BOSS BATTLE · 5× COINS" : training ? "TRAINING ROOM" : choosingPlayerTwo ? "PLAYER 2: CHOOSE YOUR FIGHTER" : matchMode === "two-player" ? "PLAYER 1: CHOOSE YOUR FIGHTER" : "CHOOSE YOUR FIGHTER";
-  $("fighter-select-heading").textContent = boss ? "Pick a hero to face Mega Doomgear" : training ? "Pick a fighter to train" : choosingPlayerTwo ? "Player 2, pick your fighter!" : matchMode === "two-player" ? "Player 1, pick your fighter!" : "Who will you play?";
-  $("fighter-select-help").textContent = boss ? "Mega Doomgear has 200 health, 1.5× damage, and is 3× bigger. Win to earn five times the coins!" : training ? "Practice your moves on a dummy. No coins or wins are used." : choosingPlayerTwo ? "Player 2: click any unlocked fighter. Then the battle starts!" : matchMode === "two-player" ? "Player 1 goes first. Click a fighter, then Player 2 picks one." : "Click a fighter to play. The computer will pick a rival!";
+  const onlineHost = onlineIsHost();
+  const onlineGuest = onlineIsGuest();
+  $("fighter-select-eyebrow").textContent = boss ? "BOSS BATTLE · 5× COINS" : training ? "TRAINING ROOM" : onlineHost ? "FRIEND BATTLE · PLAYER 1" : onlineGuest ? "FRIEND BATTLE · PLAYER 2" : choosingPlayerTwo ? "PLAYER 2: CHOOSE YOUR FIGHTER" : matchMode === "two-player" ? "PLAYER 1: CHOOSE YOUR FIGHTER" : "CHOOSE YOUR FIGHTER";
+  $("fighter-select-heading").textContent = boss ? "Pick a hero to face Mega Doomgear" : training ? "Pick a fighter to train" : onlineHost ? "Choose Player 1" : onlineGuest ? "Choose Player 2" : choosingPlayerTwo ? "Player 2, pick your fighter!" : matchMode === "two-player" ? "Player 1, pick your fighter!" : "Who will you play?";
+  $("fighter-select-help").textContent = boss ? "Mega Doomgear has 200 health, 1.5× damage, and is 3× bigger. Win to earn five times the coins!" : training ? "Practice your moves on a dummy. No coins or wins are used." : onlineHost ? "Pick your fighter. Then your friend picks Player 2 using the room code." : onlineGuest ? "Your friend picked the arena. Pick your fighter to start the online battle!" : choosingPlayerTwo ? "Player 2: click any unlocked fighter. Then the battle starts!" : matchMode === "two-player" ? "Player 1 goes first. Click a fighter, then Player 2 picks one." : "Click a fighter to play. The computer will pick a rival!";
 }
 
 function chooseFighter(fighter) {
   if (matchMode === "training") { startBattle(fighter, trainingDummy); return; }
   if (matchMode === "boss") { startBattle(fighter, bossEnemy); return; }
+  if (onlineIsHost()) {
+    onlineMatch.hostConfigured = true;
+    window.RumbleOnline.setHostSetup({ stageId: chosenStage.id, settings: { difficulty: matchSettings.difficulty, timer: matchSettings.timer }, hostFighter: fighter.id, hostWeaponLevel: getWeaponLevel(fighter.id) })
+      .then(() => showOnlineWaiting())
+      .catch((error) => { showOnlineWaiting(); setOnlineLobbyMessage(error.message || "Could not save your fighter choice."); });
+    return;
+  }
+  if (onlineIsGuest()) {
+    window.RumbleOnline.setGuestFighter(fighter.id, getWeaponLevel(fighter.id))
+      .then(() => showOnlineWaiting())
+      .catch((error) => { showOnlineWaiting(); setOnlineLobbyMessage(error.message || "Could not save your fighter choice."); });
+    return;
+  }
   if (matchMode !== "two-player") {
     startBattle(fighter);
     return;
@@ -648,7 +768,7 @@ function makeFighter(data, x, facing, floor) {
 }
 
 function updateBattleStatus() {
-  const modeLabel = game.mode === "boss" ? "BOSS BATTLE" : game.mode === "training" ? "TRAINING" : game.mode === "two-player" ? "2 PLAYER" : difficultyModes[game.settings.difficulty].label;
+  const modeLabel = game.mode === "boss" ? "BOSS BATTLE" : game.mode === "training" ? "TRAINING" : game.mode === "two-player" ? "2 PLAYER" : game.mode === "online-host" || game.mode === "online-guest" ? "ONLINE FRIEND" : difficultyModes[game.settings.difficulty].label;
   if (game.timeLeftMs === null) {
     $("round-text").innerHTML = `${modeLabel} · NO TIMER · ${coinIcon} ${profile.coins} · 🏆 ${profile.trophies}`;
     return;
@@ -678,10 +798,14 @@ function startBattle(selected, opponent = null) {
   const arena = stageArenas[stage.id] || fallbackArena;
   game = { mode: matchMode, player: makeFighter(selected, 230, 1, arena.floor), enemy: makeFighter(enemy, 810, -1, arena.floor), stage, settings: { ...matchSettings }, timeLeftMs: matchMode === "training" ? null : matchSettings.timer === null ? null : matchSettings.timer * 1000, projectiles: [], tankCharges: [], apples: [], appleDropMs: 10000, goldenAppleDropMs: Math.random() < .15 ? 15000 + Math.random() * 20000 : null, powerUps: [], powerUpDropMs: randomPowerUpDelay(), sparks: [], ended: false, messageTimer: 0, message: "3", countdownMs: 3000, countdownText: "3", startedAt: null };
   if (matchMode === "boss") { game.enemy.maxHealth = 200; game.enemy.health = 200; }
-  $("player-name").textContent = game.mode === "two-player" ? `P1 · ${selected.name.toUpperCase()}` : selected.name.toUpperCase();
-  $("enemy-name").textContent = game.mode === "two-player" ? `P2 · ${enemy.name.toUpperCase()}` : enemy.name.toUpperCase();
+  const onlineRoom = window.RumbleOnline?.getRoom();
+  const online = game.mode === "online-host" || game.mode === "online-guest";
+  $("player-name").textContent = game.mode === "two-player" ? `P1 · ${selected.name.toUpperCase()}` : online ? `P1 · ${(onlineRoom?.hostName || selected.name).toUpperCase()}` : selected.name.toUpperCase();
+  $("enemy-name").textContent = game.mode === "two-player" ? `P2 · ${enemy.name.toUpperCase()}` : online ? `P2 · ${(onlineRoom?.guestName || enemy.name).toUpperCase()}` : enemy.name.toUpperCase();
   $("controls-card").innerHTML = game.mode === "two-player"
     ? "<strong>Player 1:</strong> Arrow Keys move/jump · A melee · S range · Q special · W Omega · E shield &nbsp; <strong>Player 2:</strong> J/L move · I jump · F melee · G range · R special · U Omega · Y shield"
+    : online
+      ? `<strong>${onlineIsHost() ? "Your controls" : "Your controls"}:</strong> Arrow Keys move/jump · <b>A</b> melee · <b>S</b> range · <b>Q</b> special · <b>W</b> Omega · <b>E</b> shield · <strong>Friend battle:</strong> ${onlineIsHost() ? "you are Player 1" : "you are Player 2"}`
     : "<strong>Controls:</strong> Arrow Keys move · <b>↑</b> jump twice to reach platforms · <b>A</b> melee · <b>S</b> range · <b>Q</b> special · <b>W</b> Omega Mode (Project Null) · <b>E</b> shield (hold up to 1 second)";
   playerOneChoice = null;
   $("player-health").style.width = "100%"; $("enemy-health").style.width = "100%";
@@ -700,7 +824,7 @@ function doAttack(who, type) {
   const enemy = isPlayer ? game.enemy : game.player;
   let damage = type === "heavy" ? who.power + 5 : type === "special" ? who.power + 9 : type === "super" ? who.power + 18 : who.power;
   let reach = type === "range" ? 560 : type === "special" ? 250 : type === "super" ? 650 : type === "heavy" ? 120 : 86;
-  const weaponLevel = getWeaponLevel(who.id);
+  const weaponLevel = Number.isFinite(who.weaponLevel) ? who.weaponLevel : getWeaponLevel(who.id);
   if (type === "range") { damage += weaponLevel * 5; reach += weaponLevel * 45; }
   if (type === "melee" && who.powerUp === "sword") damage += who.power;
   if (type === "range" && who.powerUp === "pistol") damage += 12;
@@ -787,9 +911,9 @@ function updateHealth() { $("player-health").style.width = `${game.player.health
 function updateLives() { $("player-lives").textContent = `LIVES: ${game.player.lives}`; $("enemy-lives").textContent = `LIVES: ${game.enemy.lives}`; }
 function flashMessage(message, timer) { game.message = message; game.messageTimer = timer; $("battle-message").textContent = message; $("battle-message").classList.add("show"); }
 
-function rewardWinCoins() {
+function rewardWinCoins(winner = game.player, completedSeconds = null) {
   const battleCoins = game.settings.difficulty === "hard" ? 30 : game.settings.difficulty === "easy" ? 10 : 20;
-  const battleSeconds = Math.floor((performance.now() - game.startedAt) / 1000);
+  const battleSeconds = completedSeconds === null ? Math.floor((performance.now() - game.startedAt) / 1000) : completedSeconds;
   const speedBonus = Math.max(0, 25 - Math.floor(battleSeconds / 5));
   const bossMultiplier = game.mode === "boss" ? 5 : 1;
   const reward = (battleCoins + speedBonus) * bossMultiplier;
@@ -802,7 +926,7 @@ function rewardWinCoins() {
   if (battleSeconds < 15) awardAchievement("speedy", earnedAchievements);
   if (profile.coins >= 100) awardAchievement("coin-collector", earnedAchievements);
   if (game.mode === "boss") awardAchievement("boss-beater", earnedAchievements);
-  if (game.player.id === "kingcaw") awardAchievement("crow-champion", earnedAchievements);
+  if (winner.id === "kingcaw") awardAchievement("crow-champion", earnedAchievements);
   if (profile.trophies >= 5) awardAchievement("five-trophies", earnedAchievements);
   if (profile.trophies >= 10) awardAchievement("ten-trophies", earnedAchievements);
   if (profile.trophies >= 50) awardAchievement("fifty-trophies", earnedAchievements);
@@ -872,6 +996,105 @@ function secondPlayerInput() {
   if (keys.g) { keys.g = false; doAttack(p, "range"); }
   if (keys.r) { keys.r = false; doAttack(p, "special"); }
   if (keys.u) { keys.u = false; activateOmega(p); }
+}
+
+function onlineControlsFromKeys() {
+  return {
+    left: Boolean(keys.ArrowLeft),
+    right: Boolean(keys.ArrowRight),
+    shield: Boolean(keys.e),
+    jumpNonce: onlineMatch.inputNonce && keys.ArrowUp ? onlineMatch.inputNonce : 0,
+    meleeNonce: onlineMatch.inputNonce && keys.a ? onlineMatch.inputNonce : 0,
+    rangeNonce: onlineMatch.inputNonce && keys.s ? onlineMatch.inputNonce : 0,
+    specialNonce: onlineMatch.inputNonce && keys.q ? onlineMatch.inputNonce : 0,
+    omegaNonce: onlineMatch.inputNonce && keys.w ? onlineMatch.inputNonce : 0,
+  };
+}
+
+function applyOnlineControls(fighter, input, previous) {
+  fighter.walking = false;
+  if (fighter.frozenTimer > 0) { fighter.shielding = false; return; }
+  if (!input.shield) fighter.shieldExhausted = false;
+  fighter.shielding = Boolean(input.shield && !fighter.shieldExhausted && fighter.shieldEnergy > 0);
+  if (fighter.shielding) {
+    fighter.shieldEnergy--;
+    if (fighter.shieldEnergy <= 0) { fighter.shielding = false; fighter.shieldExhausted = true; flashMessage("SHIELD EMPTY!", 32); }
+  }
+  if (input.left) { fighter.x -= fighter.speed; fighter.facing = -1; fighter.walking = true; }
+  if (input.right) { fighter.x += fighter.speed; fighter.facing = 1; fighter.walking = true; }
+  if (input.jumpNonce && input.jumpNonce !== previous.jumpNonce && fighter.jumpsLeft > 0) {
+    fighter.vy = fighter.jumpsLeft === 2 ? -19 : -17;
+    fighter.jumpsLeft--;
+  }
+  if (input.meleeNonce && input.meleeNonce !== previous.meleeNonce) doAttack(fighter, "melee");
+  if (input.rangeNonce && input.rangeNonce !== previous.rangeNonce) doAttack(fighter, "range");
+  if (input.specialNonce && input.specialNonce !== previous.specialNonce) doAttack(fighter, "special");
+  if (input.omegaNonce && input.omegaNonce !== previous.omegaNonce) activateOmega(fighter);
+}
+
+function onlineSnapshot() {
+  const copyFighter = (fighter) => ({ ...fighter });
+  const ownerSlot = (owner) => owner === game.player ? "p1" : "p2";
+  return {
+    sequence: Date.now(),
+    stageId: game.stage.id,
+    settings: game.settings,
+    timeLeftMs: game.timeLeftMs,
+    countdownMs: game.countdownMs,
+    countdownText: game.countdownText,
+    message: game.message,
+    messageTimer: game.messageTimer,
+    player: copyFighter(game.player),
+    enemy: copyFighter(game.enemy),
+    projectiles: game.projectiles.map((projectile) => ({ ...projectile, owner: ownerSlot(projectile.owner) })),
+    tankCharges: game.tankCharges.map((tank) => ({ ...tank, owner: ownerSlot(tank.owner) })),
+    apples: game.apples.map((apple) => ({ ...apple })),
+    powerUps: game.powerUps.map((powerUp) => ({ ...powerUp })),
+    sparks: game.sparks.map((spark) => ({ ...spark })),
+  };
+}
+
+function applyOnlineSnapshot(snapshot) {
+  if (!onlineIsGuest() || !snapshot?.player || !snapshot?.enemy) return;
+  const stage = stages.find((item) => item.id === snapshot.stageId) || chosenStage;
+  const player = { ...snapshot.player };
+  const enemy = { ...snapshot.enemy };
+  game = {
+    ...(game || {}),
+    mode: "online-guest",
+    stage,
+    settings: snapshot.settings || { ...matchSettings },
+    timeLeftMs: snapshot.timeLeftMs,
+    countdownMs: snapshot.countdownMs,
+    countdownText: snapshot.countdownText,
+    message: snapshot.message,
+    messageTimer: snapshot.messageTimer,
+    player,
+    enemy,
+    projectiles: (snapshot.projectiles || []).map((projectile) => ({ ...projectile, owner: projectile.owner === "p1" ? player : enemy })),
+    tankCharges: (snapshot.tankCharges || []).map((tank) => ({ ...tank, owner: tank.owner === "p1" ? player : enemy })),
+    apples: snapshot.apples || [],
+    powerUps: snapshot.powerUps || [],
+    sparks: snapshot.sparks || [],
+    ended: false,
+  };
+  $("battle-message").textContent = game.countdownMs > 0 ? game.countdownText : game.message || "FIGHT!";
+  $("battle-message").classList.toggle("show", game.countdownMs > 0 || game.messageTimer > 0);
+  updateHealth();
+  updateLives();
+  updateBattleStatus();
+}
+
+function publishOnlineState(now) {
+  if (!onlineIsHost() || now - onlineMatch.lastStateAt < 66) return;
+  onlineMatch.lastStateAt = now;
+  window.RumbleOnline.publishState(onlineSnapshot()).catch(() => {});
+}
+
+function sendOnlineControls(now) {
+  if (!onlineIsGuest() || now - onlineMatch.lastInputAt < 45) return;
+  onlineMatch.lastInputAt = now;
+  window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
 }
 
 function enemyAI() {
@@ -1413,6 +1636,12 @@ function draw() {
 function loop(now) {
   if (!game || game.ended) return;
   const dt = Math.min(40, now-lastTime); lastTime=now;
+  if (onlineIsGuest()) {
+    sendOnlineControls(now);
+    draw();
+    animationFrame = requestAnimationFrame(loop);
+    return;
+  }
   if (game.countdownMs > 0) {
     game.countdownMs = Math.max(0, game.countdownMs - dt);
     const countdownText = game.countdownMs > 0 ? String(Math.ceil(game.countdownMs / 1000)) : "FIGHT!";
@@ -1426,29 +1655,47 @@ function loop(now) {
         $("battle-message").classList.add("show");
       }
     }
+    publishOnlineState(now);
     draw();
     animationFrame = requestAnimationFrame(loop);
     return;
   }
   if (updateBattleTimer(dt)) return;
   playerInput();
-  if (game.mode === "two-player") secondPlayerInput(); else enemyAI();
+  if (game.mode === "two-player") secondPlayerInput();
+  else if (onlineIsHost()) {
+    applyOnlineControls(game.enemy, onlineMatch.remoteInput, onlineMatch.previousRemoteInput);
+    onlineMatch.previousRemoteInput = { ...onlineMatch.remoteInput };
+  } else enemyAI();
   updateFighter(game.player); updateFighter(game.enemy); updateProjectiles(); updateTankCharges(); updateApples(dt); updatePowerUps(dt);
   if (game.messageTimer > 0) { game.messageTimer--; if (game.messageTimer === 0) $("battle-message").classList.remove("show"); }
+  publishOnlineState(now);
   draw(); animationFrame=requestAnimationFrame(loop);
 }
 
 function endBattle(playerWon, timeRanOut = false) {
   if (game.ended) return;
   game.ended = true;
+  const onlineBattle = game.mode === "online-host";
   const trophyMessage = recordBattleTrophy(playerWon);
-  const coinsWon = (playerWon || game.mode === "two-player") && game.mode !== "training" ? rewardWinCoins() : null;
+  const completedSeconds = game.startedAt ? Math.max(0, Math.floor((performance.now() - game.startedAt) / 1000)) : 0;
+  const coinsWon = (playerWon || game.mode === "two-player") && game.mode !== "training" ? rewardWinCoins(game.player, completedSeconds) : null;
   if (!coinsWon && game.mode !== "training") saveProfile();
   const rewardText = coinsWon?.bossMultiplier === 5
     ? `+${coinsWon.reward} ${coinIcon}! 5× BOSS BATTLE REWARD!${coinsWon.arenaUnlockMessage}${coinsWon.achievementMessage}`
     : coinsWon ? `+${coinsWon.reward} ${coinIcon}! ${coinsWon.battleCoins} for winning + ${coinsWon.speedBonus} speed bonus.${coinsWon.arenaUnlockMessage}${coinsWon.achievementMessage}` : "";
   cancelAnimationFrame(animationFrame);
   flashMessage(timeRanOut ? "TIME'S UP!" : playerWon ? "YOU WIN!" : "OH NO!", 60);
+  if (onlineBattle) {
+    const result = {
+      matchId: window.RumbleOnline.getRoom()?.matchId || `${onlineMatch.roomCode}-${Date.now()}`,
+      winnerSlot: playerWon ? "p1" : "p2",
+      winnerName: (playerWon ? game.player : game.enemy).name,
+      timeRanOut,
+      completedSeconds,
+    };
+    window.RumbleOnline.publishResult(result).catch(() => {});
+  }
   setTimeout(() => {
     const winner = playerWon ? game.player : game.enemy;
     if (game.mode === "two-player") {
@@ -1492,14 +1739,128 @@ function showWinConfetti() {
   window.setTimeout(() => { confetti.innerHTML = ""; }, 3400);
 }
 
+function onlineFighter(id, weaponLevel) {
+  const fighter = roster.find((item) => item.id === id);
+  return fighter ? { ...fighter, weaponLevel: Math.max(0, Number(weaponLevel) || 0) } : null;
+}
+
+function startOnlineBattle(room) {
+  if (onlineMatch.battleStarted || !room?.hostFighter || !room?.guestFighter) return;
+  const hostFighter = onlineFighter(room.hostFighter, room.hostWeaponLevel);
+  const guestFighter = onlineFighter(room.guestFighter, room.guestWeaponLevel);
+  const stage = stages.find((item) => item.id === room.stageId);
+  if (!hostFighter || !guestFighter || !stage) return;
+  onlineMatch.battleStarted = true;
+  chosenStage = stage;
+  matchSettings = { ...matchSettings, ...(room.settings || {}) };
+  if (onlineIsHost()) {
+    onlineMatch.unlistenInput = window.RumbleOnline.onInput("p2", (input) => { onlineMatch.remoteInput = input || {}; });
+  }
+  startBattle(hostFighter, guestFighter);
+  if (onlineIsGuest() && room.state) applyOnlineSnapshot(room.state);
+}
+
+function claimedOnlineMatch(matchId) {
+  try {
+    const claimed = JSON.parse(localStorage.getItem("rumble-rivals-online-results") || "[]");
+    return Array.isArray(claimed) && claimed.includes(matchId);
+  } catch { return false; }
+}
+
+function rememberOnlineMatch(matchId) {
+  try {
+    const claimed = JSON.parse(localStorage.getItem("rumble-rivals-online-results") || "[]");
+    const next = [...new Set([...(Array.isArray(claimed) ? claimed : []), matchId])].slice(-100);
+    localStorage.setItem("rumble-rivals-online-results", JSON.stringify(next));
+  } catch { /* The one-time reward still works during this visit. */ }
+}
+
+function showOnlineGuestResult(result) {
+  if (!onlineIsGuest() || !result?.matchId || onlineMatch.handledResult === result.matchId) return;
+  onlineMatch.handledResult = result.matchId;
+  const playerWon = result.winnerSlot === "p2";
+  let trophyMessage = "";
+  let coinsWon = null;
+  if (!claimedOnlineMatch(result.matchId)) {
+    trophyMessage = recordBattleTrophy(playerWon);
+    coinsWon = playerWon ? rewardWinCoins(game.enemy, result.completedSeconds || 0) : null;
+    if (!coinsWon) saveProfile();
+    rememberOnlineMatch(result.matchId);
+  } else {
+    trophyMessage = "This match was already counted.";
+  }
+  const rewardText = coinsWon ? `+${coinsWon.reward} ${coinIcon}! ${coinsWon.battleCoins} for winning + ${coinsWon.speedBonus} speed bonus.${coinsWon.arenaUnlockMessage}${coinsWon.achievementMessage}` : playerWon ? "Your rewards were already counted." : `You have ${profile.coins} ${coinIcon}. Win the next battle to earn more!`;
+  $("result-kicker").textContent = result.timeRanOut ? "TIME'S UP!" : "THE ARENA CHEERS!";
+  $("result-title").textContent = playerWon ? "YOU WIN!" : "TRY AGAIN!";
+  $("result-copy").textContent = result.timeRanOut ? `${result.winnerName} had more health when time ran out!` : `${result.winnerName} is the Rumble Rivals champion!`;
+  $("coin-reward").innerHTML = rewardText;
+  $("trophy-reward").textContent = trophyMessage;
+  if (playerWon) showWinConfetti(); else $("win-confetti").innerHTML = "";
+  if (game) game.ended = true;
+  cancelAnimationFrame(animationFrame);
+  showScreen("result");
+}
+
+function handleOnlineRoom(room) {
+  if (!onlineMatch.role || !room) return;
+  if (room.version !== window.RumbleOnline.version) {
+    setOnlineLobbyMessage("Your friend has a different game version. Both players should reload the game.");
+    showScreen("online-lobby");
+    return;
+  }
+  const friendUid = onlineIsHost() ? room.guestUid : room.hostUid;
+  const friendConnected = friendUid && room.players?.[friendUid]?.connected !== false;
+  if (room.status === "abandoned" || (friendUid && !friendConnected && room.status !== "finished")) {
+    cancelAnimationFrame(animationFrame);
+    setOnlineLobbyMessage("Your friend left the room or lost their connection.");
+    showScreen("online-lobby");
+    return;
+  }
+  if (onlineIsHost() && room.hostFighter && room.guestFighter && room.status !== "playing" && room.status !== "finished" && !onlineMatch.battleStarted && !onlineMatch.starting) {
+    onlineMatch.starting = true;
+    window.RumbleOnline.startMatch().then(() => startOnlineBattle(window.RumbleOnline.getRoom() || room)).catch((error) => {
+      onlineMatch.starting = false;
+      setOnlineLobbyMessage(error.message || "Could not start the online battle.");
+    });
+    return;
+  }
+  if (onlineIsGuest() && room.hostFighter && !room.guestFighter && !$("select").classList.contains("active")) {
+    buildRoster();
+    showFighterSelection();
+    showScreen("select");
+  }
+  if (room.status === "playing") {
+    if (!onlineMatch.battleStarted) startOnlineBattle(room);
+    if (onlineIsGuest() && room.state) applyOnlineSnapshot(room.state);
+  }
+  if (room.status === "finished" && room.result) showOnlineGuestResult(room.result);
+}
+
+window.RumbleOnline?.subscribe((event) => {
+  if (event.type === "room") handleOnlineRoom(event.room);
+  if (event.type === "error" && onlineMatch.role) setOnlineLobbyMessage(event.message);
+});
+
 $("start-button").addEventListener("click", startLoading);
 $("solo-play-button").addEventListener("click", () => { matchMode = "computer"; playerOneChoice = null; showScreen("stages"); });
 $("two-player-button").addEventListener("click", () => { matchMode = "two-player"; playerOneChoice = null; showScreen("stages"); });
-$("find-friend-button").addEventListener("click", () => {
-  $("play-menu-message").textContent = "Friend codes will be ready when the game is online. For now, choose Play Game for a computer battle!";
+$("find-friend-button").addEventListener("click", () => showOnlineLobby("host"));
+$("enter-code-button").addEventListener("click", () => showOnlineLobby("join"));
+$("online-create-button").addEventListener("click", () => {
+  if (onlineIsHost() && !onlineMatch.hostConfigured) { showScreen("stages"); return; }
+  makeFriendRoom();
 });
-$("enter-code-button").addEventListener("click", () => {
-  $("play-menu-message").textContent = "Enter Code will let you join a friend's battle once the online part of the game is ready.";
+$("online-join-button").addEventListener("click", joinFriendRoom);
+$("online-copy-code").addEventListener("click", async () => {
+  const code = onlineMatch.roomCode;
+  if (!code) return;
+  try { await navigator.clipboard.writeText(code); setOnlineLobbyMessage("Code copied! Send it to your friend."); }
+  catch { setOnlineLobbyMessage(`Tell your friend this code: ${code}`); }
+});
+$("online-lobby-back").addEventListener("click", () => {
+  if (isOnlineMatch()) leaveOnlineMatch();
+  matchMode = "computer";
+  showScreen("play-menu");
 });
 $("play-menu-back").addEventListener("click", returnToCover);
 $("training-button").addEventListener("click", () => { matchMode = "training"; playerOneChoice = null; buildRoster(); showFighterSelection(); showScreen("select"); });
@@ -1517,10 +1878,10 @@ $("achievements-menu-button").addEventListener("click", () => { buildAchievement
 $("unlocks-back").addEventListener("click", () => showScreen("settings"));
 $("upgrades-back").addEventListener("click", () => showScreen("settings"));
 $("achievements-back").addEventListener("click", () => showScreen("settings"));
-$("stage-back").addEventListener("click", () => showScreen("play-menu"));
-$("back-to-cover").addEventListener("click", () => { playerOneChoice = null; showScreen("stages"); });
+$("stage-back").addEventListener("click", () => isOnlineMatch() ? showOnlineWaiting() : showScreen("play-menu"));
+$("back-to-cover").addEventListener("click", () => { playerOneChoice = null; isOnlineMatch() ? showOnlineWaiting() : showScreen("stages"); });
 $("quit-battle").addEventListener("click", returnToCover);
-$("rematch-button").addEventListener("click", () => startBattle(game.player, game.mode === "two-player" ? game.enemy : null));
+$("rematch-button").addEventListener("click", () => isOnlineMatch() ? returnToCover() : startBattle(game.player, game.mode === "two-player" ? game.enemy : null));
 $("select-button").addEventListener("click", returnToCover);
 window.addEventListener("keydown", (event) => {
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
@@ -1535,9 +1896,15 @@ window.addEventListener("keydown", (event) => {
     return;
   }
   if (["ArrowLeft","ArrowRight","ArrowUp","a","s","q","w","e","j","l","i","f","g","r","u","y"," "].includes(key)) event.preventDefault();
+  if (onlineIsGuest() && ["ArrowUp", "a", "s", "q", "w"].includes(key) && !keys[key]) onlineMatch.inputNonce++;
   keys[key] = true;
+  if (onlineIsGuest() && game && !game.ended) window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
 });
-window.addEventListener("keyup", (event) => { const key=event.key.length===1 ? event.key.toLowerCase() : event.key; keys[key]=false; });
+window.addEventListener("keyup", (event) => {
+  const key=event.key.length===1 ? event.key.toLowerCase() : event.key;
+  keys[key]=false;
+  if (onlineIsGuest() && game && !game.ended) window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
+});
 updateCoinDisplays();
 updateTrophyDisplay();
 buildUnlocks();
