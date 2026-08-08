@@ -947,6 +947,19 @@ function doAttack(who, type) {
         crystalShard: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#75fff0", 10);
+    } else if (who.id === "megameg") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (12 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#3daeff",
+        life: 76,
+        size: 18 + weaponLevel * 5,
+        plasmaTornado: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#55ccff", 12);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -1681,6 +1694,30 @@ function drawProjectile(projectile) {
       ctx.arc(length * spot, 0, Math.max(1.5, projectile.size * .1), 0, Math.PI * 2);
       ctx.fill();
     });
+  } else if (projectile.plasmaTornado) {
+    const size = projectile.size;
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(direction * projectile.life * .09);
+    ctx.shadowColor = "#32b7ff";
+    ctx.shadowBlur = 22;
+    ctx.strokeStyle = "#52ccff";
+    ctx.lineWidth = Math.max(3, size * .16);
+    for (let ring = 0; ring < 4; ring += 1) {
+      const y = -size * .7 + ring * size * .46;
+      const width = size * (.5 + ring * .22);
+      ctx.beginPath();
+      ctx.ellipse(0, y, width, Math.max(3, size * .13), 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = "#d5f7ff";
+    ctx.lineWidth = Math.max(2, size * .09);
+    ctx.beginPath();
+    ctx.moveTo(-size * .32, -size * .75);
+    ctx.lineTo(size * .25, -size * .28);
+    ctx.lineTo(-size * .18, size * .12);
+    ctx.lineTo(size * .42, size * .62);
+    ctx.stroke();
   } else if (projectile.crystalShard) {
     const size = projectile.size;
     const direction = Math.sign(projectile.vx) || 1;
