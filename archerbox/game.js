@@ -850,6 +850,19 @@ function doAttack(who, type) {
         granolaBar: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#f5cf70", 7);
+    } else if (who.id === "professor") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (13 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#a9bcc4",
+        life: 70,
+        size: 14 + weaponLevel * 4,
+        metalGear: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#d7e5e6", 8);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -1584,6 +1597,32 @@ function drawProjectile(projectile) {
       ctx.arc(length * spot, 0, Math.max(1.5, projectile.size * .1), 0, Math.PI * 2);
       ctx.fill();
     });
+  } else if (projectile.metalGear) {
+    const teeth = 10;
+    const size = projectile.size;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.life * .2 * (Math.sign(projectile.vx) || 1));
+    ctx.shadowColor = "#70e5df";
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = "#aabcc2";
+    ctx.beginPath();
+    for (let tooth = 0; tooth < teeth * 2; tooth += 1) {
+      const angle = (Math.PI * 2 * tooth) / (teeth * 2);
+      const radius = tooth % 2 === 0 ? size : size * .72;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (tooth === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#5b6d73";
+    ctx.beginPath();
+    ctx.arc(0, 0, size * .5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#dceef0";
+    ctx.beginPath();
+    ctx.arc(0, 0, size * .22, 0, Math.PI * 2);
+    ctx.fill();
   } else if (projectile.rifleBullet) {
     const direction = Math.sign(projectile.vx) || 1;
     ctx.translate(projectile.x, projectile.y);
