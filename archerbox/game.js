@@ -837,6 +837,19 @@ function doAttack(who, type) {
     if (who.powerUp === "pistol") {
       game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 23, owner: who, damage, color: "#fff2a8", life: 62, size: 8, gunBullet: true, bulletColor: "#fff2a8", bulletLength: 2.4 });
       burst(projectileOrigin.x, projectileOrigin.y, "#fff2a8", 8);
+    } else if (who.id === "pip") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (14 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#d69c45",
+        life: 70,
+        size: 13 + weaponLevel * 3,
+        granolaBar: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#f5cf70", 7);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -1553,7 +1566,25 @@ function drawTankCharge(tank) {
 
 function drawProjectile(projectile) {
   ctx.save();
-  if (projectile.rifleBullet) {
+  if (projectile.granolaBar) {
+    const direction = Math.sign(projectile.vx) || 1;
+    const length = projectile.size * 1.65;
+    const height = projectile.size * .72;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(direction * projectile.life * .18);
+    ctx.shadowColor = "#9a6024";
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = "#e7b954";
+    ctx.fillRect(-length / 2, -height / 2, length, height);
+    ctx.fillStyle = "#9b5a2c";
+    ctx.fillRect(-length / 2 + 4, -height / 2 + 3, length - 8, height - 6);
+    ctx.fillStyle = "#f7da83";
+    [-.28, 0, .28].forEach((spot) => {
+      ctx.beginPath();
+      ctx.arc(length * spot, 0, Math.max(1.5, projectile.size * .1), 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else if (projectile.rifleBullet) {
     const direction = Math.sign(projectile.vx) || 1;
     ctx.translate(projectile.x, projectile.y);
     ctx.scale(direction, 1);
