@@ -901,7 +901,7 @@ function doAttack(who, type) {
         y: projectileOrigin.y,
         vx: who.facing * (13 + weaponLevel * 2),
         owner: who,
-        damage,
+        damage: damage + 7,
         color: "#c7d4d8",
         life: 72,
         size: 15 + weaponLevel * 4,
