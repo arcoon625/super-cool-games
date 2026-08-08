@@ -863,6 +863,19 @@ function doAttack(who, type) {
         metalGear: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#d7e5e6", 8);
+    } else if (who.id === "bloop") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (11 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#71d9ff",
+        life: 74,
+        size: 17 + weaponLevel * 5,
+        bubble: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#a9efff", 8);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -1622,6 +1635,26 @@ function drawProjectile(projectile) {
     ctx.fillStyle = "#dceef0";
     ctx.beginPath();
     ctx.arc(0, 0, size * .22, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (projectile.bubble) {
+    const size = projectile.size;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.globalAlpha = .48;
+    ctx.fillStyle = "#69cfff";
+    ctx.beginPath();
+    ctx.arc(0, 0, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "#d5f8ff";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "#58d7ff";
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.arc(0, 0, size, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(-size * .32, -size * .34, Math.max(2, size * .18), 0, Math.PI * 2);
     ctx.fill();
   } else if (projectile.rifleBullet) {
     const direction = Math.sign(projectile.vx) || 1;
