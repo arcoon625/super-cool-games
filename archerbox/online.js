@@ -82,30 +82,21 @@
       const code = makeCode();
       const ref = database.ref(`rumbleRivalsRooms/${code}`);
       const now = Date.now();
-      const result = await ref.transaction((room) => {
-        // Do not overwrite even an expired room. A fresh random code is safer,
-        // and stale rooms are ignored by the join screen after 15 minutes.
-        if (room) return;
-        return {
+      // Claim only the host slot first. Firebase can safely approve this tiny
+      // transaction before the rest of the room is filled in.
+      const claim = await ref.child("hostUid").transaction((currentHost) => currentHost ? undefined : host.uid);
+      if (claim.committed) {
+        await ref.update({
           version,
           status: "waiting",
-          hostUid: host.uid,
-          guestUid: null,
           hostName: name,
-          guestName: null,
-          hostFighter: null,
-          guestFighter: null,
-          stageId: null,
-          settings: null,
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           expiresAt: now + ROOM_TTL_MS,
-          players: { [host.uid]: { name, slot: "p1", connected: true } }
-        };
-      });
-      if (result.committed) {
+          [`players/${host.uid}`]: { name, slot: "p1", connected: true }
+        });
         listenToRoom(code);
         await watchDisconnect("host");
-        return { code, uid: host.uid, role: "host", room: result.snapshot.val() };
+        return { code, uid: host.uid, role: "host", room: (await ref.once("value")).val() };
       }
     }
     throw new Error("Could not make a fresh room code. Please try again.");
