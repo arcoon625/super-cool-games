@@ -444,12 +444,21 @@
     <div class="empty-state" id="empty-state">No games matched that search.</div>
 
     <p class="footer-copy">
-      Icons are rendered to a canvas and inserted as <code>image/png</code> data URLs, so the page stays self-contained while each game still gets a distinct visual identity.
+      Every game gets its own colorful icon to help you find your next adventure.
     </p>
   </main>
 
   <script>
     const games = [
+      {
+        title: "Rumble Rivals",
+        href: "archerbox/index.html",
+        tag: "Platform Fighter",
+        desc: "Pick a fighter, collect power-ups, and battle across wild arenas.",
+        motif: "raccoon",
+        palette: ["#6d4bd6", "#17b7e7", "#ffd447"],
+        icon: "archerbox/assets/rumble-rivals-icon.png"
+      },
       {
         title: "War Game",
         href: "BattleSomething/war_game.html",
@@ -1485,7 +1494,7 @@
             <span class="card-line"></span>
           </div>
         `;
-        card.querySelector(".game-icon").src = makeIcon(game);
+        card.querySelector(".game-icon").src = game.icon || makeIcon(game);
         grid.appendChild(card);
       }
 
