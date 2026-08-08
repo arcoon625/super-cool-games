@@ -10,8 +10,7 @@
 window.RUMBLE_RIVALS_FIREBASE_CONFIG = {
   apiKey: "AIzaSyAcW7TlGk5KEOVKP45rtXDVskVnj9rHJXY",
   authDomain: "archerbox-1d42a.firebaseapp.com",
-  // Firebase shows this exact address after you create Realtime Database.
-  databaseURL: "",
+  databaseURL: "https://archerbox-1d42a-default-rtdb.firebaseio.com",
   projectId: "archerbox-1d42a",
   storageBucket: "archerbox-1d42a.firebasestorage.app",
   messagingSenderId: "848273276559",
