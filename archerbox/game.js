@@ -934,6 +934,19 @@ function doAttack(who, type) {
         electricGear: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#c884ff", 10);
+    } else if (who.id === "null") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (15 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#6fffe8",
+        life: 72,
+        size: 15 + weaponLevel * 5,
+        crystalShard: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#75fff0", 10);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -1668,6 +1681,28 @@ function drawProjectile(projectile) {
       ctx.arc(length * spot, 0, Math.max(1.5, projectile.size * .1), 0, Math.PI * 2);
       ctx.fill();
     });
+  } else if (projectile.crystalShard) {
+    const size = projectile.size;
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(direction * projectile.life * .12);
+    ctx.shadowColor = "#4effe6";
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = "#42d8cf";
+    ctx.beginPath();
+    ctx.moveTo(size * 1.15, 0);
+    ctx.lineTo(0, -size * .58);
+    ctx.lineTo(-size * .8, 0);
+    ctx.lineTo(0, size * .58);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#bafff5";
+    ctx.beginPath();
+    ctx.moveTo(size * .88, 0);
+    ctx.lineTo(0, -size * .4);
+    ctx.lineTo(0, size * .05);
+    ctx.closePath();
+    ctx.fill();
   } else if (projectile.electricGear) {
     const teeth = 8;
     const size = projectile.size;
