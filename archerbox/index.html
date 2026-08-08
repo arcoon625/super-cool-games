@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rumble Rivals</title>
+    <link rel="stylesheet" href="styles.css?v=win-confetti" />
+    <style>
+      .result-card { position: relative; z-index: 1; }
+      .win-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+      .confetti-piece { position: absolute; top: var(--top); width: 12px; height: 20px; left: var(--left); background: var(--color); border-radius: 3px; animation: confetti-fall var(--fall-time) ease-in forwards; animation-delay: var(--delay); }
+      @keyframes confetti-fall { to { transform: translate(var(--drift), 820px) rotate(720deg); opacity: 0; } }
+    </style>
+  </head>
+  <body>
+    <main class="game-shell">
+      <button id="settings-button" class="gear-button" aria-label="Open battle settings" title="Battle settings">⚙</button>
+      <section id="cover" class="screen cover-screen active">
+        <div class="cover-stars">✦ ✧ ✦ ✧ ✦</div>
+        <div id="cover-card" class="cover-card">
+          <p class="eyebrow">ARCHER'S ORIGINAL FIGHTING GAME</p>
+          <h1>RUMBLE<br /><span>RIVALS</span></h1>
+          <p class="cover-subtitle">Heroes, villains, gadgets, and giant tanks!</p>
+          <button id="start-button" class="big-button">PLAY GAME</button>
+          <div id="cover-loader" class="cover-loader" aria-live="polite">
+            <div class="progress-track"><div id="cover-progress-bar" class="progress-bar"></div></div>
+            <strong id="cover-loading-percent" class="cover-loading-percent">0%</strong>
+            <p id="cover-loading-message">Waking up Bloop's fishbowl...</p>
+          </div>
+          <p class="tiny-note">Use the Arrow Keys to move · A, S, D, Q, E to attack</p>
+        </div>
+        <div class="cover-characters" aria-hidden="true">
+          <div class="mini raccoon">🦝</div><div class="mini shark">🦈</div><div class="mini tank">▰</div><div class="mini crystal">◆</div>
+        </div>
+      </section>
+
+      <section id="loading" class="screen loading-screen">
+        <div class="loading-box">
+          <p class="eyebrow">GETTING THE ARENA READY</p>
+          <h2>Loading Rumble Rivals...</h2>
+          <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+          <p id="loading-message">Waking up Bloop's fishbowl...</p>
+        </div>
+      </section>
+
+      <section id="play-menu" class="screen play-menu-screen">
+        <div class="play-menu-card">
+          <p class="eyebrow">RUMBLE RIVALS</p>
+          <h2>What do you want to do?</h2>
+          <p class="play-menu-copy">Pick how you want to play before choosing an arena.</p>
+          <div class="play-menu-buttons">
+            <button id="solo-play-button" class="big-button">PLAY GAME</button>
+            <button id="two-player-button" class="menu-choice-button">2 PLAYER</button>
+            <button id="find-friend-button" class="menu-choice-button">FIND A FRIEND</button>
+            <button id="enter-code-button" class="menu-choice-button">ENTER CODE</button>
+          </div>
+          <p id="play-menu-message" class="play-menu-message" aria-live="polite">Play Game lets you choose an arena and fighter.</p>
+          <button id="play-menu-back" class="small-button">Back to Cover</button>
+        </div>
+      </section>
+
+      <section id="settings" class="screen settings-screen">
+        <header class="select-header">
+          <div>
+            <p class="eyebrow">BATTLE SETTINGS</p>
+            <h2>Set up your match</h2>
+          </div>
+          <button id="settings-back" class="small-button">Back</button>
+        </header>
+        <div class="settings-card">
+          <div class="trophy-bank" aria-label="Trophy count">🏆 <strong id="settings-trophies">0</strong> TROPHIES</div>
+          <div class="setting-group">
+            <h3>Computer Difficulty</h3>
+            <p>How tricky should the computer fighter be?</p>
+            <div class="setting-options" role="group" aria-label="Computer difficulty">
+              <button type="button" class="setting-choice" data-setting="difficulty" data-value="easy"><strong>Easy</strong><span>Slow and friendly</span></button>
+              <button type="button" class="setting-choice selected" data-setting="difficulty" data-value="normal"><strong>Normal</strong><span>A fair battle</span></button>
+              <button type="button" class="setting-choice" data-setting="difficulty" data-value="hard"><strong>Hard</strong><span>Fast and fierce</span></button>
+            </div>
+          </div>
+          <div class="setting-group">
+            <h3>Battle Timer</h3>
+            <p>Pick how long the fight lasts.</p>
+            <div class="setting-options" role="group" aria-label="Battle timer">
+              <button type="button" class="setting-choice" data-setting="timer" data-value="60"><strong>1 Minute</strong><span>Quick battle</span></button>
+              <button type="button" class="setting-choice selected" data-setting="timer" data-value="120"><strong>2 Minutes</strong><span>Big battle</span></button>
+              <button type="button" class="setting-choice" data-setting="timer" data-value="none"><strong>No Timer</strong><span>Fight as long as you want</span></button>
+            </div>
+          </div>
+          <div class="setting-group">
+            <h3>Music Volume</h3>
+            <p>Choose how loud the upbeat game music should be.</p>
+            <div class="setting-options volume-options" role="group" aria-label="Music volume">
+              <button type="button" class="setting-choice" data-setting="volume" data-value="0"><strong>Mute</strong><span>No music</span></button>
+              <button type="button" class="setting-choice" data-setting="volume" data-value="0.25"><strong>Quiet</strong><span>Soft music</span></button>
+              <button type="button" class="setting-choice selected" data-setting="volume" data-value="0.55"><strong>Normal</strong><span>Just right</span></button>
+              <button type="button" class="setting-choice" data-setting="volume" data-value="0.9"><strong>Loud</strong><span>Turn it up!</span></button>
+            </div>
+          </div>
+          <div class="settings-shortcuts">
+            <button id="training-button" class="training-button"><strong>TRAIN</strong><span>Practice on a dummy</span></button>
+            <button id="unlock-menu-button" class="unlock-menu-button">UNLOCKS · <span class="coin" aria-label="coin">$</span> <span id="settings-coins">0</span> COINS</button>
+          </div>
+          <button id="upgrade-menu-button" class="upgrade-menu-button">WEAPON UPGRADES · <span class="coin" aria-label="coin">$</span> <span id="upgrade-settings-coins">0</span> COINS</button>
+          <button id="achievements-menu-button" class="achievements-menu-button">🏆 ACHIEVEMENTS</button>
+          <button id="settings-continue" class="big-button">SAVE SETTINGS</button>
+        </div>
+      </section>
+
+      <section id="unlocks" class="screen unlock-screen">
+        <header class="select-header">
+          <div>
+            <p class="eyebrow">RUMBLE REWARDS</p>
+            <h2>Unlock new stuff!</h2>
+          </div>
+          <button id="unlocks-back" class="small-button">Back</button>
+        </header>
+        <div class="coin-bank"><span class="coin" aria-label="coin">$</span> <strong id="unlock-coins">0</strong> coins</div>
+        <p id="unlock-message" class="unlock-message">Win battles to earn coins, then spend them here.</p>
+        <div id="unlock-grid" class="unlock-grid"></div>
+      </section>
+
+      <section id="upgrades" class="screen upgrades-screen">
+        <header class="select-header">
+          <div>
+            <p class="eyebrow">WEAPON WORKSHOP</p>
+            <h2>Power up your gear!</h2>
+          </div>
+          <button id="upgrades-back" class="small-button">Back</button>
+        </header>
+        <div class="coin-bank"><span class="coin" aria-label="coin">$</span> <strong id="upgrade-coins">0</strong> coins</div>
+        <p id="upgrade-message" class="unlock-message">Pick a fighter, then upgrade their range weapon.</p>
+        <div class="upgrade-layout">
+          <div>
+            <h3 class="upgrade-label">Choose a fighter</h3>
+            <div id="upgrade-fighter-grid" class="upgrade-fighter-grid"></div>
+          </div>
+          <article id="upgrade-details" class="upgrade-details" aria-live="polite"></article>
+        </div>
+      </section>
+
+      <section id="achievements" class="screen achievements-screen">
+        <header class="select-header">
+          <div>
+            <p class="eyebrow">YOUR TROPHIES</p>
+            <h2>Achievements</h2>
+          </div>
+          <button id="achievements-back" class="small-button">Back</button>
+        </header>
+        <p id="achievement-count" class="unlock-message">0 of 5 achievements earned</p>
+        <div id="achievements-grid" class="achievements-grid"></div>
+      </section>
+
+      <section id="stages" class="screen stage-screen">
+        <header class="select-header">
+          <div>
+            <p class="eyebrow">CHOOSE YOUR PLACE</p>
+            <h2>Where will you rumble?</h2>
+          </div>
+          <div class="stage-actions">
+            <button id="boss-button" class="boss-button" aria-label="Start a boss battle" title="Boss battles">BOSS</button>
+            <button id="stage-back" class="small-button">Back</button>
+          </div>
+        </header>
+        <div id="stage-grid" class="stage-grid"></div>
+        <p class="select-help">Pick a place first. Then choose your fighter!</p>
+      </section>
+
+      <section id="select" class="screen select-screen">
+        <header class="select-header">
+          <div>
+            <p id="fighter-select-eyebrow" class="eyebrow">CHOOSE YOUR FIGHTER</p>
+            <h2 id="fighter-select-heading">Who will you play?</h2>
+          </div>
+          <button id="back-to-cover" class="small-button">Back</button>
+        </header>
+        <div id="character-grid" class="character-grid"></div>
+        <div id="fighter-details" class="fighter-details" aria-live="polite">
+          <strong>Want to see stats?</strong> Hover over a fighter, then press <kbd>A</kbd>.
+        </div>
+        <p id="fighter-select-help" class="select-help">Click a fighter to play. The computer will pick a rival!</p>
+      </section>
+
+      <section id="battle" class="screen battle-screen">
+        <div class="battle-topbar">
+          <button id="quit-battle" class="small-button">START OVER</button>
+          <div class="health-group player-health"><span id="player-name">YOU</span><div class="health-track"><div id="player-health" class="health-fill"></div></div><small id="player-lives" class="lives-text">LIVES: 3</small></div>
+          <div id="round-text" class="round-text">ROUND 1</div>
+          <div class="health-group enemy-health"><span id="enemy-name">RIVAL</span><div class="health-track"><div id="enemy-health" class="health-fill enemy-fill"></div></div><small id="enemy-lives" class="lives-text">LIVES: 3</small></div>
+        </div>
+        <canvas id="game-canvas" width="1100" height="620" aria-label="Rumble Rivals battle arena"></canvas>
+        <div id="battle-message" class="battle-message">FIGHT!</div>
+        <div id="controls-card" class="controls-card">
+          <strong>Player 1:</strong> Arrow Keys move/jump · <b>A</b> melee · <b>S</b> range · <b>Q</b> special · <b>W</b> Omega · <b>E</b> shield &nbsp; <strong>Player 2:</strong> <b>J/L</b> move · <b>I</b> jump · <b>F</b> melee · <b>G</b> range · <b>R</b> special · <b>U</b> Omega · <b>Y</b> shield
+        </div>
+      </section>
+
+      <section id="result" class="screen result-screen">
+        <div id="win-confetti" class="win-confetti" aria-hidden="true"></div>
+        <div class="result-card">
+          <p id="result-kicker" class="eyebrow">BATTLE COMPLETE</p>
+          <h2 id="result-title">YOU WIN!</h2>
+          <p id="result-copy">Great rumbling!</p>
+          <p id="coin-reward" class="coin-reward"></p>
+          <p id="trophy-reward" class="trophy-reward"></p>
+          <button id="rematch-button" class="big-button">NEXT BATTLE</button>
+          <button id="select-button" class="small-button result-small">START OVER</button>
+        </div>
+      </section>
+    </main>
+    <script src="game.js?v=screenwide-confetti-blast"></script>
+  </body>
+</html>

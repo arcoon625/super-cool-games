@@ -1,0 +1,1547 @@
+const $ = (id) => document.getElementById(id);
+const screens = ["cover", "loading", "play-menu", "settings", "unlocks", "upgrades", "achievements", "stages", "select", "battle", "result"];
+const canvas = $("game-canvas");
+const ctx = canvas.getContext("2d");
+const fallbackArena = {
+  floor: 470,
+  platforms: [
+    { x: 105, y: 390, width: 220 },
+    { x: 445, y: 310, width: 210 },
+    { x: 775, y: 390, width: 220 },
+  ],
+};
+
+const roster = [
+  { id: "shellshock", name: "Sergeant Shellshock", icon: "🦝", art: "assets/characters/sergeant-shellshock.png", color: "#e5704e", attack: "Helmet Bonk", range: "Pistol", special: "Big Boom Blast", speed: 5.3, power: 10 },
+  { id: "pip", name: "Pip", icon: "🐾", art: "assets/characters/pip.png", color: "#efb94d", attack: "Paw Swipe", range: "Snack Toss", special: "Grapple Zip", speed: 6.2, power: 8 },
+  { id: "professor", name: "Professor Trash Panda", icon: "🧪", art: "assets/characters/professor-trash-panda.png", color: "#5fa7a6", attack: "Wrench Whack", range: "Gear Flinger", special: "Trash-o-Matic", speed: 4.7, power: 11 },
+  { id: "bloop", name: "Bloop", icon: "🦈", art: "assets/characters/bloop.png", color: "#388fe5", attack: "Bowl Bump", range: "Bubble Beam", special: "Fishbowl Dash", speed: 5.6, power: 9 },
+  { id: "ironbolt", name: "Captain Ironbolt", icon: "🐺", art: "assets/characters/captain-ironbolt.png", color: "#80944d", attack: "Twin Katanas", range: "Machine Gun", special: "Tank Charge", speed: 4.4, power: 13 },
+  { id: "bolt", name: "Bolt the Beaver", icon: "🦫", art: "assets/characters/bolt-the-beaver.png", color: "#ad704c", attack: "Tail Slam", range: "Wrench Toss", special: "Rocket Boost", speed: 5.4, power: 10 },
+  { id: "goblin", name: "Garbage Goblin", icon: "👺", art: "assets/characters/garbage-goblin.png", color: "#778c47", attack: "Magnet Bonk", range: "Scrap Toss", special: "Junk Avalanche", speed: 5.1, power: 11 },
+  { id: "doomgear", name: "Doctor Doomgear", icon: "🤖", art: "assets/characters/doctor-doomgear.png", color: "#67428f", attack: "Claw Swing", range: "Gear Bolt", special: "Gear Fortress Beam", speed: 4.8, power: 12 },
+  { id: "null", name: "Project Null", icon: "🔷", art: "assets/characters/project-null.png", color: "#554da0", attack: "Crystal Claw", range: "Teal Orb", special: "Gravity Crush", speed: 5.2, power: 14, omega: true },
+  { id: "megameg", name: "Mecha Meg", icon: "🦈", art: "assets/characters/mecha-meg.png", color: "#198bd7", attack: "Titan Claw", range: "Plasma Torpedo", special: "Megalodon Charge", speed: 4.6, power: 15 },
+  { id: "kingcaw", name: "King Caw", icon: "🐦‍⬛", art: "assets/characters/king-caw.png", color: "#60398f", attack: "Crown Claw", range: "Feather Fling", special: "Royal Wing Gust", speed: 5.8, power: 11 },
+];
+
+const trainingDummy = { id: "training-dummy", name: "Training Dummy", color: "#d47b48", attack: "None", range: "None", special: "None", speed: 0, power: 0, trainingDummy: true };
+const trainingStage = { id: "training-room", name: "Training Room", art: "assets/arenas/training-room.png" };
+const bossEnemy = { id: "boss", name: "MEGA DOOMGEAR", color: "#bd3f4e", attack: "Titan Smash", range: "Plasma Cannon", special: "Meteor Crash", speed: 4.7, power: 10, boss: true };
+const bossStage = { id: "boss-lair", name: "Boss Lair" };
+
+const stages = [
+  { id: "icy", name: "Icy Peaks", description: "Frozen platforms under the northern lights", art: "assets/arenas/icy.png" },
+  { id: "fire", name: "Lava Leap", description: "Volcano rocks and glowing lava", art: "assets/arenas/fire.png" },
+  { id: "stone", name: "Stone Ruins", description: "Ancient temples and waterfalls", art: "assets/arenas/stone.png" },
+  { id: "water", name: "Coral Coast", description: "Ocean waves and reef rafts", art: "assets/arenas/water.png" },
+  { id: "pirate", name: "Pirate Ship Panic", description: "Jump across a pirate ship sailing through giant waves", art: "assets/arenas/pirate-ship-panic.png" },
+  { id: "lightning", name: "Thunder Works", description: "Storm clouds and electric towers", art: "assets/arenas/lightning.png" },
+  { id: "wind", name: "Sky Gusts", description: "Clouds, windmills, and airships", art: "assets/arenas/wind.png" },
+  { id: "jungle", name: "Jungle Jump", description: "Vines, mushrooms, and small animals", art: "assets/arenas/jungle.png" },
+  { id: "shadow", name: "Moonlit Shadows", description: "Purple crystals and spooky trees", art: "assets/arenas/shadow.png" },
+  { id: "metal", name: "Gear Factory", description: "Magnets, machines, and steel", art: "assets/arenas/metal.png" },
+  { id: "space", name: "Black Hole Bay", description: "Planets, meteors, and stars", art: "assets/arenas/space.png" },
+  { id: "candy", name: "Candy Kingdom", description: "Cookies, gummies, and soda rivers", art: "assets/arenas/candy.png" },
+  { id: "crystal", name: "Gem Grotto", description: "Sparkling caves and crystal falls", art: "assets/arenas/crystal.png" },
+  { id: "dino", name: "Dino Dig Site", description: "Fossils, digging tools, and giant bones", art: "assets/arenas/dino-dig-site.png" },
+  { id: "toybox", name: "Toybox Tower", description: "Building blocks, toy trains, and a robot", art: "assets/arenas/toybox-tower.png" },
+  { id: "warfare", name: "Warfare Battlefield", description: "Sandbags, supply crates, and mountain bases", art: "assets/arenas/warfare.png" },
+  { id: "mystery", name: "Volcano Dino Island", description: "Lava rocks, giant fossils, and tropical jungle platforms", art: "assets/arenas/volcano-dino-island.png" },
+  { id: "sharklab", name: "Shark Lab", description: "Underwater tanks, glowing pipes, and steel platforms", art: "assets/arenas/shark-lab.png" },
+  { id: "frozenaquarium", name: "Frozen Aquarium", description: "Icy fish tanks, crystal caves, and snowy platforms", art: "assets/arenas/frozen-aquarium.png" },
+  { id: "treehouse", name: "Giant Treehouse", description: "Rope bridges, lanterns, vines, and sunset branches", art: "assets/arenas/giant-treehouse.png" },
+  { id: "pizzaplanet", name: "Space Pizza Planet", description: "Cheese moons, pepperoni meteors, and cosmic pizza platforms", art: "assets/arenas/space-pizza-planet.png" },
+];
+
+// These are the real platform locations in each background picture.
+const stageArenas = {
+  "training-room": { floor: 480, platforms: [{ x: 95, y: 145, width: 250 }, { x: 345, y: 55, width: 420 }, { x: 760, y: 145, width: 250 }, { x: 180, y: 284, width: 255 }, { x: 665, y: 284, width: 255 }] },
+  icy:       { floor: 355, platforms: [{ x: 110, y: 268, width: 250 }, { x: 440, y: 176, width: 230 }, { x: 740, y: 268, width: 255 }] },
+  fire:      { floor: 366, platforms: [{ x: 135, y: 286, width: 230 }, { x: 440, y: 196, width: 230 }, { x: 740, y: 286, width: 230 }] },
+  stone:     { floor: 416, platforms: [{ x: 145, y: 303, width: 250 }, { x: 440, y: 209, width: 230 }, { x: 720, y: 300, width: 260 }] },
+  water:     { floor: 351, platforms: [{ x: 75, y: 270, width: 220 }, { x: 470, y: 218, width: 175 }, { x: 835, y: 271, width: 205 }] },
+  pirate:    { floor: 426, platforms: [{ x: 94, y: 296, width: 252 }, { x: 458, y: 222, width: 208 }, { x: 738, y: 300, width: 247 }] },
+  frozenaquarium: { floor: 370, platforms: [{ x: 102, y: 204, width: 247 }, { x: 372, y: 110, width: 352 }, { x: 740, y: 204, width: 218 }] },
+  sharklab:  { floor: 425, platforms: [{ x: 65, y: 250, width: 231 }, { x: 421, y: 223, width: 237 }, { x: 802, y: 252, width: 224 }] },
+  treehouse: { floor: 435, platforms: [{ x: 63, y: 231, width: 276 }, { x: 392, y: 169, width: 358 }, { x: 775, y: 231, width: 304 }] },
+  pizzaplanet: { floor: 395, platforms: [{ x: 138, y: 196, width: 218 }, { x: 437, y: 154, width: 224 }, { x: 745, y: 200, width: 200 }] },
+  mystery:   { floor: 430, platforms: [{ x: 68, y: 268, width: 267 }, { x: 438, y: 184, width: 213 }, { x: 755, y: 277, width: 262 }] },
+  lightning: { floor: 400, platforms: [{ x: 135, y: 283, width: 255 }, { x: 440, y: 214, width: 230 }, { x: 720, y: 283, width: 255 }] },
+  wind:      { floor: 360, platforms: [{ x: 245, y: 252, width: 190 }, { x: 480, y: 183, width: 160 }, { x: 665, y: 252, width: 200 }] },
+  jungle:    { floor: 445, platforms: [{ x: 110, y: 278, width: 250 }, { x: 440, y: 153, width: 230 }, { x: 730, y: 278, width: 260 }] },
+  shadow:    { floor: 425, platforms: [{ x: 190, y: 315, width: 230 }, { x: 440, y: 213, width: 230 }, { x: 685, y: 315, width: 230 }] },
+  metal:     { floor: 382, platforms: [{ x: 45, y: 323, width: 220 }, { x: 440, y: 263, width: 230 }, { x: 820, y: 323, width: 220 }] },
+  space:     { floor: 440, platforms: [{ x: 135, y: 342, width: 190 }, { x: 440, y: 290, width: 230 }, { x: 775, y: 342, width: 200 }] },
+  candy:     { floor: 445, platforms: [{ x: 185, y: 316, width: 220 }, { x: 440, y: 184, width: 230 }, { x: 695, y: 316, width: 220 }] },
+  crystal:   { floor: 430, platforms: [{ x: 120, y: 303, width: 245 }, { x: 440, y: 188, width: 230 }, { x: 740, y: 303, width: 245 }] },
+  dino:      { floor: 465, platforms: [{ x: 135, y: 340, width: 250 }, { x: 440, y: 230, width: 230 }, { x: 730, y: 340, width: 250 }] },
+  toybox:    { floor: 420, platforms: [{ x: 190, y: 230, width: 200 }, { x: 450, y: 230, width: 200 }, { x: 710, y: 230, width: 200 }] },
+  warfare:   { floor: 420, platforms: [{ x: 195, y: 264, width: 250 }, { x: 690, y: 264, width: 250 }] },
+};
+
+const difficultyModes = {
+  easy: { label: "EASY", moveSpeed: .65, thinking: 1.45, attackChance: .68 },
+  normal: { label: "NORMAL", moveSpeed: 1, thinking: 1, attackChance: .9 },
+  hard: { label: "HARD", moveSpeed: 1.2, thinking: .68, attackChance: 1 },
+};
+const coinIcon = '<span class="coin" aria-label="coin">$</span>';
+const achievementCatalog = [
+  { id: "first-win", icon: "🥇", art: "assets/badges/first-rumble-badge.png", name: "First Rumble", description: "Win your first battle." },
+  { id: "speedy", icon: "⚡", art: "assets/badges/lightning-win-badge.png", name: "Lightning Win", description: "Win a battle in under 15 seconds." },
+  { id: "coin-collector", icon: "💰", art: "assets/badges/coin-collector-badge.png", name: "Coin Collector", description: "Collect 100 coins total." },
+  { id: "boss-beater", icon: "👑", art: "assets/badges/boss-beater-badge.png", name: "Boss Beater", description: "Defeat Mega Doomgear." },
+  { id: "crow-champion", icon: "🐦‍⬛", art: "assets/badges/crowning-glory-badge.png", name: "Crowning Glory", description: "Win a battle as King Caw." },
+  { id: "five-trophies", icon: "🏆", art: "assets/badges/five-trophies-badge.png", name: "Trophy Starter", description: "Earn 5 trophies." },
+  { id: "ten-trophies", icon: "🏆", art: "assets/badges/ten-trophies-badge.png", name: "Silver Champion", description: "Earn 10 trophies." },
+  { id: "fifty-trophies", icon: "🏆", art: "assets/badges/fifty-trophies-badge.png", name: "Gold Champion", description: "Earn 50 trophies." },
+  { id: "one-hundred-trophies", icon: "🏆", art: "assets/badges/one-hundred-trophies-badge.png", name: "Platinum Champion", description: "Earn 100 trophies." },
+  { id: "five-hundred-trophies", icon: "🏆", art: "assets/badges/five-hundred-trophies-badge.png", name: "Crystal Legend", description: "Earn 500 trophies." },
+  { id: "one-thousand-trophies", icon: "🏆", art: "assets/badges/one-thousand-trophies-badge.png", name: "Rainbow Rumble Legend", description: "Earn 1,000 trophies." },
+];
+
+const unlockCatalog = [
+  { type: "fighters", id: "doomgear", cost: 75, kind: "Fighter" },
+  { type: "fighters", id: "null", cost: 150, kind: "Fighter" },
+  { type: "fighters", id: "megameg", cost: 250, kind: "Fighter" },
+];
+
+const weaponUpgradePaths = {
+  shellshock: [
+    { name: "Pistol", description: "A simple, quick single bullet.", cost: 0 },
+    { name: "Rifle", description: "A fast and accurate long-range bullet.", cost: 30 },
+    { name: "Mini Gun", description: "A rapid spray of little bullets.", cost: 70 },
+    { name: "Bazooka", description: "A bigger explosive rocket with extra damage.", cost: 125 },
+    { name: "Machine Gun", description: "Three bright, powerful machine-gun bullets.", cost: 190 },
+    { name: "Sniper", description: "One super-fast bullet with big damage.", cost: 300 },
+    { name: "Rocket Launcher", description: "A huge rocket with the strongest blast.", cost: 450 },
+  ],
+  pip: [{ name: "Snack Toss", description: "Pip's starter snack shot.", cost: 0 }, { name: "Gadget Blaster", description: "Faster and stronger gadget shots.", cost: 65 }, { name: "Mega Snack Cannon", description: "A giant flying snack blast.", cost: 160 }],
+  professor: [{ name: "Gear Flinger", description: "Professor's starter spinning gear.", cost: 0 }, { name: "Gear Cannon", description: "Bigger gears with more power.", cost: 70 }, { name: "Mega Gear Storm", description: "A super-sized gear blast.", cost: 180 }],
+  bloop: [{ name: "Bubble Beam", description: "Bloop's starter bubble shot.", cost: 0 }, { name: "Torpedo Bubble", description: "A faster bubble torpedo.", cost: 70 }, { name: "Tidal Torpedo", description: "A giant ocean-powered torpedo.", cost: 190 }],
+  ironbolt: [{ name: "Machine Gun", description: "Captain Ironbolt's starter gun.", cost: 0 }, { name: "Cannon Burst", description: "A heavy cannon shot.", cost: 85 }, { name: "Missile Rack", description: "Powerful rapid missiles.", cost: 225 }],
+  bolt: [{ name: "Wrench Toss", description: "Bolt's starter wrench throw.", cost: 0 }, { name: "Drill Launcher", description: "A speedy spinning drill.", cost: 70 }, { name: "Rocket Wrench", description: "A rocket-powered wrench blast.", cost: 180 }],
+  goblin: [{ name: "Scrap Toss", description: "Garbage Goblin's starter scrap shot.", cost: 0 }, { name: "Magnet Cannon", description: "A strong magnetic blast.", cost: 80 }, { name: "Junk Meteor", description: "A giant flying pile of junk.", cost: 205 }],
+  doomgear: [{ name: "Gear Bolt", description: "Doctor Doomgear's starter gear bolt.", cost: 0 }, { name: "Plasma Claw", description: "A glowing claw-energy shot.", cost: 95 }, { name: "Doom Laser", description: "A huge villain laser blast.", cost: 250 }],
+  null: [{ name: "Teal Orb", description: "Project Null's starter crystal orb.", cost: 0 }, { name: "Crystal Volley", description: "A fast crystal shot.", cost: 110 }, { name: "Gravity Nova", description: "A giant gravity-powered orb.", cost: 300 }],
+  megameg: [{ name: "Plasma Torpedo", description: "Mecha Meg's speedy glowing torpedo.", cost: 0 }, { name: "Fin Missile", description: "A larger missile with a bigger blast.", cost: 120 }, { name: "Megalodon Beam", description: "A huge cyan beam powered by Mecha Meg's armor.", cost: 325 }],
+  kingcaw: [{ name: "Feather Fling", description: "King Caw's quick royal feather shot.", cost: 0 }, { name: "Crown Boomerang", description: "A sharp spinning crown attack.", cost: 80 }, { name: "Royal Storm", description: "A powerful flock of glowing feathers.", cost: 210 }],
+};
+
+const starterProfile = {
+  coins: 0,
+  trophies: 0,
+  wins: 0,
+  arenaWinsStart: 0,
+  spacePizzaWinsStart: 0,
+  spacePizzaUnlocked: false,
+  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw"],
+  stages: stages.map((stage) => stage.id),
+  upgrades: {},
+  achievements: [],
+};
+
+function freshProfile() {
+  return { ...starterProfile, fighters: [...starterProfile.fighters], stages: [...starterProfile.stages], upgrades: {}, achievements: [] };
+}
+
+function loadProfile() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("rumble-rivals-profile"));
+    if (!saved) return freshProfile();
+    const savedWins = Number.isFinite(saved.wins) ? Math.max(0, Math.floor(saved.wins)) : 0;
+  return {
+    coins: Number.isFinite(saved.coins) ? Math.max(0, saved.coins) : 0,
+      trophies: Number.isFinite(saved.trophies) ? Math.max(0, Math.floor(saved.trophies)) : 0,
+      wins: savedWins,
+      // Existing saved games start this ordered arena challenge from this update.
+      arenaWinsStart: Number.isFinite(saved.arenaWinsStart) ? Math.max(0, Math.floor(saved.arenaWinsStart)) : savedWins,
+      // Space Pizza Planet starts locked when this new arena is added.
+      spacePizzaWinsStart: Number.isFinite(saved.spacePizzaWinsStart) ? Math.max(0, Math.floor(saved.spacePizzaWinsStart)) : savedWins,
+      spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
+      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw"])] : [...starterProfile.fighters],
+      stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
+      upgrades: saved.upgrades && typeof saved.upgrades === "object" ? saved.upgrades : {},
+      achievements: Array.isArray(saved.achievements) ? saved.achievements : [],
+    };
+  } catch {
+    return freshProfile();
+  }
+}
+
+function saveProfile() {
+  try { localStorage.setItem("rumble-rivals-profile", JSON.stringify(profile)); } catch { /* Coins still work for this visit. */ }
+}
+
+const mysteryArenaWinsNeeded = 10;
+const sharkLabWinsNeeded = 20;
+const frozenAquariumWinsNeeded = 30;
+const treehouseWinsNeeded = 40;
+const spacePizzaWinsNeeded = 50;
+function arenaChallengeWins() { return Math.max(0, profile.wins - profile.arenaWinsStart); }
+
+function isUnlocked(type, id) {
+  if (type === "stages") {
+    const wins = arenaChallengeWins();
+    if (id === "mystery") return wins >= mysteryArenaWinsNeeded;
+    if (id === "sharklab") return wins >= sharkLabWinsNeeded;
+    if (id === "frozenaquarium") return wins >= frozenAquariumWinsNeeded;
+    if (id === "treehouse") return wins >= treehouseWinsNeeded;
+    if (id === "pizzaplanet") return profile.spacePizzaUnlocked;
+    return true;
+  }
+  return profile[type].includes(id);
+}
+function getUnlock(type, id) { return unlockCatalog.find((item) => item.type === type && item.id === id); }
+
+const battleCutouts = {};
+const cutoutSources = {
+  "training-dummy": "assets/characters/cutouts/training-dummy-cutout.png",
+  shellshock: "assets/characters/cutouts/sergeant-shellshock-cutout.png",
+  pip: "assets/characters/cutouts/pip-cutout.png",
+  professor: "assets/characters/cutouts/professor-trash-panda-cutout.png",
+  bloop: "assets/characters/cutouts/bloop-cutout.png",
+  ironbolt: "assets/characters/cutouts/captain-ironbolt-cutout.png",
+  bolt: "assets/characters/cutouts/bolt-the-beaver-cutout.png",
+  goblin: "assets/characters/cutouts/garbage-goblin-cutout.png",
+  doomgear: "assets/characters/cutouts/doctor-doomgear-cutout.png",
+  null: "assets/characters/cutouts/project-null-cutout.png",
+  megameg: "assets/characters/cutouts/mecha-meg-cutout.png",
+  kingcaw: "assets/characters/cutouts/king-caw-cutout.png",
+};
+Object.entries(cutoutSources).forEach(([id, source]) => {
+  const cutout = new Image();
+  cutout.src = source;
+  battleCutouts[id] = cutout;
+});
+const stageImages = {};
+stages.filter((stage) => stage.art).forEach((stage) => {
+  const image = new Image();
+  image.src = stage.art;
+  stageImages[stage.id] = image;
+});
+const trainingRoomImage = new Image();
+trainingRoomImage.src = trainingStage.art;
+
+let game = null;
+let animationFrame = 0;
+let keys = {};
+let lastTime = 0;
+let loadingTimer = null;
+let hoveredFighter = null;
+let chosenStage = stages[0];
+let matchMode = "computer";
+let playerOneChoice = null;
+let matchSettings = { difficulty: "normal", timer: 120, volume: .55 };
+let profile = loadProfile();
+let selectedUpgradeFighter = roster[0];
+let settingsReturnScreen = "stages";
+let musicContext = null;
+let musicMasterGain = null;
+let musicTimer = null;
+let musicStep = 0;
+
+function showScreen(id) {
+  screens.forEach((screen) => $(screen).classList.toggle("active", screen === id));
+  const menuVisible = id === "stages" || id === "select";
+  $("settings-button").classList.toggle("visible", menuVisible);
+  $("boss-button").classList.toggle("visible", id === "stages");
+}
+
+function chooseSetting(kind, value) {
+  matchSettings[kind] = kind === "timer" ? (value === "none" ? null : Number(value)) : kind === "volume" ? Number(value) : value;
+  if (kind === "volume" && musicMasterGain && musicContext) musicMasterGain.gain.setTargetAtTime(matchSettings.volume, musicContext.currentTime, .03);
+  document.querySelectorAll(`.setting-choice[data-setting="${kind}"]`).forEach((button) => {
+    button.classList.toggle("selected", button.dataset.value === value);
+  });
+}
+
+function returnToCover() {
+  cancelAnimationFrame(animationFrame);
+  clearInterval(loadingTimer);
+  keys = {};
+  game = null;
+  matchMode = "computer";
+  playerOneChoice = null;
+  $("cover-card").classList.remove("loading");
+  showScreen("cover");
+}
+
+function resetAllProgress() {
+  profile = freshProfile();
+  matchSettings = { difficulty: "normal", timer: 120, volume: .55 };
+  chosenStage = stages[0];
+  playerOneChoice = null;
+  try { localStorage.removeItem("rumble-rivals-profile"); } catch { /* A fresh profile still works for this visit. */ }
+  if (musicMasterGain && musicContext) musicMasterGain.gain.setTargetAtTime(matchSettings.volume, musicContext.currentTime, .03);
+  document.querySelectorAll(".setting-choice").forEach((button) => {
+    const value = button.dataset.value;
+    const setting = button.dataset.setting;
+    const selected = (setting === "difficulty" && value === matchSettings.difficulty)
+      || (setting === "timer" && Number(value) === matchSettings.timer)
+      || (setting === "volume" && Number(value) === matchSettings.volume);
+    button.classList.toggle("selected", selected);
+  });
+  buildRoster();
+  buildStages();
+  buildUnlocks();
+  buildUpgrades();
+  buildAchievements();
+  updateCoinDisplays();
+  returnToCover();
+}
+
+function updateCoinDisplays() {
+  $("settings-coins").textContent = profile.coins;
+  $("unlock-coins").textContent = profile.coins;
+  $("upgrade-settings-coins").textContent = profile.coins;
+  $("upgrade-coins").textContent = profile.coins;
+  $("unlock-menu-button").title = `You have ${profile.coins} coins`;
+  $("upgrade-menu-button").title = `You have ${profile.coins} coins`;
+}
+
+function updateTrophyDisplay() {
+  $("settings-trophies").textContent = profile.trophies;
+}
+
+function recordBattleTrophy(playerWon) {
+  if (game.mode === "training") return "";
+  const hadTrophy = profile.trophies > 0;
+  profile.trophies = Math.max(0, profile.trophies + (playerWon ? 1 : -1));
+  updateTrophyDisplay();
+  return playerWon ? "+1 🏆 trophy!" : hadTrophy ? "-1 🏆 trophy." : "No trophies to lose.";
+}
+
+function hasAchievement(id) { return profile.achievements.includes(id); }
+
+function awardAchievement(id, earned) {
+  if (!hasAchievement(id)) { profile.achievements.push(id); earned.push(id); }
+}
+
+function buildAchievements() {
+  const grid = $("achievements-grid");
+  grid.innerHTML = "";
+  achievementCatalog.forEach((achievement) => {
+    const earned = hasAchievement(achievement.id);
+    const card = document.createElement("article");
+    card.className = "achievement-card";
+    card.classList.toggle("earned", earned);
+    const badge = earned && achievement.art ? `<img src="${achievement.art}" alt="${achievement.name} badge" />` : earned ? achievement.icon : "🔒";
+    card.innerHTML = `<span class="badge badge-${achievement.id}">${badge}</span><h3>${earned ? achievement.name : "???"}</h3><p>${earned ? achievement.description : "Keep playing to discover this achievement."}</p><small>${earned ? "EARNED!" : "LOCKED"}</small>`;
+    grid.append(card);
+  });
+  $("achievement-count").textContent = `${profile.achievements.length} of ${achievementCatalog.length} achievements earned`;
+}
+
+function buyUnlock(item) {
+  const message = $("unlock-message");
+  if (isUnlocked(item.type, item.id)) return;
+  if (profile.coins < item.cost) {
+    message.textContent = `You need ${item.cost - profile.coins} more coins for this one!`;
+    return;
+  }
+  profile.coins -= item.cost;
+  profile[item.type].push(item.id);
+  saveProfile();
+  updateCoinDisplays();
+  buildRoster();
+  buildStages();
+  buildUnlocks();
+  buildUpgrades();
+  const entry = (item.type === "fighters" ? roster : stages).find((thing) => thing.id === item.id);
+  message.textContent = `${entry.name} is unlocked!`;
+}
+
+function buildUnlocks() {
+  const grid = $("unlock-grid");
+  grid.innerHTML = "";
+  unlockCatalog.forEach((item) => {
+    const entry = (item.type === "fighters" ? roster : stages).find((thing) => thing.id === item.id);
+    const unlocked = isUnlocked(item.type, item.id);
+    const card = document.createElement("article");
+    card.className = "unlock-card";
+    card.innerHTML = `<img src="${entry.art}" alt="${entry.name}" /><h3>${entry.name}</h3><p>${item.kind}</p>`;
+    const button = document.createElement("button");
+    button.innerHTML = unlocked ? "UNLOCKED!" : `UNLOCK · ${coinIcon} ${item.cost}`;
+    button.disabled = unlocked;
+    button.addEventListener("click", () => buyUnlock(item));
+    card.append(button);
+    grid.append(card);
+  });
+}
+
+function getWeaponLevel(fighterId) {
+  const path = weaponUpgradePaths[fighterId] || [];
+  const savedLevel = Number(profile.upgrades?.[fighterId]) || 0;
+  return Math.max(0, Math.min(path.length - 1, savedLevel));
+}
+
+function getRangeWeapon(fighter) {
+  const path = weaponUpgradePaths[fighter.id];
+  return path ? path[getWeaponLevel(fighter.id)].name : fighter.range;
+}
+
+function buildUpgrades() {
+  const grid = $("upgrade-fighter-grid");
+  grid.innerHTML = "";
+  roster.forEach((fighter) => {
+    const unlocked = isUnlocked("fighters", fighter.id);
+    const level = getWeaponLevel(fighter.id);
+    const card = document.createElement("button");
+    card.className = "upgrade-fighter-card";
+    card.style.background = `linear-gradient(145deg, ${fighter.color}, #263663)`;
+    card.classList.toggle("selected", selectedUpgradeFighter.id === fighter.id);
+    card.innerHTML = `<img src="${fighter.art}" alt="${fighter.name}" /><strong>${fighter.name}</strong><span>${unlocked ? `${getRangeWeapon(fighter)} · Level ${level + 1}` : "🔒 Unlock this fighter first"}</span>`;
+    card.disabled = !unlocked;
+    if (unlocked) {
+      card.addEventListener("click", () => {
+        selectedUpgradeFighter = fighter;
+        buildUpgrades();
+      });
+    }
+    grid.append(card);
+  });
+  buildUpgradeDetails();
+}
+
+function buildUpgradeDetails() {
+  const fighter = selectedUpgradeFighter;
+  const path = weaponUpgradePaths[fighter.id];
+  const level = getWeaponLevel(fighter.id);
+  const current = path[level];
+  const next = path[level + 1];
+  const details = $("upgrade-details");
+  const levels = path.map((upgrade, index) => {
+    const status = index < level ? "completed" : index === level ? "current" : "next";
+    const label = index === 0 ? "START" : `${coinIcon} ${upgrade.cost}`;
+    return `<div class="weapon-level ${status}"><strong>${index + 1}. ${upgrade.name}</strong><span>${upgrade.description}</span><small>${index < level ? "UPGRADED!" : index === level ? "CURRENT WEAPON" : label}</small></div>`;
+  }).join("");
+  details.innerHTML = `<img src="${fighter.art}" alt="${fighter.name}" /><div class="upgrade-details-copy"><p class="eyebrow">${fighter.name.toUpperCase()}</p><h3>${current.name}</h3><p>Range weapon level ${level + 1} of ${path.length}</p><div class="weapon-levels">${levels}</div></div>`;
+  const action = document.createElement("button");
+  action.className = "upgrade-buy-button";
+  action.innerHTML = next ? `UPGRADE TO ${next.name.toUpperCase()} · ${coinIcon} ${next.cost}` : "MAX WEAPON LEVEL!";
+  action.disabled = !next;
+  if (next) action.addEventListener("click", () => buyWeaponUpgrade(fighter));
+  details.append(action);
+}
+
+function buyWeaponUpgrade(fighter) {
+  const path = weaponUpgradePaths[fighter.id];
+  const level = getWeaponLevel(fighter.id);
+  const next = path[level + 1];
+  const message = $("upgrade-message");
+  if (!next) return;
+  if (profile.coins < next.cost) {
+    message.textContent = `You need ${next.cost - profile.coins} more coins for ${next.name}!`;
+    return;
+  }
+  profile.coins -= next.cost;
+  profile.upgrades[fighter.id] = level + 1;
+  saveProfile();
+  updateCoinDisplays();
+  buildUpgrades();
+  message.textContent = `${fighter.name}'s ${next.name} is ready for battle!`;
+}
+
+function playMusicNote(frequency, time, length, volume, wave = "triangle") {
+  if (!frequency || !musicContext) return;
+  const oscillator = musicContext.createOscillator();
+  const gain = musicContext.createGain();
+  oscillator.type = wave;
+  oscillator.frequency.setValueAtTime(frequency, time);
+  gain.gain.setValueAtTime(.0001, time);
+  gain.gain.exponentialRampToValueAtTime(volume, time + .015);
+  gain.gain.exponentialRampToValueAtTime(.0001, time + length);
+  oscillator.connect(gain).connect(musicMasterGain || musicContext.destination);
+  oscillator.start(time);
+  oscillator.stop(time + length + .02);
+}
+
+function playMusicKick(time) {
+  if (!musicContext) return;
+  const oscillator = musicContext.createOscillator();
+  const gain = musicContext.createGain();
+  oscillator.frequency.setValueAtTime(135, time);
+  oscillator.frequency.exponentialRampToValueAtTime(52, time + .12);
+  gain.gain.setValueAtTime(.07, time);
+  gain.gain.exponentialRampToValueAtTime(.0001, time + .14);
+  oscillator.connect(gain).connect(musicMasterGain || musicContext.destination);
+  oscillator.start(time);
+  oscillator.stop(time + .16);
+}
+
+function playMusicSnare(time) {
+  if (!musicContext) return;
+  const oscillator = musicContext.createOscillator();
+  const gain = musicContext.createGain();
+  oscillator.type = "square";
+  oscillator.frequency.setValueAtTime(185, time);
+  oscillator.frequency.exponentialRampToValueAtTime(90, time + .06);
+  gain.gain.setValueAtTime(.025, time);
+  gain.gain.exponentialRampToValueAtTime(.0001, time + .09);
+  oscillator.connect(gain).connect(musicMasterGain || musicContext.destination);
+  oscillator.start(time);
+  oscillator.stop(time + .11);
+}
+
+function playPowerUpSound() {
+  if (!musicContext || matchSettings.volume <= 0) return;
+  const time = musicContext.currentTime + .01;
+  const note = (frequency, delay, length, volume, wave = "triangle") => playMusicNote(frequency, time + delay, length, volume, wave);
+  note(940, 0, .045, .055, "square");
+  note(1260, .045, .07, .04, "square");
+}
+
+function startMusic() {
+  const AudioEngine = window.AudioContext || window.webkitAudioContext;
+  if (!AudioEngine) return;
+  if (!musicContext) {
+    musicContext = new AudioEngine();
+    musicMasterGain = musicContext.createGain();
+    musicMasterGain.gain.value = matchSettings.volume;
+    musicMasterGain.connect(musicContext.destination);
+  }
+  musicContext.resume();
+  if (musicTimer) return;
+  const melody = [659, 0, 784, 880, 784, 0, 659, 587, 659, 0, 784, 988, 880, 0, 784, 0, 740, 0, 659, 740, 784, 0, 880, 784, 659, 0, 587, 659, 740, 0, 659, 0];
+  const bass = [131, 131, 147, 147, 165, 165, 147, 147];
+  const chords = [[262, 330, 392], [294, 370, 440], [330, 415, 494], [294, 370, 440]];
+  const playStep = () => {
+    const time = musicContext.currentTime + .03;
+    const step = musicStep % 32;
+    playMusicNote(melody[step], time, .17, .035);
+    if (step % 4 === 0) {
+      playMusicNote(bass[step / 4], time, .2, .045, "sawtooth");
+      playMusicKick(time);
+    }
+    if (step % 8 === 0) chords[(step / 8) % chords.length].forEach((note) => playMusicNote(note, time, .38, .009, "sine"));
+    if (step % 4 === 2) playMusicSnare(time);
+    if (step % 2 === 1) playMusicNote(1568, time, .035, .008, "square");
+    musicStep++;
+  };
+  playStep();
+  musicTimer = window.setInterval(playStep, 220);
+}
+
+function buildRoster() {
+  const grid = $("character-grid");
+  grid.innerHTML = "";
+  roster.forEach((fighter) => {
+    const card = document.createElement("button");
+    const unlocked = isUnlocked("fighters", fighter.id);
+    const unlock = getUnlock("fighters", fighter.id);
+    card.className = "character-card";
+    card.style.background = `linear-gradient(145deg, ${fighter.color}, #263663)`;
+    const pickedByPlayerOne = matchMode === "two-player" && playerOneChoice?.id === fighter.id;
+    card.innerHTML = `<img class="fighter-portrait" src="${fighter.art}" alt="${fighter.name}" />${pickedByPlayerOne ? '<span class="player-one-tag">PLAYER 1</span>' : ""}<h3>${fighter.name}</h3><p>${unlocked ? fighter.special : `🔒 LOCKED · ${coinIcon} ${unlock.cost}`}</p>`;
+    card.classList.toggle("picked-player-one", pickedByPlayerOne);
+    if (!unlocked) {
+      card.classList.add("locked");
+      card.disabled = true;
+    } else {
+      card.addEventListener("click", () => chooseFighter(fighter));
+    }
+    const rememberHoveredFighter = () => {
+      hoveredFighter = fighter;
+      grid.querySelectorAll(".character-card").forEach((otherCard) => otherCard.classList.remove("selected-hover"));
+      card.classList.add("selected-hover");
+    };
+    card.addEventListener("mouseenter", rememberHoveredFighter);
+    card.addEventListener("pointerenter", rememberHoveredFighter);
+    card.addEventListener("mouseover", rememberHoveredFighter);
+    card.addEventListener("mouseleave", () => {
+      if (hoveredFighter === fighter) hoveredFighter = null;
+      card.classList.remove("selected-hover");
+    });
+    card.addEventListener("focus", () => { hoveredFighter = fighter; });
+    card.addEventListener("blur", () => { if (hoveredFighter === fighter) hoveredFighter = null; });
+    grid.append(card);
+  });
+}
+
+function showFighterSelection() {
+  const training = matchMode === "training";
+  const boss = matchMode === "boss";
+  const choosingPlayerTwo = matchMode === "two-player" && playerOneChoice;
+  $("fighter-select-eyebrow").textContent = boss ? "BOSS BATTLE · 5× COINS" : training ? "TRAINING ROOM" : choosingPlayerTwo ? "PLAYER 2: CHOOSE YOUR FIGHTER" : matchMode === "two-player" ? "PLAYER 1: CHOOSE YOUR FIGHTER" : "CHOOSE YOUR FIGHTER";
+  $("fighter-select-heading").textContent = boss ? "Pick a hero to face Mega Doomgear" : training ? "Pick a fighter to train" : choosingPlayerTwo ? "Player 2, pick your fighter!" : matchMode === "two-player" ? "Player 1, pick your fighter!" : "Who will you play?";
+  $("fighter-select-help").textContent = boss ? "Mega Doomgear has 200 health, 1.5× damage, and is 3× bigger. Win to earn five times the coins!" : training ? "Practice your moves on a dummy. No coins or wins are used." : choosingPlayerTwo ? "Player 2: click any unlocked fighter. Then the battle starts!" : matchMode === "two-player" ? "Player 1 goes first. Click a fighter, then Player 2 picks one." : "Click a fighter to play. The computer will pick a rival!";
+}
+
+function chooseFighter(fighter) {
+  if (matchMode === "training") { startBattle(fighter, trainingDummy); return; }
+  if (matchMode === "boss") { startBattle(fighter, bossEnemy); return; }
+  if (matchMode !== "two-player") {
+    startBattle(fighter);
+    return;
+  }
+  if (!playerOneChoice) {
+    playerOneChoice = fighter;
+    hoveredFighter = null;
+    buildRoster();
+    showFighterSelection();
+    return;
+  }
+  startBattle(playerOneChoice, fighter);
+}
+
+function buildStages() {
+  const grid = $("stage-grid");
+  grid.innerHTML = "";
+  stages.forEach((stage) => {
+    const card = document.createElement("button");
+    const unlocked = isUnlocked("stages", stage.id);
+    card.className = "stage-card";
+    const winsNeeded = stage.id === "mystery" ? mysteryArenaWinsNeeded : stage.id === "sharklab" ? sharkLabWinsNeeded : stage.id === "frozenaquarium" ? frozenAquariumWinsNeeded : stage.id === "treehouse" ? treehouseWinsNeeded : stage.id === "pizzaplanet" ? spacePizzaWinsNeeded : null;
+    const isMystery = (stage.id === "mystery" || stage.id === "sharklab" || stage.id === "frozenaquarium" || stage.id === "treehouse" || stage.id === "pizzaplanet") && !unlocked;
+    const isWinLocked = winsNeeded !== null && !unlocked;
+    card.innerHTML = isMystery
+      ? `<div class="mystery-stage-art" aria-hidden="true">?</div><strong>???</strong><span class="mystery-stage-lock">UNLOCKS IN ${winsNeeded} WINS</span>`
+      : stage.art
+      ? `<img src="${stage.art}" alt="${stage.name}" /><strong>${stage.name}</strong><span class="${isWinLocked ? "stage-win-lock" : ""}">${isWinLocked ? `UNLOCKS IN ${winsNeeded} WINS` : stage.description}</span>`
+      : `<div class="stage-basic-art" aria-hidden="true"></div><strong>${stage.name}</strong><span>${stage.description}</span>`;
+    if (!unlocked) {
+      card.classList.add("locked");
+      card.disabled = true;
+    } else {
+      card.addEventListener("click", () => { chosenStage = stage; showFighterSelection(); buildRoster(); showScreen("select"); });
+    }
+    grid.append(card);
+  });
+}
+
+function showFighterDetails(fighter) {
+  const details = $("fighter-details");
+  details.classList.add("active");
+  details.style.background = `linear-gradient(125deg, ${fighter.color}, #2a3265)`;
+  details.innerHTML = `<img src="${fighter.art}" alt="${fighter.name}" /><div><h3>${fighter.name}'s Stats</h3><div class="fighter-stats"><span>❤️ Health: 100</span><span>💥 Damage: ${fighter.power}</span><span>⚡ Speed: ${Math.round(fighter.speed * 10)}/100</span><span>👊 Melee: ${fighter.attack}</span><span>🎯 Range: ${getRangeWeapon(fighter)}</span><span>✨ Special: ${fighter.special}</span></div></div>`;
+}
+
+function startLoading() {
+  startMusic();
+  showScreen("cover");
+  clearInterval(loadingTimer);
+  $("cover-card").classList.add("loading");
+  $("cover-progress-bar").style.width = "0%";
+  $("cover-loading-percent").textContent = "0%";
+  const messages = ["Waking up Bloop's fishbowl...", "Polishing Rumble's tank treads...", "Charging Project Null's crystals...", "Professor Trash Panda is checking the buttons...", "Opening the arena gates!"];
+  let progress = 0;
+  loadingTimer = setInterval(() => {
+    progress += Math.random() * 12 + 4;
+    const shownProgress = Math.min(progress, 100);
+    $("cover-progress-bar").style.width = `${shownProgress}%`;
+    $("cover-loading-percent").textContent = `${Math.round(shownProgress)}%`;
+    $("cover-loading-message").textContent = messages[Math.min(messages.length - 1, Math.floor(progress / 22))];
+    if (progress >= 100) {
+      clearInterval(loadingTimer);
+      setTimeout(() => { $("cover-card").classList.remove("loading"); showScreen("play-menu"); }, 350);
+    }
+  }, 180);
+}
+
+function getArena() {
+  return stageArenas[game?.stage?.id] || fallbackArena;
+}
+
+function makeFighter(data, x, facing, floor) {
+  return { ...data, x, y: floor, vy: 0, facing, health: 100, maxHealth: 100, lives: 3, jumpsLeft: 2, cooldown: 0, invincible: 0, attackTimer: 0, specialTimer: 0, hitFlash: 0, omegaTimer: 0, omegaCooldown: 0, powerUp: null, powerUpTimer: 0, frozenTimer: 0, starTimer: 0, shieldEnergy: 60, shieldExhausted: false, shielding: false, super: 0, aiTimer: 0, action: "idle", walking: false, anim: Math.random() * 6.28 };
+}
+
+function updateBattleStatus() {
+  const modeLabel = game.mode === "boss" ? "BOSS BATTLE" : game.mode === "training" ? "TRAINING" : game.mode === "two-player" ? "2 PLAYER" : difficultyModes[game.settings.difficulty].label;
+  if (game.timeLeftMs === null) {
+    $("round-text").innerHTML = `${modeLabel} · NO TIMER · ${coinIcon} ${profile.coins} · 🏆 ${profile.trophies}`;
+    return;
+  }
+  const totalSeconds = Math.ceil(game.timeLeftMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  $("round-text").innerHTML = `${modeLabel} · ${minutes}:${seconds} · ${coinIcon} ${profile.coins} · 🏆 ${profile.trophies}`;
+}
+
+function updateBattleTimer(dt) {
+  if (game.timeLeftMs === null) return false;
+  game.timeLeftMs = Math.max(0, game.timeLeftMs - dt);
+  updateBattleStatus();
+  if (game.timeLeftMs === 0) {
+    endBattle(game.player.health >= game.enemy.health, true);
+    return true;
+  }
+  return false;
+}
+
+function startBattle(selected, opponent = null) {
+  cancelAnimationFrame(animationFrame);
+  const choices = roster.filter((fighter) => fighter.id !== selected.id && isUnlocked("fighters", fighter.id));
+  const enemy = opponent || choices[Math.floor(Math.random() * choices.length)];
+  const stage = matchMode === "training" ? trainingStage : matchMode === "boss" ? bossStage : chosenStage;
+  const arena = stageArenas[stage.id] || fallbackArena;
+  game = { mode: matchMode, player: makeFighter(selected, 230, 1, arena.floor), enemy: makeFighter(enemy, 810, -1, arena.floor), stage, settings: { ...matchSettings }, timeLeftMs: matchMode === "training" ? null : matchSettings.timer === null ? null : matchSettings.timer * 1000, projectiles: [], tankCharges: [], apples: [], appleDropMs: 10000, goldenAppleDropMs: Math.random() < .15 ? 15000 + Math.random() * 20000 : null, powerUps: [], powerUpDropMs: randomPowerUpDelay(), sparks: [], ended: false, messageTimer: 0, message: "3", countdownMs: 3000, countdownText: "3", startedAt: null };
+  if (matchMode === "boss") { game.enemy.maxHealth = 200; game.enemy.health = 200; }
+  $("player-name").textContent = game.mode === "two-player" ? `P1 · ${selected.name.toUpperCase()}` : selected.name.toUpperCase();
+  $("enemy-name").textContent = game.mode === "two-player" ? `P2 · ${enemy.name.toUpperCase()}` : enemy.name.toUpperCase();
+  $("controls-card").innerHTML = game.mode === "two-player"
+    ? "<strong>Player 1:</strong> Arrow Keys move/jump · A melee · S range · Q special · W Omega · E shield &nbsp; <strong>Player 2:</strong> J/L move · I jump · F melee · G range · R special · U Omega · Y shield"
+    : "<strong>Controls:</strong> Arrow Keys move · <b>↑</b> jump twice to reach platforms · <b>A</b> melee · <b>S</b> range · <b>Q</b> special · <b>W</b> Omega Mode (Project Null) · <b>E</b> shield (hold up to 1 second)";
+  playerOneChoice = null;
+  $("player-health").style.width = "100%"; $("enemy-health").style.width = "100%";
+  updateLives();
+  updateBattleStatus();
+  showScreen("battle");
+  $("battle-message").textContent = "3";
+  $("battle-message").classList.add("show");
+  lastTime = performance.now();
+  animationFrame = requestAnimationFrame(loop);
+}
+
+function doAttack(who, type) {
+  if (!game || game.ended || who.cooldown > 0) return;
+  const isPlayer = who === game.player;
+  const enemy = isPlayer ? game.enemy : game.player;
+  let damage = type === "heavy" ? who.power + 5 : type === "special" ? who.power + 9 : type === "super" ? who.power + 18 : who.power;
+  let reach = type === "range" ? 560 : type === "special" ? 250 : type === "super" ? 650 : type === "heavy" ? 120 : 86;
+  const weaponLevel = getWeaponLevel(who.id);
+  if (type === "range") { damage += weaponLevel * 5; reach += weaponLevel * 45; }
+  if (type === "melee" && who.powerUp === "sword") damage += who.power;
+  if (type === "range" && who.powerUp === "pistol") damage += 12;
+  if (who.omegaTimer > 0) { damage += 7; reach += 70; }
+  if (who.boss) damage = Math.round(damage * 1.5);
+  if (type === "range") {
+    const projectileOrigin = who.id === "shellshock"
+      ? { x: who.x + who.facing * 96, y: who.y - 63 }
+      : { x: who.x + who.facing * 40, y: who.y - 35 };
+    if (who.powerUp === "pistol") {
+      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 23, owner: who, damage, color: "#fff2a8", life: 62, size: 8, gunBullet: true, bulletColor: "#fff2a8", bulletLength: 2.4 });
+      burst(projectileOrigin.x, projectileOrigin.y, "#fff2a8", 8);
+    } else if (who.id === "shellshock") {
+      if (weaponLevel === 0) {
+        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
+        burst(projectileOrigin.x, projectileOrigin.y, "#ffe566", 4);
+      } else if (weaponLevel === 1) {
+        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 22, owner: who, damage: damage + 5, color: "#f8c65a", life: 64, size: 6, rifleBullet: true });
+        burst(projectileOrigin.x, projectileOrigin.y, "#f8c65a", 5);
+      } else if (weaponLevel === 2 || weaponLevel === 4) {
+        const miniGun = weaponLevel === 2;
+        const spreads = miniGun ? [-11, -5, 0, 5, 11] : [-7, 0, 7];
+        spreads.forEach((spread, index) => {
+          const middleShot = index === Math.floor(spreads.length / 2);
+          game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y + spread, vx: who.facing * (miniGun ? 18 : 16), owner: who, damage: middleShot ? damage + (miniGun ? 4 : 8) : 0, color: "#ffe566", life: 55, size: 7, gunBullet: true, visualOnly: !middleShot, bulletColor: miniGun ? "#fff26a" : "#ffe566", bulletLength: miniGun ? 1.2 : 1.5 });
+        });
+        burst(projectileOrigin.x, projectileOrigin.y, "#ffe566", miniGun ? 10 : 8);
+      } else if (weaponLevel === 3 || weaponLevel === 6) {
+        const rocketLauncher = weaponLevel === 6;
+        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * (rocketLauncher ? 14 : 11), owner: who, damage: damage + (rocketLauncher ? 16 : 8), color: rocketLauncher ? "#ff5d39" : "#ff9e37", life: 70, size: rocketLauncher ? 26 : 18, rocket: true });
+        burst(projectileOrigin.x, projectileOrigin.y, rocketLauncher ? "#ff5d39" : "#ffb640", rocketLauncher ? 14 : 10);
+      } else {
+        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 29, owner: who, damage: damage + 18, color: "#d7ffff", life: 48, size: 5, gunBullet: true, bulletColor: "#d7ffff", bulletLength: 3.2, sniper: true });
+        burst(projectileOrigin.x, projectileOrigin.y, "#d7ffff", 7);
+      }
+    } else {
+      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * (12 + weaponLevel * 2 + (who.omegaTimer > 0 ? 3 : 0)), owner: who, damage, color: who.omegaTimer > 0 ? "#81fff5" : who.color, life: 70, size: 11 + weaponLevel * 3, rocket: weaponLevel >= 2 });
+    }
+  } else if (type === "special" && who.id === "ironbolt") {
+    game.tankCharges.push({ x: who.x - who.facing * 175, y: getArena().floor - 18, vx: who.facing * 18, owner: who, damage: damage + 4, life: 76, hit: false });
+    flashMessage("TANK CHARGE!", 42);
+  } else if (type === "super") {
+    game.projectiles.push({ x: who.x, y: 100, vx: 0, owner: who, damage, color: "#ffe658", life: 28, size: 75, beam: true });
+  } else if (Math.abs(enemy.x - who.x) < reach) {
+    hitOpponent(who, enemy, damage, reach, type === "special" ? who.special.toUpperCase() : type === "heavy" ? "SMASH!" : "WHACK!");
+  }
+  who.cooldown = type === "super" ? 70 : type === "special" ? 42 : type === "heavy" ? 28 : 16;
+  who.attackTimer = 13;
+  who.action = type;
+  if (type === "super") who.super = 0;
+  if (type === "special") who.super = Math.min(100, who.super + 8);
+}
+
+function hitOpponent(attacker, target, damage, reach, text) {
+  if (target.invincible > 0 || target.starTimer > 0 || Math.abs(target.x - attacker.x) > reach || game.ended) return;
+  if (target.shielding) {
+    burst(target.x, target.y - 45, "#77dcff", 10);
+    flashMessage("SHIELD BLOCK!", 22);
+    return;
+  }
+  target.health = Math.max(0, target.health - damage);
+  target.hitFlash = 12; target.invincible = 12;
+  target.x += attacker.facing * Math.min(60, damage * 3.2);
+  attacker.super = Math.min(100, attacker.super + 12);
+  burst(target.x, target.y - 35, attacker.color, 12);
+  if (text) flashMessage(text, 28);
+  updateHealth();
+  if (target.trainingDummy && target.health <= 0) {
+    target.health = target.maxHealth;
+    target.x = 810;
+    target.invincible = 50;
+    updateHealth();
+    flashMessage("DUMMY RESET! KEEP PRACTICING!", 52);
+    return;
+  }
+  if (target.health <= 0) endBattle(attacker === game.player);
+}
+
+function burst(x, y, color, count) {
+  for (let i = 0; i < count; i++) game.sparks.push({ x, y, vx: (Math.random() - .5) * 9, vy: (Math.random() - .6) * 8, life: 22 + Math.random() * 14, color });
+}
+
+function updateHealth() { $("player-health").style.width = `${game.player.health / game.player.maxHealth * 100}%`; $("enemy-health").style.width = `${game.enemy.health / game.enemy.maxHealth * 100}%`; }
+function updateLives() { $("player-lives").textContent = `LIVES: ${game.player.lives}`; $("enemy-lives").textContent = `LIVES: ${game.enemy.lives}`; }
+function flashMessage(message, timer) { game.message = message; game.messageTimer = timer; $("battle-message").textContent = message; $("battle-message").classList.add("show"); }
+
+function rewardWinCoins() {
+  const battleCoins = game.settings.difficulty === "hard" ? 30 : game.settings.difficulty === "easy" ? 10 : 20;
+  const battleSeconds = Math.floor((performance.now() - game.startedAt) / 1000);
+  const speedBonus = Math.max(0, 25 - Math.floor(battleSeconds / 5));
+  const bossMultiplier = game.mode === "boss" ? 5 : 1;
+  const reward = (battleCoins + speedBonus) * bossMultiplier;
+  const winsBefore = arenaChallengeWins();
+  const spacePizzaUnlockingNow = !profile.spacePizzaUnlocked && profile.wins - profile.spacePizzaWinsStart === spacePizzaWinsNeeded - 1;
+  profile.coins += reward;
+  profile.wins++;
+  const earnedAchievements = [];
+  if (profile.wins >= 1) awardAchievement("first-win", earnedAchievements);
+  if (battleSeconds < 15) awardAchievement("speedy", earnedAchievements);
+  if (profile.coins >= 100) awardAchievement("coin-collector", earnedAchievements);
+  if (game.mode === "boss") awardAchievement("boss-beater", earnedAchievements);
+  if (game.player.id === "kingcaw") awardAchievement("crow-champion", earnedAchievements);
+  if (profile.trophies >= 5) awardAchievement("five-trophies", earnedAchievements);
+  if (profile.trophies >= 10) awardAchievement("ten-trophies", earnedAchievements);
+  if (profile.trophies >= 50) awardAchievement("fifty-trophies", earnedAchievements);
+  if (profile.trophies >= 100) awardAchievement("one-hundred-trophies", earnedAchievements);
+  if (profile.trophies >= 500) awardAchievement("five-hundred-trophies", earnedAchievements);
+  if (profile.trophies >= 1000) awardAchievement("one-thousand-trophies", earnedAchievements);
+  const winsAfter = arenaChallengeWins();
+  const mysteryUnlockingNow = winsBefore < mysteryArenaWinsNeeded && winsAfter >= mysteryArenaWinsNeeded;
+  const sharkLabUnlockingNow = winsBefore < sharkLabWinsNeeded && winsAfter >= sharkLabWinsNeeded;
+  const frozenAquariumUnlockingNow = winsBefore < frozenAquariumWinsNeeded && winsAfter >= frozenAquariumWinsNeeded;
+  const treehouseUnlockingNow = winsBefore < treehouseWinsNeeded && winsAfter >= treehouseWinsNeeded;
+  if (spacePizzaUnlockingNow) profile.spacePizzaUnlocked = true;
+  saveProfile();
+  updateCoinDisplays();
+  if (mysteryUnlockingNow || sharkLabUnlockingNow || frozenAquariumUnlockingNow || treehouseUnlockingNow || spacePizzaUnlockingNow) buildStages();
+  const arenaUnlockMessage = `${mysteryUnlockingNow ? " Mystery Arena unlocked!" : ""}${sharkLabUnlockingNow ? " Shark Lab unlocked!" : ""}${frozenAquariumUnlockingNow ? " Frozen Aquarium unlocked!" : ""}${treehouseUnlockingNow ? " Giant Treehouse unlocked!" : ""}${spacePizzaUnlockingNow ? " Space Pizza Planet unlocked!" : ""}`;
+  const achievementMessage = earnedAchievements.length ? ` Achievement unlocked: ${earnedAchievements.map((id) => achievementCatalog.find((item) => item.id === id).name).join(" + ")}!` : "";
+  return { reward, battleCoins, speedBonus, bossMultiplier, arenaUnlockMessage, achievementMessage };
+}
+
+function activateOmega(p = game.player) {
+  if (!p.omega || p.omegaTimer > 0 || p.omegaCooldown > 0) { flashMessage(p.omega ? "OMEGA IS COOLING DOWN!" : "ONLY PROJECT NULL HAS OMEGA MODE!", 44); return; }
+  p.omegaTimer = 15 * 60; p.omegaCooldown = 120 * 60; p.super = 100; burst(p.x, p.y - 70, "#9d7aff", 30); flashMessage("OMEGA MODE!", 75);
+}
+
+function playerInput() {
+  const p = game.player;
+  p.walking = false;
+  if (p.frozenTimer > 0) { p.shielding = false; return; }
+  if (!keys.e) p.shieldExhausted = false;
+  p.shielding = Boolean(keys.e && !p.shieldExhausted && p.shieldEnergy > 0);
+  if (p.shielding) {
+    p.shieldEnergy--;
+    if (p.shieldEnergy <= 0) { p.shielding = false; p.shieldExhausted = true; flashMessage("SHIELD EMPTY!", 32); }
+  }
+  if (keys.ArrowLeft) { p.x -= p.speed; p.facing = -1; p.walking = true; }
+  if (keys.ArrowRight) { p.x += p.speed; p.facing = 1; p.walking = true; }
+  if (keys.ArrowUp && p.jumpsLeft > 0) {
+    p.vy = p.jumpsLeft === 2 ? -19 : -17;
+    p.jumpsLeft--;
+    keys.ArrowUp = false;
+  }
+  if (keys.a) { keys.a = false; doAttack(p, "melee"); }
+  if (keys.s) { keys.s = false; doAttack(p, "range"); }
+  if (keys.q) { keys.q = false; doAttack(p, "special"); }
+  if (keys.w) { keys.w = false; activateOmega(); }
+}
+
+function secondPlayerInput() {
+  const p = game.enemy;
+  p.walking = false;
+  if (p.frozenTimer > 0) { p.shielding = false; return; }
+  if (!keys.y) p.shieldExhausted = false;
+  p.shielding = Boolean(keys.y && !p.shieldExhausted && p.shieldEnergy > 0);
+  if (p.shielding) {
+    p.shieldEnergy--;
+    if (p.shieldEnergy <= 0) { p.shielding = false; p.shieldExhausted = true; flashMessage("SHIELD EMPTY!", 32); }
+  }
+  if (keys.j) { p.x -= p.speed; p.facing = -1; p.walking = true; }
+  if (keys.l) { p.x += p.speed; p.facing = 1; p.walking = true; }
+  if (keys.i && p.jumpsLeft > 0) {
+    p.vy = p.jumpsLeft === 2 ? -19 : -17;
+    p.jumpsLeft--;
+    keys.i = false;
+  }
+  if (keys.f) { keys.f = false; doAttack(p, "melee"); }
+  if (keys.g) { keys.g = false; doAttack(p, "range"); }
+  if (keys.r) { keys.r = false; doAttack(p, "special"); }
+  if (keys.u) { keys.u = false; activateOmega(p); }
+}
+
+function enemyAI() {
+  if (game.mode === "training") return;
+  const e = game.enemy, p = game.player, distance = p.x - e.x;
+  if (e.frozenTimer > 0) { e.walking = false; return; }
+  const difficulty = difficultyModes[game.settings.difficulty];
+  e.facing = distance > 0 ? 1 : -1;
+  e.walking = false;
+  if (Math.abs(distance) > 125) { e.x += Math.sign(distance) * e.speed * .55 * difficulty.moveSpeed; e.walking = true; }
+  if (e.vy === 0 && p.y < e.y - 35 && Math.random() < .035 * difficulty.moveSpeed) e.vy = -18;
+  e.aiTimer--;
+  if (e.aiTimer <= 0 && e.cooldown <= 0) {
+    const roll = Math.random();
+    if (roll < difficulty.attackChance) {
+      const attackRoll = Math.random();
+      if (Math.abs(distance) < 100 && attackRoll < .6) doAttack(e, "melee");
+      else if (attackRoll < .72) doAttack(e, "range");
+      else doAttack(e, "special");
+    }
+    e.aiTimer = (25 + Math.random() * 42) * difficulty.thinking;
+  }
+}
+
+function updateFighter(f) {
+  if (f.trainingDummy && (f.x < -65 || f.x > canvas.width + 65)) {
+    f.x = 810; f.y = getArena().floor; f.vy = 0; f.health = f.maxHealth; f.invincible = 50;
+    updateHealth();
+    flashMessage("DUMMY RESET! KEEP PRACTICING!", 52);
+    return;
+  }
+  if (f.x < -65 || f.x > canvas.width + 65) { loseLife(f); return; }
+  const arena = getArena();
+  const oldY = f.y;
+  f.vy += .78;
+  f.y += f.vy;
+  if (f.vy >= 0) {
+    for (const platform of arena.platforms) {
+      const crossedTop = oldY <= platform.y && f.y >= platform.y;
+      const overPlatform = f.x + 24 > platform.x && f.x - 24 < platform.x + platform.width;
+      if (crossedTop && overPlatform) { f.y = platform.y; f.vy = 0; f.jumpsLeft = 2; break; }
+    }
+  }
+  if (f.y > arena.floor) { f.y = arena.floor; f.vy = 0; f.jumpsLeft = 2; }
+  f.anim += f.walking ? .32 : .09;
+  ["cooldown", "invincible", "attackTimer", "specialTimer", "hitFlash", "omegaTimer", "omegaCooldown", "powerUpTimer", "frozenTimer", "starTimer"].forEach((key) => { if (f[key] > 0) f[key]--; });
+  if (!f.shielding && f.shieldEnergy < 60) f.shieldEnergy++;
+  if (f.powerUpTimer <= 0) f.powerUp = null;
+}
+
+function loseLife(f) {
+  if (game.ended) return;
+  f.lives--;
+  updateLives();
+  if (f.lives < 0) { endBattle(f !== game.player); return; }
+  f.x = f === game.player ? 230 : 810;
+  f.y = getArena().floor - 70;
+  f.vy = -5;
+  f.jumpsLeft = 2;
+  f.health = 100;
+  f.cooldown = 45;
+  f.invincible = 90;
+  f.walking = false;
+  updateHealth();
+  burst(f.x, f.y - 45, "#ffffff", 22);
+  flashMessage(`${f.name.toUpperCase()} RESPAWNS! ${f.lives} SAFE FALLS LEFT`, 75);
+}
+
+function updateProjectiles() {
+  game.projectiles.forEach((p) => {
+    p.life--; p.x += p.vx;
+    const enemy = p.owner === game.player ? game.enemy : game.player;
+    if (p.visualOnly) {
+      // The two extra tracer bullets are just for the machine-gun look.
+    } else if (p.beam) {
+      if (p.life === 18 && Math.abs(enemy.x - p.x) < 370) hitOpponent(p.owner, enemy, p.damage, 700, "SUPER BLAST!");
+    } else if (Math.abs(p.x - enemy.x) < p.size + 28 && Math.abs(p.y - (enemy.y - 36)) < 50) {
+      if (enemy.shielding) {
+        p.owner = enemy;
+        p.vx = -p.vx * .45;
+        p.damage = Math.max(2, Math.round(p.damage * .7));
+        p.life = Math.min(p.life, 20);
+        p.x = enemy.x + Math.sign(p.vx) * 38;
+        burst(enemy.x, enemy.y - 45, "#77dcff", 12);
+        flashMessage("SHIELD BOUNCE!", 26);
+      } else {
+        hitOpponent(p.owner, enemy, p.damage, 700, "ZAP!");
+        p.life = 0;
+      }
+    }
+  });
+  game.projectiles = game.projectiles.filter((p) => p.life > 0 && p.x > -100 && p.x < canvas.width + 100);
+  game.sparks.forEach((s) => { s.x += s.vx; s.y += s.vy; s.vy += .3; s.life--; });
+  game.sparks = game.sparks.filter((s) => s.life > 0);
+}
+
+function spawnApple(golden = false) {
+  game.apples.push({ x: 55 + Math.random() * (canvas.width - 110), y: -28, vy: 0, life: golden ? 180 : 300, landed: false, golden });
+  flashMessage(golden ? "GOLDEN APPLE DROP!" : "APPLE DROP!", 42);
+}
+
+function updateApples(dt) {
+  game.appleDropMs -= dt;
+  if (game.appleDropMs <= 0) {
+    spawnApple();
+    game.appleDropMs += 10000;
+  }
+  if (game.goldenAppleDropMs !== null) {
+    game.goldenAppleDropMs -= dt;
+    if (game.goldenAppleDropMs <= 0) { spawnApple(true); game.goldenAppleDropMs = null; }
+  }
+  const arena = getArena();
+  game.apples.forEach((apple) => {
+    const oldY = apple.y;
+    if (!apple.landed) {
+      apple.vy += .58;
+      apple.y += apple.vy;
+      if (apple.vy >= 0) {
+        for (const platform of arena.platforms) {
+          const crossedTop = oldY + 18 <= platform.y && apple.y + 18 >= platform.y;
+          const overPlatform = apple.x + 14 > platform.x && apple.x - 14 < platform.x + platform.width;
+          if (crossedTop && overPlatform) { apple.y = platform.y - 18; apple.vy = 0; apple.landed = true; break; }
+        }
+      }
+      if (apple.y + 18 >= arena.floor) { apple.y = arena.floor - 18; apple.vy = 0; apple.landed = true; }
+    }
+    apple.life--;
+    [game.player, game.enemy].forEach((fighter) => {
+      if (apple.collected || Math.abs(fighter.x - apple.x) > 42 || Math.abs((fighter.y - 38) - apple.y) > 52) return;
+      apple.collected = true;
+      fighter.health = apple.golden ? fighter.maxHealth : Math.min(fighter.maxHealth, fighter.health + 25);
+      updateHealth();
+      playPowerUpSound(apple.golden ? "golden-apple" : "apple");
+      burst(apple.x, apple.y, apple.golden ? "#ffe34d" : "#ff4d4d", apple.golden ? 25 : 13);
+      flashMessage(apple.golden ? "GOLDEN APPLE! FULL HEALTH!" : "APPLE! +25 HEALTH", 55);
+    });
+  });
+  game.apples = game.apples.filter((apple) => !apple.collected && apple.life > 0);
+}
+
+function drawApple(apple) {
+  ctx.save();
+  ctx.translate(apple.x, apple.y);
+  ctx.shadowColor = apple.golden ? "#f0b900" : "#631f2a";
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = apple.golden ? "#ffc928" : "#ee4345";
+  ctx.beginPath();
+  ctx.arc(-7, 1, 11, 0, Math.PI * 2);
+  ctx.arc(7, 1, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = apple.golden ? "#fff2a2" : "#ff7470";
+  ctx.beginPath();
+  ctx.arc(-5, -2, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#704527";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, -9);
+  ctx.quadraticCurveTo(1, -18, 6, -20);
+  ctx.stroke();
+  ctx.fillStyle = "#62be50";
+  ctx.beginPath();
+  ctx.ellipse(10, -17, 8, 4, -.45, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function randomPowerUpDelay() {
+  return 15000 + Math.random() * 20000;
+}
+
+function spawnPowerUp() {
+  const types = ["sword", "pistol", "freeze", "star"];
+  const type = types[Math.floor(Math.random() * types.length)];
+  game.powerUps.push({ type, x: 55 + Math.random() * (canvas.width - 110), y: -32, vy: 0, life: 900, landed: false });
+  flashMessage(type === "sword" ? "SWORD DROP!" : type === "pistol" ? "SHINY PISTOL DROP!" : type === "freeze" ? "FREEZE BOMB DROP!" : "SUPER STAR DROP!", 42);
+}
+
+function updatePowerUps(dt) {
+  game.powerUpDropMs -= dt;
+  if (game.powerUpDropMs <= 0) {
+    spawnPowerUp();
+    game.powerUpDropMs += randomPowerUpDelay();
+  }
+  const arena = getArena();
+  game.powerUps.forEach((powerUp) => {
+    const oldY = powerUp.y;
+    if (!powerUp.landed) {
+      powerUp.vy += .58;
+      powerUp.y += powerUp.vy;
+      if (powerUp.vy >= 0) {
+        for (const platform of arena.platforms) {
+          const crossedTop = oldY + 20 <= platform.y && powerUp.y + 20 >= platform.y;
+          const overPlatform = powerUp.x + 17 > platform.x && powerUp.x - 17 < platform.x + platform.width;
+          if (crossedTop && overPlatform) { powerUp.y = platform.y - 20; powerUp.vy = 0; powerUp.landed = true; break; }
+        }
+      }
+      if (powerUp.y + 20 >= arena.floor) { powerUp.y = arena.floor - 20; powerUp.vy = 0; powerUp.landed = true; }
+    }
+    powerUp.life--;
+    [game.player, game.enemy].forEach((fighter) => {
+      if (powerUp.collected || Math.abs(fighter.x - powerUp.x) > 45 || Math.abs((fighter.y - 38) - powerUp.y) > 55) return;
+      powerUp.collected = true;
+      if (powerUp.type === "freeze") {
+        const opponent = fighter === game.player ? game.enemy : game.player;
+        opponent.frozenTimer = 120;
+        opponent.shielding = false;
+        playPowerUpSound("freeze");
+        burst(powerUp.x, powerUp.y, "#7ce8ff", 28);
+        flashMessage("FREEZE BOMB! OPPONENT FROZEN!", 65);
+      } else if (powerUp.type === "star") {
+        fighter.starTimer = 300;
+        playPowerUpSound("star");
+        burst(powerUp.x, powerUp.y, "#fff05a", 30);
+        flashMessage("SUPER STAR! INVINCIBLE!", 65);
+      } else {
+        fighter.powerUp = powerUp.type;
+        fighter.powerUpTimer = 600;
+        playPowerUpSound(powerUp.type);
+        burst(powerUp.x, powerUp.y, powerUp.type === "sword" ? "#6ce6ff" : "#ffe45d", 18);
+        flashMessage(powerUp.type === "sword" ? "SWORD POWER! MELEE x2" : "SHINY PISTOL POWER!", 55);
+      }
+    });
+  });
+  game.powerUps = game.powerUps.filter((powerUp) => !powerUp.collected && powerUp.life > 0);
+}
+
+function drawPowerUp(powerUp) {
+  ctx.save();
+  ctx.translate(powerUp.x, powerUp.y);
+  ctx.shadowColor = powerUp.type === "sword" ? "#64edff" : powerUp.type === "pistol" || powerUp.type === "star" ? "#ffe45d" : "#7ce8ff";
+  ctx.shadowBlur = 18;
+  if (powerUp.type === "sword") {
+    ctx.rotate(-.28);
+    ctx.fillStyle = "#dffaff";
+    ctx.fillRect(-4, -22, 8, 34);
+    ctx.fillStyle = "#58dffa";
+    ctx.beginPath(); ctx.moveTo(0, -31); ctx.lineTo(-5, -20); ctx.lineTo(5, -20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#f3c85a";
+    ctx.fillRect(-14, 9, 28, 6);
+    ctx.fillStyle = "#794c32";
+    ctx.fillRect(-4, 15, 8, 13);
+  } else if (powerUp.type === "pistol") {
+    ctx.fillStyle = "#d6dce5";
+    ctx.fillRect(-18, -8, 30, 13);
+    ctx.fillStyle = "#fff4ac";
+    ctx.fillRect(10, -5, 15, 6);
+    ctx.fillStyle = "#687487";
+    ctx.fillRect(-8, 4, 10, 15);
+    ctx.fillStyle = "#fff9d8";
+    ctx.beginPath(); ctx.arc(-11, -2, 4, 0, Math.PI * 2); ctx.fill();
+  } else if (powerUp.type === "freeze") {
+    ctx.fillStyle = "#79dff4";
+    ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#d9fbff"; ctx.lineWidth = 3;
+    for (let i = 0; i < 3; i++) { ctx.save(); ctx.rotate(i * Math.PI / 3); ctx.beginPath(); ctx.moveTo(-11, 0); ctx.lineTo(11, 0); ctx.moveTo(0, -11); ctx.lineTo(0, 11); ctx.stroke(); ctx.restore(); }
+    ctx.strokeStyle = "#475a77"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(6, -16); ctx.quadraticCurveTo(10, -28, 18, -25); ctx.stroke();
+  } else {
+    ctx.fillStyle = "#fff4a0";
+    ctx.beginPath();
+    for (let point = 0; point < 10; point++) { const angle = -Math.PI / 2 + point * Math.PI / 5; const radius = point % 2 === 0 ? 25 : 11; const x = Math.cos(angle) * radius; const y = Math.sin(angle) * radius; point ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#694c20"; ctx.beginPath(); ctx.arc(-8, -2, 2.5, 0, Math.PI * 2); ctx.arc(8, -2, 2.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function updateTankCharges() {
+  game.tankCharges.forEach((tank) => {
+    tank.x += tank.vx;
+    tank.life--;
+    const target = tank.owner === game.player ? game.enemy : game.player;
+    const closeEnough = Math.abs(tank.x - target.x) < 84 && Math.abs(tank.y - target.y) < 125;
+    if (!tank.hit && target.invincible <= 0 && target.starTimer <= 0 && closeEnough) {
+      tank.hit = true;
+      if (target.shielding) {
+        burst(target.x, target.y - 45, "#77dcff", 16);
+        flashMessage("SHIELD BLOCK!", 28);
+        return;
+      }
+      target.health = Math.max(0, target.health - tank.damage);
+      target.hitFlash = 18;
+      target.invincible = 16;
+      target.x += Math.sign(tank.vx) * Math.min(82, tank.damage * 4);
+      tank.owner.super = Math.min(100, tank.owner.super + 12);
+      burst(target.x, target.y - 35, "#f4cf4d", 20);
+      flashMessage("TANK CHARGE!", 38);
+      updateHealth();
+      if (target.trainingDummy && target.health <= 0) {
+        target.health = target.maxHealth;
+        target.x = 810;
+        target.invincible = 50;
+        updateHealth();
+        flashMessage("DUMMY RESET! KEEP PRACTICING!", 52);
+        return;
+      }
+      if (target.health <= 0) endBattle(tank.owner === game.player);
+    }
+  });
+  game.tankCharges = game.tankCharges.filter((tank) => tank.life > 0 && tank.x > -180 && tank.x < canvas.width + 180);
+}
+
+function drawBackground() {
+  if (game?.mode === "boss") {
+    const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    sky.addColorStop(0, "#1e1637"); sky.addColorStop(.72, "#6d2635"); sky.addColorStop(.73, "#ec633b"); sky.addColorStop(1, "#6a1f30");
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#f49b45"; [[145, 120], [430, 180], [815, 115], [1000, 230]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill(); });
+    [{ x: 105, y: 390, width: 220 }, { x: 445, y: 310, width: 210 }, { x: 775, y: 390, width: 220 }].forEach((platform) => { ctx.fillStyle = "#352b45"; ctx.fillRect(platform.x, platform.y, platform.width, 22); ctx.fillStyle = "#ef743f"; ctx.fillRect(platform.x, platform.y, platform.width, 6); });
+    ctx.fillStyle = "#ffe170"; ctx.font = "bold 34px system-ui"; ctx.textAlign = "center"; ctx.fillText("MEGA DOOMGEAR'S LAIR", canvas.width / 2, 75);
+    return;
+  }
+  if (game?.mode === "training") {
+    if (trainingRoomImage.complete && trainingRoomImage.naturalWidth) {
+      ctx.drawImage(trainingRoomImage, 0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#10244b12";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+    const wall = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    wall.addColorStop(0, "#dff5ff"); wall.addColorStop(.7, "#8bc6e5"); wall.addColorStop(.71, "#687b8b"); wall.addColorStop(1, "#384d60");
+    ctx.fillStyle = wall; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff88"; for (let x = 70; x < canvas.width; x += 150) ctx.fillRect(x, 50, 80, 200);
+    ctx.fillStyle = "#f2c64e"; ctx.fillRect(0, 510, canvas.width, 10);
+    const platforms = [{ x: 105, y: 390, width: 220 }, { x: 445, y: 310, width: 210 }, { x: 775, y: 390, width: 220 }];
+    platforms.forEach((platform) => {
+      ctx.fillStyle = "#34495d"; ctx.fillRect(platform.x, platform.y, platform.width, 20);
+      ctx.fillStyle = "#70c7de"; ctx.fillRect(platform.x, platform.y, platform.width, 7);
+      ctx.fillStyle = "#d5fbff"; ctx.fillRect(platform.x + 12, platform.y + 8, platform.width - 24, 3);
+    });
+    ctx.fillStyle = "#2a3d50"; ctx.font = "bold 32px system-ui"; ctx.textAlign = "center"; ctx.fillText("TRAINING ROOM", canvas.width / 2, 75);
+    return;
+  }
+  const selectedStageImage = game?.stage && stageImages[game.stage.id];
+  if (selectedStageImage?.complete && selectedStageImage.naturalWidth) {
+    ctx.drawImage(selectedStageImage, 0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#10244b18";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height); sky.addColorStop(0, "#73d6fa"); sky.addColorStop(.68, "#d4f6ff"); sky.addColorStop(.69, "#7bcc77"); sky.addColorStop(1, "#2f976b"); ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#ffffffaa"; [[140,100,70],[380,155,48],[760,90,78],[975,175,50]].forEach(([x,y,s]) => { ctx.beginPath(); ctx.arc(x,y,s,0,Math.PI*2); ctx.arc(x+s*.8,y+20,s*.68,0,Math.PI*2); ctx.arc(x-s*.75,y+24,s*.58,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle = "#4ca061"; for (let i=0;i<7;i++){ const x=i*185-30; ctx.beginPath(); ctx.arc(x+50, 430, 130, Math.PI, 0); ctx.fill(); }
+  ctx.fillStyle = "#4cba75"; ctx.fillRect(0, 510, canvas.width, 110); ctx.fillStyle = "#267d67"; ctx.fillRect(0, 560, canvas.width, 60);
+  ctx.fillStyle = "#784cb3"; [[160,500],[870,500]].forEach(([x,y]) => { ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+22,y-74); ctx.lineTo(x+44,y); ctx.fill(); });
+}
+
+function drawCharacterArt(context, f) {
+  const omega = f.omegaTimer > 0;
+  const circle = (x, y, radius, color) => { context.fillStyle = color; context.beginPath(); context.arc(x, y, radius, 0, Math.PI * 2); context.fill(); };
+  const oval = (x, y, rx, ry, color) => { context.fillStyle = color; context.beginPath(); context.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); context.fill(); };
+  const poly = (points, color) => { context.fillStyle = color; context.beginPath(); context.moveTo(points[0][0], points[0][1]); points.slice(1).forEach(([x, y]) => context.lineTo(x, y)); context.closePath(); context.fill(); };
+  const line = (x1, y1, x2, y2, width, color) => { context.strokeStyle = color; context.lineWidth = width; context.lineCap = "round"; context.beginPath(); context.moveTo(x1, y1); context.lineTo(x2, y2); context.stroke(); };
+  const eye = (x, y, color = "#17284d") => { circle(x, y, 7, "#fff"); circle(x + 1, y + 1, 3.5, color); };
+
+  if (f.id === "training-dummy") {
+    oval(0, -35, 28, 43, "#a77a55"); circle(0, -90, 31, "#e8d1a6");
+    context.strokeStyle = "#754f3c"; context.lineWidth = 5; context.beginPath(); context.moveTo(-21, -102); context.lineTo(21, -78); context.moveTo(21, -102); context.lineTo(-21, -78); context.stroke();
+    context.fillStyle = "#fff8de"; context.fillRect(-14, -96, 28, 12); context.fillStyle = "#b84942"; context.fillRect(-5, -93, 10, 6);
+  } else if (f.id === "shellshock") {
+    oval(0, -37, 26, 39, "#e86f48"); circle(0, -83, 31, "#7b808c"); circle(-17, -113, 13, "#7b808c"); circle(17, -113, 13, "#7b808c"); oval(0, -77, 22, 18, "#444951"); eye(-9, -80); eye(10, -80); line(20, -45, 58, -30, 12, "#2d3543"); line(56, -30, 76, -30, 9, "#555e6f");
+  } else if (f.id === "pip") {
+    oval(-2, -32, 20, 31, "#8c9099"); circle(-2, -72, 27, "#a9adb3"); circle(-18, -96, 11, "#a9adb3"); circle(14, -96, 11, "#a9adb3"); oval(-2, -70, 20, 13, "#f0e4d2"); eye(-11, -73); eye(7, -73); oval(27, -43, 15, 26, "#f2ca42"); line(-17, -28, -42, -13, 13, "#9fa4a9"); line(-41, -13, -54, -3, 9, "#676b74");
+  } else if (f.id === "professor") {
+    oval(0, -35, 25, 40, "#f5f0dd"); circle(0, -82, 29, "#7d8087"); circle(-18, -108, 10, "#7d8087"); circle(18, -108, 10, "#7d8087"); circle(-11, -83, 12, "#dcae42"); circle(12, -83, 12, "#dcae42"); circle(-11, -83, 8, "#87e9ed"); circle(12, -83, 8, "#87e9ed"); line(-9, -45, -34, -22, 9, "#75818a"); line(-39, -25, -51, -7, 5, "#d7dde4");
+  } else if (f.id === "bloop") {
+    context.strokeStyle = "#eaffff"; context.lineWidth = 6; context.beginPath(); context.arc(0, -70, 52, 0, Math.PI * 2); context.stroke(); oval(2, -68, 32, 22, "#349ce5"); poly([[24,-68],[48,-86],[44,-52]], "#349ce5"); eye(-8, -72); eye(8, -72); poly([[-12,-51],[1,-43],[13,-51]], "#fff"); line(-46, -35, -65, -16, 7, "#d49e47"); line(46, -35, 65, -16, 7, "#d49e47");
+  } else if (f.id === "ironbolt") {
+    oval(0, -35, 27, 40, "#617342"); circle(0, -82, 29, "#a4a7ab"); poly([[-23,-101],[-24,-126],[-5,-108]], "#89929a"); poly([[5,-108],[23,-126],[23,-101]], "#89929a"); oval(0, -75, 24, 16, "#d9dbe0"); eye(-9,-77); eye(10,-77); line(0,-102,38,-98,8,"#e95359"); context.fillStyle="#71864c"; context.fillRect(29,-50,40,25); circle(67,-37,13,"#273640"); line(-28,-58,-56,-12,6,"#e6edf2"); line(-14,-58,-42,-12,6,"#e6edf2");
+  } else if (f.id === "bolt") {
+    oval(0, -35, 26, 40, "#bb754e"); circle(0, -82, 28, "#a66142"); oval(0, -72, 21, 14, "#e7c6a8"); eye(-10,-83); eye(10,-83); context.fillStyle="#fff"; context.fillRect(-9,-64,7,12); context.fillRect(3,-64,7,12); oval(-40,-35,19,30,"#6d432e"); oval(28,-45,15,24,"#c98e42"); line(40,-48,55,-70,6,"#4fe7e7"); line(48,-40,65,-60,6,"#4fe7e7");
+  } else if (f.id === "goblin") {
+    oval(0, -35, 25, 40, "#697d3e"); circle(0, -82, 28, "#87ad49"); poly([[-21,-88],[-52,-107],[-31,-68]], "#87ad49"); poly([[21,-88],[52,-107],[31,-68]], "#87ad49"); context.fillStyle="#80878b"; context.fillRect(-23,-111,46,17); circle(-10,-80,10,"#f4d753"); circle(11,-80,10,"#f4d753"); circle(-10,-80,3,"#17284d");circle(11,-80,3,"#17284d"); line(28,-48,55,-25,7,"#a8aeb2"); line(54,-25,70,-41,11,"#ca5668");
+  } else if (f.id === "doomgear" || f.id === "boss") {
+    oval(0, -34, 30, 42, "#332b4c"); circle(0, -83, 32, "#22263d"); poly([[-30,-88],[-46,-128],[-7,-112]], "#4f387e"); poly([[8,-112],[46,-128],[30,-88]], "#4f387e"); oval(0,-82,25,22,"#9f9ca8"); circle(-10,-84,7,"#7650d3");circle(11,-84,7,"#7650d3"); line(0,-69,0,-58,6,"#5ce8dc"); line(28,-46,62,-62,18,"#697180"); circle(66,-65,13,"#9ba5af");
+  } else if (f.id === "null") {
+    oval(0, -34, 27, 42, omega ? "#242a41" : "#323f8c"); circle(0, -82, 31, "#3d4da3"); poly([[-24,-96],[-24,-124],[-2,-106]], "#272f6e"); poly([[2,-106],[24,-124],[24,-96]], "#1f7da0"); oval(-10,-81,16,21,"#444990"); oval(10,-81,16,21,"#2787ae"); line(0,-106,0,-57,4,"#67f4e4"); eye(-10,-84,"#59f6e5"); eye(10,-84,"#a56eff"); poly([[25,-48],[43,-73],[49,-38]], omega ? "#a46dff" : "#4f3ea6"); poly([[-25,-50],[-45,-70],[-48,-37]], omega ? "#8afff1" : "#4f3ea6");
+  }
+  if (omega) { context.strokeStyle="#8afff1"; context.lineWidth=5; context.beginPath(); context.arc(0,-68,59,0,Math.PI*2); context.stroke(); }
+}
+
+function drawBattlePortrait(f) {
+  const cutout = battleCutouts[f.boss ? "doomgear" : f.id];
+  if (!cutout || !cutout.complete || !cutout.naturalWidth) return false;
+  const maxWidth = 190;
+  const maxHeight = 224;
+  let width = maxHeight * (cutout.naturalWidth / cutout.naturalHeight);
+  let height = maxHeight;
+  if (width > maxWidth) {
+    width = maxWidth;
+    height = width * (cutout.naturalHeight / cutout.naturalWidth);
+  }
+  ctx.save();
+  ctx.shadowColor = "#18254caa";
+  ctx.shadowBlur = 15;
+  ctx.drawImage(cutout, -width / 2, -height, width, height);
+  ctx.restore();
+  return true;
+}
+
+function drawFighter(f) {
+  const wave = Math.sin(f.anim);
+  const bob = wave * (f.walking ? 9 : 3.5);
+  const attackStretch = f.attackTimer > 0 ? 1.25 : 1;
+  const tilt = f.attackTimer > 0 ? -.18 : f.walking ? wave * .12 : wave * .025;
+  const bossScale = f.boss ? 1.5 : 1;
+  ctx.save(); ctx.translate(f.x, f.y + bob); ctx.rotate(tilt); ctx.scale(f.facing * attackStretch * bossScale, (f.attackTimer > 0 ? .88 : 1) * bossScale);
+  if (f.walking) {
+    ctx.fillStyle = "#ffffffa8";
+    for (let puff = 0; puff < 3; puff++) { ctx.beginPath(); ctx.ellipse(-32 - puff * 14, 4 + puff * 2, 12 - puff * 2, 4, 0, 0, Math.PI * 2); ctx.fill(); }
+  }
+  if (f.hitFlash > 0) ctx.globalAlpha = .55;
+  const omega = f.omegaTimer > 0;
+  if (omega) { ctx.shadowColor="#9a7cff"; ctx.shadowBlur=28; ctx.fillStyle="#9d7aff44"; ctx.beginPath(); ctx.arc(0,-48,75,0,Math.PI*2); ctx.fill(); }
+  if (f.starTimer > 0) { ctx.strokeStyle="#fff05a"; ctx.lineWidth=7; ctx.shadowColor="#ffe24a"; ctx.shadowBlur=22; ctx.beginPath(); ctx.arc(0,-53,66,0,Math.PI*2); ctx.stroke(); }
+  if (f.frozenTimer > 0) { ctx.strokeStyle="#b4f5ff"; ctx.lineWidth=6; ctx.shadowColor="#65dbff"; ctx.shadowBlur=18; ctx.beginPath(); ctx.arc(0,-53,58,0,Math.PI*2); ctx.stroke(); }
+  if (f.shielding) { ctx.strokeStyle="#75dbff"; ctx.lineWidth=7; ctx.shadowColor="#66d6ff"; ctx.shadowBlur=22; ctx.beginPath(); ctx.arc(0,-53,62,0,Math.PI*2); ctx.stroke(); }
+  ctx.fillStyle = "#17284d"; ctx.beginPath(); ctx.ellipse(0, 5, 39, 13, 0, 0, Math.PI*2); ctx.fill();
+  if (!drawBattlePortrait(f)) drawCharacterArt(ctx, f);
+  if (f.attackTimer > 0) { ctx.strokeStyle = omega ? "#8cfff2" : "#fff05a"; ctx.lineWidth=9; ctx.beginPath(); ctx.arc(23*f.facing,-58,49,-1.2,1.2); ctx.stroke(); }
+  ctx.restore();
+  ctx.fillStyle="#17284d";ctx.font="bold 15px system-ui";ctx.textAlign="center";ctx.fillText(f.name, f.x, f.y+35);
+  if (f.powerUpTimer > 0) { ctx.fillStyle=f.powerUp === "sword" ? "#1daed1" : "#b47912";ctx.font="bold 12px system-ui";ctx.fillText(`${f.powerUp === "sword" ? "SWORD" : "PISTOL"} ${Math.ceil(f.powerUpTimer/60)}s`,f.x,f.y+52); }
+  if (f.omegaTimer > 0) { ctx.fillStyle="#6945e2";ctx.font="bold 12px system-ui";ctx.fillText(`OMEGA ${Math.ceil(f.omegaTimer/60)}s`,f.x,f.y + (f.powerUpTimer > 0 ? 68 : 52)); }
+}
+
+function drawTankCharge(tank) {
+  const direction = Math.sign(tank.vx) || 1;
+  ctx.save();
+  ctx.translate(tank.x, tank.y);
+  ctx.scale(direction, 1);
+  ctx.fillStyle = "#14203499";
+  ctx.beginPath();
+  ctx.ellipse(0, 10, 83, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#27313b";
+  ctx.fillRect(-72, -42, 144, 45);
+  ctx.fillStyle = "#526232";
+  ctx.fillRect(-61, -67, 122, 38);
+  ctx.fillStyle = "#71864c";
+  ctx.beginPath();
+  ctx.roundRect(-45, -95, 75, 42, 14);
+  ctx.fill();
+  ctx.fillStyle = "#3d492c";
+  ctx.fillRect(14, -84, 84, 16);
+  ctx.fillStyle = "#d8ab44";
+  ctx.fillRect(85, -87, 13, 22);
+  ctx.fillStyle = "#b9c16a";
+  ctx.fillRect(-40, -61, 85, 5);
+  ctx.fillStyle = "#151d27";
+  [-48, -16, 16, 48].forEach((x) => { ctx.beginPath(); ctx.arc(x, -17, 15, 0, Math.PI * 2); ctx.fill(); });
+  ctx.fillStyle = "#8f9954";
+  [-48, -16, 16, 48].forEach((x) => { ctx.beginPath(); ctx.arc(x, -17, 8, 0, Math.PI * 2); ctx.fill(); });
+  ctx.restore();
+}
+
+function drawProjectile(projectile) {
+  ctx.save();
+  if (projectile.rifleBullet) {
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.scale(direction, 1);
+    ctx.shadowColor = "#ffad32";
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = "#f8c65a";
+    ctx.fillRect(-12, -3, 18, 6);
+    ctx.fillStyle = "#fff0a2";
+    ctx.beginPath();
+    ctx.moveTo(12, 0);
+    ctx.lineTo(4, -5);
+    ctx.lineTo(4, 5);
+    ctx.closePath();
+    ctx.fill();
+  } else if (projectile.gunBullet) {
+    ctx.strokeStyle = projectile.bulletColor || "#fff6a4";
+    ctx.shadowColor = projectile.sniper ? "#5cf6ff" : (projectile.bulletColor || "#ff9d22");
+    ctx.shadowBlur = projectile.sniper ? 22 : 13;
+    ctx.lineWidth = projectile.sniper ? 2 : 4;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(projectile.x - projectile.vx * (projectile.bulletLength || 1.5), projectile.y);
+    ctx.lineTo(projectile.x, projectile.y);
+    ctx.stroke();
+    if (projectile.sniper) {
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(projectile.x, projectile.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (projectile.rocket) {
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.scale(direction, 1);
+    ctx.shadowColor = projectile.color;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = "#f1eed8";
+    ctx.fillRect(-15, -6, 27, 12);
+    ctx.fillStyle = projectile.color;
+    ctx.beginPath();
+    ctx.moveTo(18, 0);
+    ctx.lineTo(7, -10);
+    ctx.lineTo(7, 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#ffc94f";
+    ctx.beginPath();
+    ctx.moveTo(-15, 0);
+    ctx.lineTo(-27, -7);
+    ctx.lineTo(-27, 7);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    ctx.shadowColor = projectile.color;
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = projectile.color;
+    if (projectile.beam) {
+      ctx.globalAlpha = .5;
+      ctx.fillRect(projectile.x - 120, 0, 240, canvas.height);
+    } else {
+      ctx.beginPath();
+      ctx.arc(projectile.x, projectile.y, projectile.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function draw() {
+  drawBackground();
+  game.tankCharges.forEach(drawTankCharge);
+  game.projectiles.forEach(drawProjectile);
+  game.apples.forEach(drawApple);
+  game.powerUps.forEach(drawPowerUp);
+  drawFighter(game.player); drawFighter(game.enemy);
+  game.sparks.forEach((s) => { ctx.fillStyle=s.color;ctx.globalAlpha=s.life/36;ctx.fillRect(s.x,s.y,5,5); });ctx.globalAlpha=1;
+  [game.player,game.enemy].forEach((f,i)=>{ctx.fillStyle="#ffffffcc";ctx.fillRect(i?canvas.width-195:25,25,170,12);ctx.fillStyle=f.color;ctx.fillRect(i?canvas.width-195:25,25,170*f.super/100,12);});
+}
+
+function loop(now) {
+  if (!game || game.ended) return;
+  const dt = Math.min(40, now-lastTime); lastTime=now;
+  if (game.countdownMs > 0) {
+    game.countdownMs = Math.max(0, game.countdownMs - dt);
+    const countdownText = game.countdownMs > 0 ? String(Math.ceil(game.countdownMs / 1000)) : "FIGHT!";
+    if (countdownText !== game.countdownText) {
+      game.countdownText = countdownText;
+      if (countdownText === "FIGHT!") {
+        game.startedAt = performance.now();
+        flashMessage("FIGHT!", 70);
+      } else {
+        $("battle-message").textContent = countdownText;
+        $("battle-message").classList.add("show");
+      }
+    }
+    draw();
+    animationFrame = requestAnimationFrame(loop);
+    return;
+  }
+  if (updateBattleTimer(dt)) return;
+  playerInput();
+  if (game.mode === "two-player") secondPlayerInput(); else enemyAI();
+  updateFighter(game.player); updateFighter(game.enemy); updateProjectiles(); updateTankCharges(); updateApples(dt); updatePowerUps(dt);
+  if (game.messageTimer > 0) { game.messageTimer--; if (game.messageTimer === 0) $("battle-message").classList.remove("show"); }
+  draw(); animationFrame=requestAnimationFrame(loop);
+}
+
+function endBattle(playerWon, timeRanOut = false) {
+  if (game.ended) return;
+  game.ended = true;
+  const trophyMessage = recordBattleTrophy(playerWon);
+  const coinsWon = (playerWon || game.mode === "two-player") && game.mode !== "training" ? rewardWinCoins() : null;
+  if (!coinsWon && game.mode !== "training") saveProfile();
+  const rewardText = coinsWon?.bossMultiplier === 5
+    ? `+${coinsWon.reward} ${coinIcon}! 5× BOSS BATTLE REWARD!${coinsWon.arenaUnlockMessage}${coinsWon.achievementMessage}`
+    : coinsWon ? `+${coinsWon.reward} ${coinIcon}! ${coinsWon.battleCoins} for winning + ${coinsWon.speedBonus} speed bonus.${coinsWon.arenaUnlockMessage}${coinsWon.achievementMessage}` : "";
+  cancelAnimationFrame(animationFrame);
+  flashMessage(timeRanOut ? "TIME'S UP!" : playerWon ? "YOU WIN!" : "OH NO!", 60);
+  setTimeout(() => {
+    const winner = playerWon ? game.player : game.enemy;
+    if (game.mode === "two-player") {
+      $("result-kicker").textContent = timeRanOut ? "TIME'S UP!" : "THE ARENA CHEERS!";
+      $("result-title").textContent = playerWon ? "P1 WINS!" : "P2 WINS!";
+      $("result-copy").textContent = timeRanOut ? `${winner.name} had more health when time ran out!` : `${winner.name} is the Rumble Rivals champion!`;
+      $("coin-reward").innerHTML = rewardText;
+      $("trophy-reward").textContent = trophyMessage;
+    } else {
+      $("result-kicker").textContent = game.mode === "boss" ? playerWon ? "BOSS DEFEATED!" : "THE BOSS WAS TOO STRONG!" : timeRanOut ? "TIME'S UP!" : playerWon ? "THE ARENA CHEERS!" : "KEEP PRACTICING!";
+      $("result-title").textContent = game.mode === "boss" ? playerWon ? "BOSS BEATEN!" : "TRY AGAIN!" : playerWon ? "YOU WIN!" : timeRanOut ? "TIME'S UP!" : "TRY AGAIN!";
+      $("result-copy").textContent = timeRanOut ? `${playerWon ? game.player.name : game.enemy.name} had more health when time ran out!` : playerWon ? `${game.player.name} is the Rumble Rivals champion!` : `${game.enemy.name} won this round. You can get them next time!`;
+      $("coin-reward").innerHTML = playerWon ? rewardText : `You have ${profile.coins} ${coinIcon}. Win the next battle to earn more!`;
+      $("trophy-reward").textContent = trophyMessage;
+    }
+    if (playerWon) {
+      showWinConfetti();
+    } else {
+      $("win-confetti").innerHTML = "";
+    }
+    showScreen("result");
+  }, 850);
+}
+
+function showWinConfetti() {
+  const confetti = $("win-confetti");
+  confetti.innerHTML = "";
+  const colors = ["#ff4f8b", "#ffd447", "#5de1c6", "#4aa8ff", "#8e68ed", "#ff9b45", "#ff6ee7", "#72f1ff"];
+  for (let pieceNumber = 0; pieceNumber < 5000; pieceNumber++) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.setProperty("--left", `${-35 + Math.random() * 170}%`);
+    piece.style.setProperty("--top", `${-320 + Math.random() * 440}px`);
+    piece.style.setProperty("--color", colors[pieceNumber % colors.length]);
+    piece.style.setProperty("--drift", `${-800 + Math.random() * 1600}px`);
+    piece.style.setProperty("--delay", `${Math.random() * .45}s`);
+    piece.style.setProperty("--fall-time", `${1.4 + Math.random() * 1.1}s`);
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    confetti.appendChild(piece);
+  }
+  window.setTimeout(() => { confetti.innerHTML = ""; }, 3400);
+}
+
+$("start-button").addEventListener("click", startLoading);
+$("solo-play-button").addEventListener("click", () => { matchMode = "computer"; playerOneChoice = null; showScreen("stages"); });
+$("two-player-button").addEventListener("click", () => { matchMode = "two-player"; playerOneChoice = null; showScreen("stages"); });
+$("find-friend-button").addEventListener("click", () => {
+  $("play-menu-message").textContent = "Friend codes will be ready when the game is online. For now, choose Play Game for a computer battle!";
+});
+$("enter-code-button").addEventListener("click", () => {
+  $("play-menu-message").textContent = "Enter Code will let you join a friend's battle once the online part of the game is ready.";
+});
+$("play-menu-back").addEventListener("click", returnToCover);
+$("training-button").addEventListener("click", () => { matchMode = "training"; playerOneChoice = null; buildRoster(); showFighterSelection(); showScreen("select"); });
+$("boss-button").addEventListener("click", () => { matchMode = "boss"; playerOneChoice = null; buildRoster(); showFighterSelection(); showScreen("select"); });
+document.querySelectorAll(".setting-choice").forEach((button) => button.addEventListener("click", () => chooseSetting(button.dataset.setting, button.dataset.value)));
+$("settings-button").addEventListener("click", () => {
+  settingsReturnScreen = $("select").classList.contains("active") ? "select" : "stages";
+  showScreen("settings");
+});
+$("settings-back").addEventListener("click", () => showScreen(settingsReturnScreen));
+$("settings-continue").addEventListener("click", () => showScreen(settingsReturnScreen));
+$("unlock-menu-button").addEventListener("click", () => { buildUnlocks(); showScreen("unlocks"); });
+$("upgrade-menu-button").addEventListener("click", () => { buildUpgrades(); showScreen("upgrades"); });
+$("achievements-menu-button").addEventListener("click", () => { buildAchievements(); showScreen("achievements"); });
+$("unlocks-back").addEventListener("click", () => showScreen("settings"));
+$("upgrades-back").addEventListener("click", () => showScreen("settings"));
+$("achievements-back").addEventListener("click", () => showScreen("settings"));
+$("stage-back").addEventListener("click", () => showScreen("play-menu"));
+$("back-to-cover").addEventListener("click", () => { playerOneChoice = null; showScreen("stages"); });
+$("quit-battle").addEventListener("click", returnToCover);
+$("rematch-button").addEventListener("click", () => startBattle(game.player, game.mode === "two-player" ? game.enemy : null));
+$("select-button").addEventListener("click", returnToCover);
+window.addEventListener("keydown", (event) => {
+  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  if ((event.metaKey || event.ctrlKey) && key === "r") {
+    event.preventDefault();
+    resetAllProgress();
+    return;
+  }
+  if ($("select").classList.contains("active") && key === "a" && hoveredFighter) {
+    event.preventDefault();
+    showFighterDetails(hoveredFighter);
+    return;
+  }
+  if (["ArrowLeft","ArrowRight","ArrowUp","a","s","q","w","e","j","l","i","f","g","r","u","y"," "].includes(key)) event.preventDefault();
+  keys[key] = true;
+});
+window.addEventListener("keyup", (event) => { const key=event.key.length===1 ? event.key.toLowerCase() : event.key; keys[key]=false; });
+updateCoinDisplays();
+updateTrophyDisplay();
+buildUnlocks();
+buildUpgrades();
+buildAchievements();
+buildStages();
+buildRoster();
