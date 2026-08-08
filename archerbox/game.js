@@ -908,6 +908,19 @@ function doAttack(who, type) {
         flyingWrench: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#d9ebee", 7);
+    } else if (who.id === "goblin") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (12 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#d84f4a",
+        life: 70,
+        size: 14 + weaponLevel * 4,
+        sodaCan: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#ff7061", 7);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -1707,6 +1720,24 @@ function drawProjectile(projectile) {
     ctx.fillStyle = "#6e8087";
     ctx.beginPath();
     ctx.arc(-size * .86, 0, size * .2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (projectile.sodaCan) {
+    const size = projectile.size;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.life * .16 * (Math.sign(projectile.vx) || 1));
+    ctx.shadowColor = "#ff7b57";
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = "#d94f48";
+    ctx.fillRect(-size * .46, -size * .82, size * .92, size * 1.64);
+    ctx.fillStyle = "#f3f0d8";
+    ctx.fillRect(-size * .46, -size * .14, size * .92, size * .26);
+    ctx.fillStyle = "#c9d5d5";
+    ctx.beginPath();
+    ctx.ellipse(0, -size * .82, size * .46, size * .16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#657477";
+    ctx.beginPath();
+    ctx.arc(0, -size * .82, size * .12, 0, Math.PI * 2);
     ctx.fill();
   } else if (projectile.rifleBullet) {
     const direction = Math.sign(projectile.vx) || 1;
