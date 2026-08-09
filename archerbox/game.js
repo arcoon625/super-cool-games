@@ -1737,10 +1737,14 @@ function drawBattlePortrait(f) {
 function drawFighter(f) {
   const wave = Math.sin(f.anim);
   const bob = wave * (f.walking ? 9 : 3.5);
-  const attackStretch = f.attackTimer > 0 ? 1.25 : 1;
-  const tilt = f.attackTimer > 0 ? -.18 : f.walking ? wave * .12 : wave * .025;
+  const attackPhase = f.attackTimer > 0 ? 1 - f.attackTimer / 13 : 0;
+  const attackSwing = Math.sin(attackPhase * Math.PI);
+  const attackStretch = f.attackTimer > 0 ? (f.action === "range" ? 1.12 : 1.25) : 1;
+  const attackPush = f.attackTimer > 0 ? (f.action === "range" ? -8 * attackSwing : f.action === "special" || f.action === "super" ? 14 * attackSwing : 24 * attackSwing) : 0;
+  const attackLift = f.attackTimer > 0 ? (f.action === "range" ? 4 * attackSwing : -8 * attackSwing) : 0;
+  const tilt = f.attackTimer > 0 ? (f.action === "range" ? .12 : f.action === "special" || f.action === "super" ? -.08 : -.28) * attackSwing : f.walking ? wave * .12 : wave * .025;
   const bossScale = f.boss ? 1.5 : 1;
-  ctx.save(); ctx.translate(f.x, f.y + bob); ctx.rotate(tilt); ctx.scale(f.facing * attackStretch * bossScale, (f.attackTimer > 0 ? .88 : 1) * bossScale);
+  ctx.save(); ctx.translate(f.x + f.facing * attackPush, f.y + bob + attackLift); ctx.rotate(tilt); ctx.scale(f.facing * attackStretch * bossScale, (f.attackTimer > 0 ? .88 : 1) * bossScale);
   if (f.walking) {
     ctx.fillStyle = "#ffffffa8";
     for (let puff = 0; puff < 3; puff++) { ctx.beginPath(); ctx.ellipse(-32 - puff * 14, 4 + puff * 2, 12 - puff * 2, 4, 0, 0, Math.PI * 2); ctx.fill(); }
@@ -1753,7 +1757,23 @@ function drawFighter(f) {
   if (f.shielding) { ctx.strokeStyle="#75dbff"; ctx.lineWidth=7; ctx.shadowColor="#66d6ff"; ctx.shadowBlur=22; ctx.beginPath(); ctx.arc(0,-53,62,0,Math.PI*2); ctx.stroke(); }
   ctx.fillStyle = "#17284d"; ctx.beginPath(); ctx.ellipse(0, 5, 39, 13, 0, 0, Math.PI*2); ctx.fill();
   if (!drawBattlePortrait(f)) drawCharacterArt(ctx, f);
-  if (f.attackTimer > 0) { ctx.strokeStyle = omega ? "#8cfff2" : "#fff05a"; ctx.lineWidth=9; ctx.beginPath(); ctx.arc(23*f.facing,-58,49,-1.2,1.2); ctx.stroke(); }
+  if (f.attackTimer > 0) {
+    if (f.action === "range") {
+      ctx.fillStyle = omega ? "#8cfff2" : "#fff6aa";
+      ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(57, -54, 13 + attackSwing * 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffb13f";
+      ctx.beginPath(); ctx.arc(57, -54, 5 + attackSwing * 4, 0, Math.PI * 2); ctx.fill();
+    } else if (f.action === "special" || f.action === "super") {
+      ctx.strokeStyle = omega || f.action === "super" ? "#8cfff2" : "#ff8b58";
+      ctx.lineWidth = 10; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(0, -58, 45 + attackSwing * 22, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      ctx.strokeStyle = omega ? "#8cfff2" : "#fff05a";
+      ctx.lineWidth = 9; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.arc(23, -58, 49 + attackSwing * 11, -1.2, 1.2); ctx.stroke();
+    }
+  }
   ctx.restore();
   if (f.emoteTimer > 0 && f.emoteText) {
     const text = f.emoteText;
