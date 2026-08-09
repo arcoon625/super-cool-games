@@ -1749,18 +1749,22 @@ function drawBattlePortrait(f) {
 
 function drawFighter(f) {
   const wave = Math.sin(f.anim);
-  const bob = wave * (f.walking ? 9 : 3.5);
+  const jumping = Math.abs(f.vy) > 1.2;
+  const bob = wave * (f.walking ? 13 : 6);
+  const breathing = 1 + Math.sin(f.anim * .55) * .025;
+  const jumpStretch = jumping ? 1.1 : 1;
+  const jumpSquish = jumping ? .93 : 1;
   const attackPhase = f.attackTimer > 0 ? 1 - f.attackTimer / 13 : 0;
   const attackSwing = Math.sin(attackPhase * Math.PI);
   const attackStretch = f.attackTimer > 0 ? (f.action === "range" ? 1.12 : 1.25) : 1;
   const attackPush = f.attackTimer > 0 ? (f.action === "range" ? -8 * attackSwing : f.action === "special" || f.action === "super" ? 14 * attackSwing : 24 * attackSwing) : 0;
   const attackLift = f.attackTimer > 0 ? (f.action === "range" ? 4 * attackSwing : -8 * attackSwing) : 0;
-  const tilt = f.attackTimer > 0 ? (f.action === "range" ? .12 : f.action === "special" || f.action === "super" ? -.08 : -.28) * attackSwing : f.walking ? wave * .12 : wave * .025;
+  const tilt = f.attackTimer > 0 ? (f.action === "range" ? .12 : f.action === "special" || f.action === "super" ? -.08 : -.28) * attackSwing : jumping ? Math.max(-.18, Math.min(.18, f.vy * .025)) : f.walking ? wave * .16 : wave * .04;
   const bossScale = f.boss ? 1.5 : 1;
-  ctx.save(); ctx.translate(f.x + f.facing * attackPush, f.y + bob + attackLift); ctx.rotate(tilt); ctx.scale(f.facing * attackStretch * bossScale, (f.attackTimer > 0 ? .88 : 1) * bossScale);
+  ctx.save(); ctx.translate(f.x + f.facing * attackPush, f.y + bob + attackLift); ctx.rotate(tilt); ctx.scale(f.facing * attackStretch * breathing * jumpSquish * bossScale, (f.attackTimer > 0 ? .88 : 1) * breathing * jumpStretch * bossScale);
   if (f.walking) {
     ctx.fillStyle = "#ffffffa8";
-    for (let puff = 0; puff < 3; puff++) { ctx.beginPath(); ctx.ellipse(-32 - puff * 14, 4 + puff * 2, 12 - puff * 2, 4, 0, 0, Math.PI * 2); ctx.fill(); }
+    for (let puff = 0; puff < 4; puff++) { ctx.beginPath(); ctx.ellipse(-30 - puff * 15, 4 + puff * 3 + Math.abs(wave) * 4, 13 - puff * 2, 5, 0, 0, Math.PI * 2); ctx.fill(); }
   }
   if (f.hitFlash > 0) ctx.globalAlpha = .55;
   const omega = f.omegaTimer > 0;
