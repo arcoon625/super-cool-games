@@ -54,6 +54,30 @@ const stages = [
   { id: "pizzaplanet", name: "Space Pizza Planet", description: "Cheese moons, pepperoni meteors, and cosmic pizza platforms", art: "assets/arenas/space-pizza-planet.png" },
 ];
 
+// Each special arena gets one themed hazard at a time, so it stays exciting
+// without making the fight impossible.
+const stageHazards = {
+  icy: { kind: "ice", label: "ICE CHUNK", color: "#9cecff", damage: 10 },
+  fire: { kind: "meteor", label: "LAVA ROCK", color: "#ff663b", damage: 14 },
+  stone: { kind: "rock", label: "FALLING ROCK", color: "#9b7656", damage: 12 },
+  pirate: { kind: "cannonball", label: "CANNONBALL", color: "#313742", damage: 13, horizontal: true },
+  lightning: { kind: "lightning", label: "LIGHTNING STRIKE", color: "#f9ed68", damage: 12 },
+  jungle: { kind: "coconut", label: "FALLING COCONUT", color: "#80502a", damage: 11 },
+  shadow: { kind: "crystal", label: "SHADOW CRYSTAL", color: "#a96bff", damage: 12 },
+  metal: { kind: "gear", label: "FALLING GEAR", color: "#a4b5bd", damage: 12 },
+  space: { kind: "meteor", label: "METEOR", color: "#ff8544", damage: 15 },
+  candy: { kind: "gumdrop", label: "GIANT GUMDROP", color: "#ff70b8", damage: 10 },
+  crystal: { kind: "crystal", label: "CRYSTAL SHARD", color: "#62f2df", damage: 12 },
+  dino: { kind: "rock", label: "DINO ROCK", color: "#b16d3d", damage: 14 },
+  toybox: { kind: "block", label: "TOY BLOCK", color: "#ffbc43", damage: 10 },
+  warfare: { kind: "crate", label: "SUPPLY CRATE", color: "#a7783d", damage: 12 },
+  mystery: { kind: "meteor", label: "VOLCANO ROCK", color: "#ec5534", damage: 15 },
+  sharklab: { kind: "electric", label: "ELECTRIC SPARK", color: "#69eaff", damage: 11 },
+  frozenaquarium: { kind: "ice", label: "ICE CHUNK", color: "#a6f4ff", damage: 11 },
+  treehouse: { kind: "coconut", label: "FALLING COCONUT", color: "#80502a", damage: 12 },
+  pizzaplanet: { kind: "meteor", label: "PEPPERONI METEOR", color: "#f16b45", damage: 14 },
+};
+
 // These are the real platform locations in each background picture.
 const stageArenas = {
   "training-room": { floor: 480, platforms: [{ x: 95, y: 145, width: 250 }, { x: 345, y: 55, width: 420 }, { x: 760, y: 145, width: 250 }, { x: 180, y: 284, width: 255 }, { x: 665, y: 284, width: 255 }] },
@@ -799,7 +823,7 @@ function startBattle(selected, opponent = null) {
   const enemy = opponent || choices[Math.floor(Math.random() * choices.length)];
   const stage = matchMode === "training" ? trainingStage : matchMode === "boss" ? bossStage : chosenStage;
   const arena = stageArenas[stage.id] || fallbackArena;
-  game = { mode: matchMode, player: makeFighter(selected, 230, 1, arena.floor), enemy: makeFighter(enemy, 810, -1, arena.floor), stage, settings: { ...matchSettings }, timeLeftMs: matchMode === "training" ? null : matchSettings.timer === null ? null : matchSettings.timer * 1000, projectiles: [], tankCharges: [], apples: [], appleDropMs: 10000, goldenAppleDropMs: Math.random() < .15 ? 15000 + Math.random() * 20000 : null, powerUps: [], powerUpDropMs: randomPowerUpDelay(), sparks: [], ended: false, messageTimer: 0, message: "3", countdownMs: 3000, countdownText: "3", startedAt: null };
+  game = { mode: matchMode, player: makeFighter(selected, 230, 1, arena.floor), enemy: makeFighter(enemy, 810, -1, arena.floor), stage, settings: { ...matchSettings }, timeLeftMs: matchMode === "training" ? null : matchSettings.timer === null ? null : matchSettings.timer * 1000, projectiles: [], tankCharges: [], hazards: [], hazardDropMs: 9000 + Math.random() * 3500, apples: [], appleDropMs: 10000, goldenAppleDropMs: Math.random() < .15 ? 15000 + Math.random() * 20000 : null, powerUps: [], powerUpDropMs: randomPowerUpDelay(), sparks: [], ended: false, messageTimer: 0, message: "3", countdownMs: 3000, countdownText: "3", startedAt: null };
   if (matchMode === "boss") { game.enemy.maxHealth = 200; game.enemy.health = 200; }
   const onlineRoom = window.RumbleOnline?.getRoom();
   const online = game.mode === "online-host" || game.mode === "online-guest";
@@ -1206,6 +1230,8 @@ function onlineSnapshot() {
     enemy: copyFighter(game.enemy),
     projectiles: game.projectiles.map((projectile) => ({ ...projectile, owner: ownerSlot(projectile.owner) })),
     tankCharges: game.tankCharges.map((tank) => ({ ...tank, owner: ownerSlot(tank.owner) })),
+    hazards: game.hazards.map((hazard) => ({ ...hazard })),
+    hazardDropMs: game.hazardDropMs,
     apples: game.apples.map((apple) => ({ ...apple })),
     powerUps: game.powerUps.map((powerUp) => ({ ...powerUp })),
     sparks: game.sparks.map((spark) => ({ ...spark })),
@@ -1231,6 +1257,8 @@ function applyOnlineSnapshot(snapshot) {
     enemy,
     projectiles: (snapshot.projectiles || []).map((projectile) => ({ ...projectile, owner: projectile.owner === "p1" ? player : enemy })),
     tankCharges: (snapshot.tankCharges || []).map((tank) => ({ ...tank, owner: tank.owner === "p1" ? player : enemy })),
+    hazards: snapshot.hazards || [],
+    hazardDropMs: snapshot.hazardDropMs || 0,
     apples: snapshot.apples || [],
     powerUps: snapshot.powerUps || [],
     sparks: snapshot.sparks || [],
@@ -1556,6 +1584,58 @@ function updateTankCharges() {
   game.tankCharges = game.tankCharges.filter((tank) => tank.life > 0 && tank.x > -180 && tank.x < canvas.width + 180);
 }
 
+function spawnStageHazard() {
+  const config = stageHazards[game.stage.id];
+  if (!config) return;
+  const size = config.kind === "meteor" ? 28 : config.kind === "cannonball" ? 24 : 22;
+  const direction = Math.random() < .5 ? 1 : -1;
+  const hazard = { ...config, x: 70 + Math.random() * (canvas.width - 140), y: -size * 2, vx: 0, vy: 4.2 + Math.random() * 1.7, size, life: 260, rotation: 0 };
+  if (config.horizontal) {
+    hazard.x = direction > 0 ? -size : canvas.width + size;
+    hazard.y = getArena().floor - 46;
+    hazard.vx = direction * 10;
+    hazard.vy = 0;
+  }
+  game.hazards.push(hazard);
+}
+
+function updateStageHazards(dt) {
+  const config = stageHazards[game.stage.id];
+  if (!config) return;
+  game.hazardDropMs -= dt;
+  if (game.hazardDropMs <= 0 && game.hazards.length === 0) {
+    spawnStageHazard();
+    game.hazardDropMs = 8000 + Math.random() * 4500;
+  }
+  game.hazards.forEach((hazard) => {
+    hazard.x += hazard.vx;
+    hazard.y += hazard.vy;
+    hazard.rotation += .16 + Math.abs(hazard.vx) * .015;
+    hazard.life--;
+    [game.player, game.enemy].forEach((fighter) => {
+      if (hazard.life <= 0 || fighter.invincible > 0 || fighter.starTimer > 0) return;
+      const closeEnough = Math.abs(hazard.x - fighter.x) < hazard.size + 30 && Math.abs(hazard.y - (fighter.y - 42)) < hazard.size + 48;
+      if (!closeEnough) return;
+      hazard.life = 0;
+      if (fighter.shielding) {
+        burst(fighter.x, fighter.y - 48, "#77dcff", 14);
+        flashMessage("SHIELD BLOCK!", 24);
+        return;
+      }
+      fighter.health = Math.max(0, fighter.health - hazard.damage);
+      fighter.hitFlash = 14;
+      fighter.invincible = 18;
+      fighter.x += Math.sign(hazard.x - fighter.x) * -Math.min(54, hazard.damage * 3);
+      burst(fighter.x, fighter.y - 42, hazard.color, 18);
+      flashMessage(`${hazard.label}!`, 42);
+      updateHealth();
+      if (fighter.health <= 0) endBattle(fighter !== game.player);
+    });
+    if (!hazard.horizontal && hazard.y > getArena().floor + hazard.size) hazard.life = 0;
+  });
+  game.hazards = game.hazards.filter((hazard) => hazard.life > 0 && hazard.x > -90 && hazard.x < canvas.width + 90);
+}
+
 function drawBackground() {
   if (game?.mode === "boss") {
     const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -1735,6 +1815,76 @@ function drawTankCharge(tank) {
   [-48, -16, 16, 48].forEach((x) => { ctx.beginPath(); ctx.arc(x, -17, 15, 0, Math.PI * 2); ctx.fill(); });
   ctx.fillStyle = "#8f9954";
   [-48, -16, 16, 48].forEach((x) => { ctx.beginPath(); ctx.arc(x, -17, 8, 0, Math.PI * 2); ctx.fill(); });
+  ctx.restore();
+}
+
+function drawStageHazard(hazard) {
+  const size = hazard.size;
+  ctx.save();
+  ctx.translate(hazard.x, hazard.y);
+  ctx.rotate(hazard.rotation);
+  ctx.shadowColor = hazard.color;
+  ctx.shadowBlur = hazard.kind === "lightning" || hazard.kind === "electric" ? 22 : 8;
+  if (hazard.kind === "rock" || hazard.kind === "meteor") {
+    ctx.fillStyle = hazard.color;
+    ctx.beginPath();
+    for (let point = 0; point < 7; point += 1) {
+      const angle = (Math.PI * 2 * point) / 7;
+      const radius = size * (point % 2 ? .78 : 1);
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (point === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    if (hazard.kind === "meteor") {
+      ctx.fillStyle = "#ffe270";
+      ctx.beginPath();
+      ctx.moveTo(-size * 1.7, 0);
+      ctx.lineTo(-size * .75, -size * .45);
+      ctx.lineTo(-size * .75, size * .45);
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else if (hazard.kind === "cannonball") {
+    ctx.fillStyle = "#313742";
+    ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#879098"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(-size * .22, -size * .22, size * .42, .4, Math.PI * 1.6); ctx.stroke();
+  } else if (hazard.kind === "ice" || hazard.kind === "crystal") {
+    ctx.fillStyle = hazard.color;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 1.2); ctx.lineTo(size * .72, 0); ctx.lineTo(0, size * 1.08); ctx.lineTo(-size * .72, 0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#e4ffff";
+    ctx.beginPath(); ctx.moveTo(0, -size * 1.05); ctx.lineTo(size * .3, 0); ctx.lineTo(0, size * .1); ctx.closePath(); ctx.fill();
+  } else if (hazard.kind === "coconut") {
+    ctx.fillStyle = "#7d4927";
+    ctx.beginPath(); ctx.ellipse(0, 0, size * .8, size, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#c58a4b"; ctx.lineWidth = 3;
+    [-.35, 0, .35].forEach((line) => { ctx.beginPath(); ctx.moveTo(size * line, -size * .72); ctx.lineTo(size * line, size * .72); ctx.stroke(); });
+  } else if (hazard.kind === "lightning" || hazard.kind === "electric") {
+    ctx.strokeStyle = hazard.color; ctx.lineWidth = Math.max(5, size * .28);
+    ctx.beginPath(); ctx.moveTo(0, -size); ctx.lineTo(-size * .34, -size * .16); ctx.lineTo(size * .12, -size * .16); ctx.lineTo(-size * .22, size); ctx.stroke();
+  } else if (hazard.kind === "gear") {
+    ctx.fillStyle = hazard.color;
+    ctx.beginPath();
+    for (let tooth = 0; tooth < 16; tooth += 1) {
+      const angle = (Math.PI * 2 * tooth) / 16;
+      const radius = tooth % 2 ? size * .7 : size;
+      if (tooth === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius); else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#52646b"; ctx.beginPath(); ctx.arc(0, 0, size * .38, 0, Math.PI * 2); ctx.fill();
+  } else if (hazard.kind === "gumdrop") {
+    ctx.fillStyle = hazard.color;
+    ctx.beginPath(); ctx.arc(0, 0, size, Math.PI, 0); ctx.lineTo(size, size * .6); ctx.lineTo(-size, size * .6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#fff2ff"; ctx.beginPath(); ctx.arc(-size * .3, -size * .35, size * .16, 0, Math.PI * 2); ctx.fill();
+  } else if (hazard.kind === "block" || hazard.kind === "crate") {
+    ctx.fillStyle = hazard.color;
+    ctx.fillRect(-size, -size, size * 2, size * 2);
+    ctx.strokeStyle = "#fff0a8"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-size, -size); ctx.lineTo(size, size); ctx.moveTo(size, -size); ctx.lineTo(-size, size); ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -2010,6 +2160,7 @@ function drawProjectile(projectile) {
 function draw() {
   drawBackground();
   game.tankCharges.forEach(drawTankCharge);
+  game.hazards.forEach(drawStageHazard);
   game.projectiles.forEach(drawProjectile);
   game.apples.forEach(drawApple);
   game.powerUps.forEach(drawPowerUp);
@@ -2052,7 +2203,7 @@ function loop(now) {
     applyOnlineControls(game.enemy, onlineMatch.remoteInput, onlineMatch.previousRemoteInput);
     onlineMatch.previousRemoteInput = { ...onlineMatch.remoteInput };
   } else enemyAI();
-  updateFighter(game.player); updateFighter(game.enemy); updateProjectiles(); updateTankCharges(); updateApples(dt); updatePowerUps(dt);
+  updateFighter(game.player); updateFighter(game.enemy); updateProjectiles(); updateTankCharges(); updateStageHazards(dt); updateApples(dt); updatePowerUps(dt);
   if (game.messageTimer > 0) { game.messageTimer--; if (game.messageTimer === 0) $("battle-message").classList.remove("show"); }
   publishOnlineState(now);
   draw(); animationFrame=requestAnimationFrame(loop);
