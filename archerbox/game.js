@@ -767,7 +767,7 @@ function getArena() {
 }
 
 function makeFighter(data, x, facing, floor) {
-  return { ...data, x, y: floor, vy: 0, facing, health: 100, maxHealth: 100, lives: 3, jumpsLeft: 2, cooldown: 0, invincible: 0, attackTimer: 0, specialTimer: 0, hitFlash: 0, omegaTimer: 0, omegaCooldown: 0, powerUp: null, powerUpTimer: 0, frozenTimer: 0, starTimer: 0, shieldEnergy: 60, shieldExhausted: false, shielding: false, super: 0, aiTimer: 0, action: "idle", walking: false, anim: Math.random() * 6.28 };
+  return { ...data, x, y: floor, vy: 0, facing, health: 100, maxHealth: 100, lives: 3, jumpsLeft: 2, cooldown: 0, invincible: 0, attackTimer: 0, specialTimer: 0, hitFlash: 0, omegaTimer: 0, omegaCooldown: 0, powerUp: null, powerUpTimer: 0, frozenTimer: 0, starTimer: 0, shieldEnergy: 60, shieldExhausted: false, shielding: false, super: 0, aiTimer: 0, action: "idle", walking: false, emoteText: "", emoteTimer: 0, anim: Math.random() * 6.28 };
 }
 
 function updateBattleStatus() {
@@ -1049,9 +1049,14 @@ function burst(x, y, color, count) {
 function updateHealth() { $("player-health").style.width = `${game.player.health / game.player.maxHealth * 100}%`; $("enemy-health").style.width = `${game.enemy.health / game.enemy.maxHealth * 100}%`; }
 function updateLives() { $("player-lives").textContent = `LIVES: ${game.player.lives}`; $("enemy-lives").textContent = `LIVES: ${game.enemy.lives}`; }
 function flashMessage(message, timer) { game.message = message; game.messageTimer = timer; $("battle-message").textContent = message; $("battle-message").classList.add("show"); }
+function showFighterEmote(fighter, phrase) {
+  fighter.emoteText = phrase;
+  fighter.emoteTimer = 150;
+}
 function useEmote(phrase) {
   if (!game || game.ended || !emotePhrases.includes(phrase)) return;
   const speaker = onlineIsGuest() ? game.enemy : game.player;
+  showFighterEmote(speaker, phrase);
   flashMessage(`${speaker.name}: ${phrase}`, 90);
   if (onlineIsGuest()) {
     onlineMatch.emoteText = phrase;
@@ -1181,7 +1186,10 @@ function applyOnlineControls(fighter, input, previous) {
   if (input.rangeNonce && input.rangeNonce !== previous.rangeNonce) doAttack(fighter, "range");
   if (input.specialNonce && input.specialNonce !== previous.specialNonce) doAttack(fighter, "special");
   if (input.omegaNonce && input.omegaNonce !== previous.omegaNonce) activateOmega(fighter);
-  if (input.emoteNonce && input.emoteNonce !== previous.emoteNonce && emotePhrases.includes(input.emote)) flashMessage(`${fighter.name}: ${input.emote}`, 90);
+  if (input.emoteNonce && input.emoteNonce !== previous.emoteNonce && emotePhrases.includes(input.emote)) {
+    showFighterEmote(fighter, input.emote);
+    flashMessage(`${fighter.name}: ${input.emote}`, 90);
+  }
 }
 
 function onlineSnapshot() {
@@ -1292,7 +1300,8 @@ function updateFighter(f) {
   }
   if (f.y > arena.floor) { f.y = arena.floor; f.vy = 0; f.jumpsLeft = 2; }
   f.anim += f.walking ? .32 : .09;
-  ["cooldown", "invincible", "attackTimer", "specialTimer", "hitFlash", "omegaTimer", "omegaCooldown", "powerUpTimer", "frozenTimer", "starTimer"].forEach((key) => { if (f[key] > 0) f[key]--; });
+  ["cooldown", "invincible", "attackTimer", "specialTimer", "hitFlash", "omegaTimer", "omegaCooldown", "powerUpTimer", "frozenTimer", "starTimer", "emoteTimer"].forEach((key) => { if (f[key] > 0) f[key]--; });
+  if (f.emoteTimer <= 0) f.emoteText = "";
   if (!f.shielding && f.shieldEnergy < 60) f.shieldEnergy++;
   if (f.powerUpTimer <= 0) f.powerUp = null;
 }
@@ -1668,6 +1677,34 @@ function drawFighter(f) {
   if (!drawBattlePortrait(f)) drawCharacterArt(ctx, f);
   if (f.attackTimer > 0) { ctx.strokeStyle = omega ? "#8cfff2" : "#fff05a"; ctx.lineWidth=9; ctx.beginPath(); ctx.arc(23*f.facing,-58,49,-1.2,1.2); ctx.stroke(); }
   ctx.restore();
+  if (f.emoteTimer > 0 && f.emoteText) {
+    const text = f.emoteText;
+    ctx.save();
+    ctx.font = "900 15px system-ui";
+    const width = Math.min(185, Math.max(76, ctx.measureText(text).width + 26));
+    const height = 34;
+    const x = Math.max(width / 2 + 6, Math.min(canvas.width - width / 2 - 6, f.x));
+    const y = Math.max(34, f.y - 145);
+    ctx.fillStyle = "#fffdf2";
+    ctx.strokeStyle = "#283866";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(x - width / 2, y - height / 2, width, height, 15);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y + height / 2 - 1);
+    ctx.lineTo(x + 2, y + height / 2 + 11);
+    ctx.lineTo(x + 10, y + height / 2 - 1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#263866";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, x, y + 1);
+    ctx.restore();
+  }
   ctx.fillStyle="#17284d";ctx.font="bold 15px system-ui";ctx.textAlign="center";ctx.fillText(f.name, f.x, f.y+35);
   if (f.powerUpTimer > 0) { ctx.fillStyle=f.powerUp === "sword" ? "#1daed1" : "#b47912";ctx.font="bold 12px system-ui";ctx.fillText(`${f.powerUp === "sword" ? "SWORD" : "PISTOL"} ${Math.ceil(f.powerUpTimer/60)}s`,f.x,f.y+52); }
   if (f.omegaTimer > 0) { ctx.fillStyle="#6945e2";ctx.font="bold 12px system-ui";ctx.fillText(`OMEGA ${Math.ceil(f.omegaTimer/60)}s`,f.x,f.y + (f.powerUpTimer > 0 ? 68 : 52)); }
