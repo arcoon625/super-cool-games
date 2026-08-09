@@ -791,7 +791,7 @@ function getArena() {
 }
 
 function makeFighter(data, x, facing, floor) {
-  return { ...data, x, y: floor, vy: 0, facing, health: 100, maxHealth: 100, lives: 3, jumpsLeft: 2, cooldown: 0, invincible: 0, attackTimer: 0, specialTimer: 0, hitFlash: 0, omegaTimer: 0, omegaCooldown: 0, powerUp: null, powerUpTimer: 0, frozenTimer: 0, starTimer: 0, shieldEnergy: 60, shieldExhausted: false, shielding: false, super: 0, aiTimer: 0, action: "idle", walking: false, emoteText: "", emoteTimer: 0, anim: Math.random() * 6.28 };
+  return { ...data, x, y: floor, vy: 0, facing, health: 100, maxHealth: 100, lives: 3, jumpsLeft: 2, cooldown: 0, invincible: 0, attackTimer: 0, attackSlide: 0, specialTimer: 0, hitFlash: 0, omegaTimer: 0, omegaCooldown: 0, powerUp: null, powerUpTimer: 0, frozenTimer: 0, starTimer: 0, shieldEnergy: 60, shieldExhausted: false, shielding: false, super: 0, aiTimer: 0, action: "idle", walking: false, emoteText: "", emoteTimer: 0, anim: Math.random() * 6.28 };
 }
 
 function updateBattleStatus() {
@@ -1036,6 +1036,7 @@ function doAttack(who, type) {
   }
   who.cooldown = type === "super" ? 70 : type === "special" ? 42 : type === "heavy" ? 28 : 16;
   who.attackTimer = 13;
+  who.attackSlide = who.facing * (type === "range" ? -12 : type === "special" ? 46 : type === "super" ? 24 : type === "heavy" ? 32 : 38);
   who.action = type;
   if (type === "super") who.super = 0;
   if (type === "special") who.super = Math.min(100, who.super + 8);
@@ -1325,6 +1326,11 @@ function updateFighter(f) {
     }
   }
   if (f.y > arena.floor) { f.y = arena.floor; f.vy = 0; f.jumpsLeft = 2; }
+  if (Math.abs(f.attackSlide) > .5) {
+    const step = f.attackSlide * .28;
+    f.x += step;
+    f.attackSlide -= step;
+  } else f.attackSlide = 0;
   f.anim += f.walking ? .32 : .09;
   ["cooldown", "invincible", "attackTimer", "specialTimer", "hitFlash", "omegaTimer", "omegaCooldown", "powerUpTimer", "frozenTimer", "starTimer", "emoteTimer"].forEach((key) => { if (f[key] > 0) f[key]--; });
   if (f.emoteTimer <= 0) f.emoteText = "";
