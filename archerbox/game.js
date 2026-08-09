@@ -861,8 +861,13 @@ function doAttack(who, type) {
     const projectileOrigin = who.id === "shellshock"
       ? { x: who.x + who.facing * 84, y: who.y - 112 }
       : { x: who.x + who.facing * 40, y: who.y - 35 };
+    const verticalAim = (speed) => {
+      if (who.id !== "shellshock") return 0;
+      const travelFrames = Math.max(7, Math.abs(enemy.x - projectileOrigin.x) / speed);
+      return Math.max(-5, Math.min(5, ((enemy.y - 38) - projectileOrigin.y) / travelFrames));
+    };
     if (who.powerUp === "pistol") {
-      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 23, owner: who, damage, color: "#fff2a8", life: 62, size: 8, gunBullet: true, bulletColor: "#fff2a8", bulletLength: 2.4 });
+      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 23, vy: verticalAim(23), owner: who, damage, color: "#fff2a8", life: 62, size: 8, gunBullet: true, bulletColor: "#fff2a8", bulletLength: 2.4 });
       burst(projectileOrigin.x, projectileOrigin.y, "#fff2a8", 8);
     } else if (who.id === "pip") {
       game.projectiles.push({
@@ -1002,25 +1007,27 @@ function doAttack(who, type) {
       burst(projectileOrigin.x, projectileOrigin.y, "#7f729b", 7);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
-        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
+        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, vy: verticalAim(15), owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
         burst(projectileOrigin.x, projectileOrigin.y, "#ffe566", 4);
       } else if (weaponLevel === 1) {
-        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 22, owner: who, damage: damage + 5, color: "#f8c65a", life: 64, size: 6, rifleBullet: true });
+        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 22, vy: verticalAim(22), owner: who, damage: damage + 5, color: "#f8c65a", life: 64, size: 6, rifleBullet: true });
         burst(projectileOrigin.x, projectileOrigin.y, "#f8c65a", 5);
       } else if (weaponLevel === 2 || weaponLevel === 4) {
         const miniGun = weaponLevel === 2;
         const spreads = miniGun ? [-11, -5, 0, 5, 11] : [-7, 0, 7];
         spreads.forEach((spread, index) => {
           const middleShot = index === Math.floor(spreads.length / 2);
-          game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y + spread, vx: who.facing * (miniGun ? 18 : 16), owner: who, damage: middleShot ? damage + (miniGun ? 4 : 8) : 0, color: "#ffe566", life: 55, size: 7, gunBullet: true, visualOnly: !middleShot, bulletColor: miniGun ? "#fff26a" : "#ffe566", bulletLength: miniGun ? 1.2 : 1.5 });
+          const bulletSpeed = miniGun ? 18 : 16;
+          game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y + spread, vx: who.facing * bulletSpeed, vy: verticalAim(bulletSpeed), owner: who, damage: middleShot ? damage + (miniGun ? 4 : 8) : 0, color: "#ffe566", life: 55, size: 7, gunBullet: true, visualOnly: !middleShot, bulletColor: miniGun ? "#fff26a" : "#ffe566", bulletLength: miniGun ? 1.2 : 1.5 });
         });
         burst(projectileOrigin.x, projectileOrigin.y, "#ffe566", miniGun ? 10 : 8);
       } else if (weaponLevel === 3 || weaponLevel === 6) {
         const rocketLauncher = weaponLevel === 6;
-        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * (rocketLauncher ? 14 : 11), owner: who, damage: damage + (rocketLauncher ? 16 : 8), color: rocketLauncher ? "#ff5d39" : "#ff9e37", life: 70, size: rocketLauncher ? 26 : 18, rocket: true });
+        const rocketSpeed = rocketLauncher ? 14 : 11;
+        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * rocketSpeed, vy: verticalAim(rocketSpeed), owner: who, damage: damage + (rocketLauncher ? 16 : 8), color: rocketLauncher ? "#ff5d39" : "#ff9e37", life: 70, size: rocketLauncher ? 26 : 18, rocket: true });
         burst(projectileOrigin.x, projectileOrigin.y, rocketLauncher ? "#ff5d39" : "#ffb640", rocketLauncher ? 14 : 10);
       } else {
-        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 29, owner: who, damage: damage + 18, color: "#d7ffff", life: 48, size: 5, gunBullet: true, bulletColor: "#d7ffff", bulletLength: 3.2, sniper: true });
+        game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 29, vy: verticalAim(29), owner: who, damage: damage + 18, color: "#d7ffff", life: 48, size: 5, gunBullet: true, bulletColor: "#d7ffff", bulletLength: 3.2, sniper: true });
         burst(projectileOrigin.x, projectileOrigin.y, "#d7ffff", 7);
       }
     } else {
@@ -1358,7 +1365,7 @@ function loseLife(f) {
 
 function updateProjectiles() {
   game.projectiles.forEach((p) => {
-    p.life--; p.x += p.vx;
+    p.life--; p.x += p.vx; p.y += p.vy || 0;
     const enemy = p.owner === game.player ? game.enemy : game.player;
     if (p.visualOnly) {
       // The two extra tracer bullets are just for the machine-gun look.
@@ -2136,7 +2143,7 @@ function drawProjectile(projectile) {
     ctx.lineWidth = projectile.sniper ? 2 : 4;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(projectile.x - projectile.vx * (projectile.bulletLength || 1.5), projectile.y);
+    ctx.moveTo(projectile.x - projectile.vx * (projectile.bulletLength || 1.5), projectile.y - (projectile.vy || 0) * (projectile.bulletLength || 1.5));
     ctx.lineTo(projectile.x, projectile.y);
     ctx.stroke();
     if (projectile.sniper) {
