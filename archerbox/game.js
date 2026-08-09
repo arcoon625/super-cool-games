@@ -86,6 +86,7 @@ const difficultyModes = {
   hard: { label: "HARD", moveSpeed: 1.2, thinking: .68, attackChance: 1 },
 };
 const coinIcon = '<span class="coin" aria-label="coin">$</span>';
+const emotePhrases = ["GOOD LUCK!", "GOOD GAME!", "MY BAD!", "NICE MOVE!", "OOPS!", "WOW!", "REMATCH?", "YOU GOT THIS!"];
 const achievementCatalog = [
   { id: "first-win", icon: "🥇", art: "assets/badges/first-rumble-badge.png", name: "First Rumble", description: "Win your first battle." },
   { id: "speedy", icon: "⚡", art: "assets/badges/lightning-win-badge.png", name: "Lightning Win", description: "Win a battle in under 15 seconds." },
@@ -250,6 +251,8 @@ let onlineMatch = {
   lastStateAt: 0,
   lastInputAt: 0,
   inputNonce: 0,
+  emoteNonce: 0,
+  emoteText: "",
   handledResult: null,
   hostConfigured: false,
 };
@@ -260,7 +263,7 @@ function onlineIsGuest() { return matchMode === "online-guest"; }
 
 function resetOnlineMatch() {
   if (onlineMatch.unlistenInput) onlineMatch.unlistenInput();
-  onlineMatch = { role: null, roomCode: null, remoteInput: {}, previousRemoteInput: {}, unlistenInput: null, battleStarted: false, lastStateAt: 0, lastInputAt: 0, inputNonce: 0, handledResult: null, hostConfigured: false };
+  onlineMatch = { role: null, roomCode: null, remoteInput: {}, previousRemoteInput: {}, unlistenInput: null, battleStarted: false, lastStateAt: 0, lastInputAt: 0, inputNonce: 0, emoteNonce: 0, emoteText: "", handledResult: null, hostConfigured: false };
 }
 
 function leaveOnlineMatch() {
@@ -1046,6 +1049,16 @@ function burst(x, y, color, count) {
 function updateHealth() { $("player-health").style.width = `${game.player.health / game.player.maxHealth * 100}%`; $("enemy-health").style.width = `${game.enemy.health / game.enemy.maxHealth * 100}%`; }
 function updateLives() { $("player-lives").textContent = `LIVES: ${game.player.lives}`; $("enemy-lives").textContent = `LIVES: ${game.enemy.lives}`; }
 function flashMessage(message, timer) { game.message = message; game.messageTimer = timer; $("battle-message").textContent = message; $("battle-message").classList.add("show"); }
+function useEmote(phrase) {
+  if (!game || game.ended || !emotePhrases.includes(phrase)) return;
+  const speaker = onlineIsGuest() ? game.enemy : game.player;
+  flashMessage(`${speaker.name}: ${phrase}`, 90);
+  if (onlineIsGuest()) {
+    onlineMatch.emoteText = phrase;
+    onlineMatch.emoteNonce++;
+    window.RumbleOnline.sendInput(onlineControlsFromKeys()).catch(() => {});
+  }
+}
 
 function rewardWinCoins(winner = game.player, completedSeconds = null) {
   const battleCoins = game.settings.difficulty === "hard" ? 30 : game.settings.difficulty === "easy" ? 10 : 20;
@@ -1144,6 +1157,8 @@ function onlineControlsFromKeys() {
     rangeNonce: onlineMatch.inputNonce && keys.s ? onlineMatch.inputNonce : 0,
     specialNonce: onlineMatch.inputNonce && keys.q ? onlineMatch.inputNonce : 0,
     omegaNonce: onlineMatch.inputNonce && keys.w ? onlineMatch.inputNonce : 0,
+    emote: onlineMatch.emoteText,
+    emoteNonce: onlineMatch.emoteNonce,
   };
 }
 
@@ -1166,6 +1181,7 @@ function applyOnlineControls(fighter, input, previous) {
   if (input.rangeNonce && input.rangeNonce !== previous.rangeNonce) doAttack(fighter, "range");
   if (input.specialNonce && input.specialNonce !== previous.specialNonce) doAttack(fighter, "special");
   if (input.omegaNonce && input.omegaNonce !== previous.omegaNonce) activateOmega(fighter);
+  if (input.emoteNonce && input.emoteNonce !== previous.emoteNonce && emotePhrases.includes(input.emote)) flashMessage(`${fighter.name}: ${input.emote}`, 90);
 }
 
 function onlineSnapshot() {
@@ -2217,6 +2233,16 @@ $("back-to-cover").addEventListener("click", () => { playerOneChoice = null; isO
 $("quit-battle").addEventListener("click", returnToCover);
 $("rematch-button").addEventListener("click", () => isOnlineMatch() ? returnToCover() : startBattle(game.player, game.mode === "two-player" ? game.enemy : null));
 $("select-button").addEventListener("click", returnToCover);
+$("emote-toggle").addEventListener("click", () => {
+  const options = $("emote-options");
+  options.hidden = !options.hidden;
+  $("emote-toggle").setAttribute("aria-expanded", String(!options.hidden));
+});
+document.querySelectorAll("[data-emote]").forEach((button) => button.addEventListener("click", () => {
+  useEmote(button.dataset.emote);
+  $("emote-options").hidden = true;
+  $("emote-toggle").setAttribute("aria-expanded", "false");
+}));
 function setBattleKey(key, pressed) {
   if (pressed && onlineIsGuest() && ["ArrowUp", "a", "s", "q", "w"].includes(key) && !keys[key]) onlineMatch.inputNonce++;
   keys[key] = pressed;

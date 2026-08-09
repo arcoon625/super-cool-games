@@ -215,6 +215,19 @@
         </div>
         <canvas id="game-canvas" width="1100" height="620" aria-label="Rumble Rivals battle arena"></canvas>
         <div id="battle-message" class="battle-message">FIGHT!</div>
+        <div class="emote-panel">
+          <button id="emote-toggle" class="emote-toggle" type="button" aria-expanded="false">💬 EMOTES</button>
+          <div id="emote-options" class="emote-options" hidden>
+            <button type="button" class="emote-choice" data-emote="GOOD LUCK!">🤞 GOOD LUCK!</button>
+            <button type="button" class="emote-choice" data-emote="GOOD GAME!">🏆 GOOD GAME!</button>
+            <button type="button" class="emote-choice" data-emote="MY BAD!">😅 MY BAD!</button>
+            <button type="button" class="emote-choice" data-emote="NICE MOVE!">⭐ NICE MOVE!</button>
+            <button type="button" class="emote-choice" data-emote="OOPS!">😮 OOPS!</button>
+            <button type="button" class="emote-choice" data-emote="WOW!">🤯 WOW!</button>
+            <button type="button" class="emote-choice" data-emote="REMATCH?">⚔️ REMATCH?</button>
+            <button type="button" class="emote-choice" data-emote="YOU GOT THIS!">💪 YOU GOT THIS!</button>
+          </div>
+        </div>
         <div id="controls-card" class="controls-card">
           <strong>Player 1:</strong> Arrow Keys move/jump · <b>A</b> melee · <b>S</b> range · <b>Q</b> special · <b>W</b> Omega · <b>E</b> shield &nbsp; <strong>Player 2:</strong> <b>J/L</b> move · <b>I</b> jump · <b>F</b> melee · <b>G</b> range · <b>R</b> special · <b>U</b> Omega · <b>Y</b> shield
         </div>
@@ -250,6 +263,6 @@
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
     <script src="online.js?v=online-3"></script>
-    <script src="game.js?v=online-14"></script>
+    <script src="game.js?v=online-15"></script>
   </body>
 </html>
