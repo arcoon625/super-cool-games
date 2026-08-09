@@ -1057,7 +1057,6 @@ function useEmote(phrase) {
   if (!game || game.ended || !emotePhrases.includes(phrase)) return;
   const speaker = onlineIsGuest() ? game.enemy : game.player;
   showFighterEmote(speaker, phrase);
-  flashMessage(`${speaker.name}: ${phrase}`, 90);
   if (onlineIsGuest()) {
     onlineMatch.emoteText = phrase;
     onlineMatch.emoteNonce++;
@@ -1188,7 +1187,6 @@ function applyOnlineControls(fighter, input, previous) {
   if (input.omegaNonce && input.omegaNonce !== previous.omegaNonce) activateOmega(fighter);
   if (input.emoteNonce && input.emoteNonce !== previous.emoteNonce && emotePhrases.includes(input.emote)) {
     showFighterEmote(fighter, input.emote);
-    flashMessage(`${fighter.name}: ${input.emote}`, 90);
   }
 }
 
