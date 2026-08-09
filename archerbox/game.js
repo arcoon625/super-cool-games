@@ -49,6 +49,7 @@ const stages = [
   { id: "warfare", name: "Warfare Battlefield", description: "Sandbags, supply crates, and mountain bases", art: "assets/arenas/warfare.png" },
   { id: "fortress", name: "Fortress Field", description: "Sunny castle battlements, bridges, and a mountain valley", art: "assets/arenas/fortress-field.png" },
   { id: "neon", name: "Neon Rooftop Rumble", description: "Glowing rooftops, skybridges, and moonlit skyscrapers", art: "assets/arenas/neon-rooftop-rumble.png" },
+  { id: "carnival", name: "Cloud Carnival", description: "Balloon platforms, rainbow skies, and floating rides", art: "assets/arenas/cloud-carnival.png" },
   { id: "mystery", name: "Volcano Dino Island", description: "Lava rocks, giant fossils, and tropical jungle platforms", art: "assets/arenas/volcano-dino-island.png" },
   { id: "sharklab", name: "Shark Lab", description: "Underwater tanks, glowing pipes, and steel platforms", art: "assets/arenas/shark-lab.png" },
   { id: "frozenaquarium", name: "Frozen Aquarium", description: "Icy fish tanks, crystal caves, and snowy platforms", art: "assets/arenas/frozen-aquarium.png" },
@@ -75,6 +76,7 @@ const stageHazards = {
   warfare: { kind: "crate", label: "SUPPLY CRATE", color: "#a7783d", damage: 12 },
   fortress: { kind: "rock", label: "FALLING BOULDER", color: "#9b7656", damage: 12 },
   neon: { kind: "electric", label: "NEON SPARK", color: "#70f2ff", damage: 12 },
+  carnival: { kind: "gumdrop", label: "LOOSE BALLOON", color: "#ff70b8", damage: 10 },
   mystery: { kind: "meteor", label: "VOLCANO ROCK", color: "#ec5534", damage: 15 },
   sharklab: { kind: "electric", label: "ELECTRIC SPARK", color: "#69eaff", damage: 11 },
   frozenaquarium: { kind: "ice", label: "ICE CHUNK", color: "#a6f4ff", damage: 11 },
@@ -108,6 +110,7 @@ const stageArenas = {
   warfare:   { floor: 420, platforms: [{ x: 195, y: 264, width: 250 }, { x: 690, y: 264, width: 250 }] },
   fortress:  { floor: 407, platforms: [{ x: 12, y: 309, width: 355 }, { x: 370, y: 199, width: 350 }, { x: 735, y: 309, width: 335 }] },
   neon:      { floor: 438, platforms: [{ x: 48, y: 345, width: 270 }, { x: 372, y: 201, width: 352 }, { x: 773, y: 345, width: 288 }] },
+  carnival:  { floor: 475, platforms: [{ x: 62, y: 336, width: 255 }, { x: 433, y: 242, width: 230 }, { x: 776, y: 336, width: 255 }] },
 };
 
 const difficultyModes = {
