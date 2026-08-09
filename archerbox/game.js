@@ -859,7 +859,7 @@ function doAttack(who, type) {
   if (who.boss) damage = Math.round(damage * 1.5);
   if (type === "range") {
     const projectileOrigin = who.id === "shellshock"
-      ? { x: who.x + who.facing * 96, y: who.y - 63 }
+      ? { x: who.x + who.facing * 84, y: who.y - 112 }
       : { x: who.x + who.facing * 40, y: who.y - 35 };
     if (who.powerUp === "pistol") {
       game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 23, owner: who, damage, color: "#fff2a8", life: 62, size: 8, gunBullet: true, bulletColor: "#fff2a8", bulletLength: 2.4 });
