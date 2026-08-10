@@ -2562,6 +2562,54 @@ document.querySelectorAll("[data-touch-key]").forEach((button) => {
   }
 });
 
+// On phones and tablets, the left control is a real joystick. Push it upward
+// to jump; the left and right directions stay held while the stick is moved.
+const touchJoystick = $("touch-joystick");
+const touchStick = $("touch-stick");
+let joystickPointerId = null;
+let joystickCanJump = true;
+function resetTouchJoystick() {
+  joystickPointerId = null;
+  joystickCanJump = true;
+  touchStick.style.transform = "translate(-50%, -50%)";
+  setBattleKey("ArrowLeft", false);
+  setBattleKey("ArrowRight", false);
+}
+function updateTouchJoystick(event) {
+  const bounds = touchJoystick.getBoundingClientRect();
+  const centerX = bounds.left + bounds.width / 2;
+  const centerY = bounds.top + bounds.height / 2;
+  let offsetX = event.clientX - centerX;
+  let offsetY = event.clientY - centerY;
+  const maxDistance = bounds.width * .3;
+  const distance = Math.hypot(offsetX, offsetY);
+  if (distance > maxDistance) { offsetX = offsetX / distance * maxDistance; offsetY = offsetY / distance * maxDistance; }
+  touchStick.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+  const moveThreshold = maxDistance * .34;
+  setBattleKey("ArrowLeft", offsetX < -moveThreshold);
+  setBattleKey("ArrowRight", offsetX > moveThreshold);
+  if (offsetY < -maxDistance * .55 && joystickCanJump) {
+    joystickCanJump = false;
+    setBattleKey("ArrowUp", true);
+    window.setTimeout(() => setBattleKey("ArrowUp", false), 110);
+  }
+  if (offsetY > -maxDistance * .2) joystickCanJump = true;
+}
+touchJoystick.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  joystickPointerId = event.pointerId;
+  touchJoystick.setPointerCapture?.(event.pointerId);
+  updateTouchJoystick(event);
+});
+touchJoystick.addEventListener("pointermove", (event) => {
+  if (event.pointerId === joystickPointerId) { event.preventDefault(); updateTouchJoystick(event); }
+});
+["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
+  touchJoystick.addEventListener(eventName, (event) => {
+    if (joystickPointerId === null || event.pointerId === joystickPointerId) resetTouchJoystick();
+  });
+});
+
 window.addEventListener("blur", () => ["ArrowLeft", "ArrowRight", "ArrowUp", "a", "s", "e"].forEach((key) => { keys[key] = false; }));
 window.addEventListener("keydown", (event) => {
   const typingInField = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || event.target.isContentEditable;

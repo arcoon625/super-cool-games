@@ -255,10 +255,8 @@
           <strong>Player 1:</strong> Arrow Keys move/jump · <b>A</b> melee · <b>S</b> range · <b>Q</b> special · <b>W</b> Omega · <b>E</b> shield &nbsp; <strong>Player 2:</strong> <b>J/L</b> move · <b>I</b> jump · <b>F</b> melee · <b>G</b> range · <b>R</b> special · <b>U</b> Omega · <b>Y</b> shield
         </div>
         <div id="touch-controls" class="touch-controls" aria-label="Touch battle controls">
-          <div class="touch-movement">
-            <button type="button" class="touch-button move-button" data-touch-key="ArrowLeft" data-touch-hold="true" aria-label="Move left">◀</button>
-            <button type="button" class="touch-button jump-button" data-touch-key="ArrowUp" aria-label="Jump">JUMP</button>
-            <button type="button" class="touch-button move-button" data-touch-key="ArrowRight" data-touch-hold="true" aria-label="Move right">▶</button>
+          <div id="touch-joystick" class="touch-joystick" role="application" aria-label="Joystick: move left or right, push up to jump">
+            <div id="touch-stick" class="touch-stick" aria-hidden="true">✦</div>
           </div>
           <div class="touch-actions">
             <button type="button" class="touch-button shield-button" data-touch-key="e" data-touch-hold="true">SHIELD</button>
@@ -286,6 +284,6 @@
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
     <script src="online.js?v=online-3"></script>
-    <script src="game.js?v=online-29"></script>
+    <script src="game.js?v=online-30"></script>
   </body>
 </html>
