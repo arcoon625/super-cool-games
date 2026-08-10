@@ -1366,7 +1366,9 @@ function loseLife(f) {
   f.y = getArena().floor - 70;
   f.vy = -5;
   f.jumpsLeft = 2;
-  f.health = 100;
+  // Falling uses one of your safe falls, but it must not heal you.
+  // This keeps players from getting a free full-health respawn.
+  f.health = Math.max(1, f.health);
   f.cooldown = 45;
   f.invincible = 90;
   f.walking = false;
