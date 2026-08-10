@@ -53,9 +53,32 @@
             <button id="two-player-button" class="menu-choice-button">2 PLAYER</button>
             <button id="find-friend-button" class="menu-choice-button">FIND A FRIEND</button>
             <button id="enter-code-button" class="menu-choice-button">ENTER CODE</button>
+            <button id="favorites-button" class="menu-choice-button">⭐ FAVORITES</button>
           </div>
+          <p id="favorite-summary" class="favorite-summary">⭐ Pick your favorite fighter and arena!</p>
           <p id="play-menu-message" class="play-menu-message" aria-live="polite">Play Game lets you choose an arena and fighter.</p>
           <button id="play-menu-back" class="small-button">Back to Cover</button>
+        </div>
+      </section>
+
+      <section id="favorites" class="screen favorites-screen">
+        <header class="select-header">
+          <div>
+            <p class="eyebrow">YOUR FAVORITES</p>
+            <h2>Choose your best picks!</h2>
+          </div>
+          <button id="favorites-back" class="small-button">Back</button>
+        </header>
+        <p class="favorites-help">Click one fighter and one arena. A gold star means it is your favorite!</p>
+        <div class="favorites-layout">
+          <section class="favorites-panel">
+            <h3>⭐ Favorite Fighter</h3>
+            <div id="favorite-fighter-grid" class="favorite-choice-grid"></div>
+          </section>
+          <section class="favorites-panel">
+            <h3>⭐ Favorite Arena</h3>
+            <div id="favorite-stage-grid" class="favorite-choice-grid"></div>
+          </section>
         </div>
       </section>
 
@@ -263,6 +286,6 @@
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
     <script src="online.js?v=online-3"></script>
-    <script src="game.js?v=online-28"></script>
+    <script src="game.js?v=online-29"></script>
   </body>
 </html>

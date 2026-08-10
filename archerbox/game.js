@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-const screens = ["cover", "loading", "play-menu", "online-lobby", "settings", "unlocks", "upgrades", "achievements", "stages", "select", "battle", "result"];
+const screens = ["cover", "loading", "play-menu", "favorites", "online-lobby", "settings", "unlocks", "upgrades", "achievements", "stages", "select", "battle", "result"];
 const canvas = $("game-canvas");
 const ctx = canvas.getContext("2d");
 const fallbackArena = {
@@ -174,6 +174,8 @@ const starterProfile = {
   spacePizzaUnlocked: false,
   fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw"],
   stages: stages.map((stage) => stage.id),
+  favoriteFighter: null,
+  favoriteStage: null,
   upgrades: {},
   achievements: [],
 };
@@ -198,6 +200,8 @@ function loadProfile() {
       spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
       fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw"])] : [...starterProfile.fighters],
       stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
+      favoriteFighter: roster.some((fighter) => fighter.id === saved.favoriteFighter) ? saved.favoriteFighter : null,
+      favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
       upgrades: saved.upgrades && typeof saved.upgrades === "object" ? saved.upgrades : {},
       achievements: Array.isArray(saved.achievements) ? saved.achievements : [],
     };
@@ -309,6 +313,7 @@ function leaveOnlineMatch() {
 
 function showScreen(id) {
   screens.forEach((screen) => $(screen).classList.toggle("active", screen === id));
+  if (id === "play-menu") updateFavoriteSummary();
   const menuVisible = id === "stages" || id === "select";
   $("settings-button").classList.toggle("visible", menuVisible);
   $("boss-button").classList.toggle("visible", id === "stages");
@@ -428,6 +433,7 @@ function resetAllProgress() {
   });
   buildRoster();
   buildStages();
+  buildFavorites();
   buildUnlocks();
   buildUpgrades();
   buildAchievements();
@@ -490,6 +496,7 @@ function buyUnlock(item) {
   updateCoinDisplays();
   buildRoster();
   buildStages();
+  buildFavorites();
   buildUnlocks();
   buildUpgrades();
   const entry = (item.type === "fighters" ? roster : stages).find((thing) => thing.id === item.id);
@@ -766,6 +773,49 @@ function buildStages() {
       card.addEventListener("click", () => { chosenStage = stage; showFighterSelection(); buildRoster(); showScreen("select"); });
     }
     grid.append(card);
+  });
+}
+
+function updateFavoriteSummary() {
+  const fighter = roster.find((entry) => entry.id === profile.favoriteFighter);
+  const stage = stages.find((entry) => entry.id === profile.favoriteStage);
+  $("favorite-summary").textContent = fighter || stage
+    ? `⭐ Fighter: ${fighter?.name || "Not picked"} · Arena: ${stage?.name || "Not picked"}`
+    : "⭐ Pick your favorite fighter and arena!";
+}
+
+function buildFavorites() {
+  const fighterGrid = $("favorite-fighter-grid");
+  const stageGrid = $("favorite-stage-grid");
+  fighterGrid.innerHTML = "";
+  stageGrid.innerHTML = "";
+  roster.filter((fighter) => isUnlocked("fighters", fighter.id)).forEach((fighter) => {
+    const choice = document.createElement("button");
+    const selected = profile.favoriteFighter === fighter.id;
+    choice.className = "favorite-choice";
+    choice.classList.toggle("selected", selected);
+    choice.innerHTML = `<img src="${fighter.art}" alt="${fighter.name}" /><span><strong>${selected ? "⭐ " : ""}${fighter.name}</strong><small>${selected ? "YOUR FAVORITE" : "MAKE FAVORITE"}</small></span>`;
+    choice.addEventListener("click", () => {
+      profile.favoriteFighter = fighter.id;
+      saveProfile();
+      updateFavoriteSummary();
+      buildFavorites();
+    });
+    fighterGrid.append(choice);
+  });
+  stages.filter((stage) => isUnlocked("stages", stage.id)).forEach((stage) => {
+    const choice = document.createElement("button");
+    const selected = profile.favoriteStage === stage.id;
+    choice.className = "favorite-choice";
+    choice.classList.toggle("selected", selected);
+    choice.innerHTML = `<img src="${stage.art}" alt="${stage.name}" /><span><strong>${selected ? "⭐ " : ""}${stage.name}</strong><small>${selected ? "YOUR FAVORITE" : "MAKE FAVORITE"}</small></span>`;
+    choice.addEventListener("click", () => {
+      profile.favoriteStage = stage.id;
+      saveProfile();
+      updateFavoriteSummary();
+      buildFavorites();
+    });
+    stageGrid.append(choice);
   });
 }
 
@@ -2440,6 +2490,8 @@ $("solo-play-button").addEventListener("click", () => { matchMode = "computer"; 
 $("two-player-button").addEventListener("click", () => { matchMode = "two-player"; playerOneChoice = null; showScreen("stages"); });
 $("find-friend-button").addEventListener("click", () => showOnlineLobby("host"));
 $("enter-code-button").addEventListener("click", () => showOnlineLobby("join"));
+$("favorites-button").addEventListener("click", () => { buildFavorites(); showScreen("favorites"); });
+$("favorites-back").addEventListener("click", () => showScreen("play-menu"));
 $("online-create-button").addEventListener("click", () => {
   if (onlineIsHost() && !onlineMatch.hostConfigured) { showScreen("stages"); return; }
   makeFriendRoom();
@@ -2541,3 +2593,4 @@ buildUpgrades();
 buildAchievements();
 buildStages();
 buildRoster();
+buildFavorites();
