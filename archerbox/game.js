@@ -24,6 +24,7 @@ const roster = [
   { id: "megameg", name: "Mecha Meg", icon: "🦈", art: "assets/characters/mecha-meg.png", color: "#198bd7", attack: "Titan Claw", range: "Plasma Torpedo", special: "Megalodon Charge", speed: 4.6, power: 15 },
   { id: "kingcaw", name: "King Caw", icon: "🐦‍⬛", art: "assets/characters/king-caw.png?v=king-caw-2", color: "#60398f", attack: "Crown Claw", range: "Feather Fling", special: "Royal Wing Gust", speed: 5.8, power: 11 },
   { id: "rexy", name: "Rexy", icon: "🦖", art: "assets/characters/rexy.png?v=rexy-3", color: "#967044", attack: "Tail Slam", range: "Fossil Boulder", special: "Mega Bite", speed: 4.5, power: 16 },
+  { id: "blue", name: "Blue", icon: "🦖", art: "assets/characters/blue-raptor.png?v=blue-1", color: "#766653", attack: "Claw Rake", range: "Razor Quill", special: "Raptor Pounce", speed: 6.5, power: 12 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
@@ -166,6 +167,7 @@ const weaponUpgradePaths = {
   megameg: [{ name: "Plasma Torpedo", description: "Mecha Meg's speedy glowing torpedo.", cost: 0 }, { name: "Fin Missile", description: "A larger missile with a bigger blast.", cost: 120 }, { name: "Megalodon Beam", description: "A huge cyan beam powered by Mecha Meg's armor.", cost: 325 }],
   kingcaw: [{ name: "Feather Fling", description: "King Caw's quick royal feather shot.", cost: 0 }, { name: "Crown Boomerang", description: "A sharp spinning crown attack.", cost: 80 }, { name: "Royal Storm", description: "A powerful flock of glowing feathers.", cost: 210 }],
   rexy: [{ name: "Fossil Boulder", description: "Rexy's heavy rolling fossil rock.", cost: 0 }, { name: "Meteor Egg", description: "A faster dinosaur egg attack.", cost: 130 }, { name: "Volcano Chunk", description: "A huge ancient rock with extra power.", cost: 340 }],
+  blue: [{ name: "Razor Quill", description: "Blue's fast sharp quill throw.", cost: 0 }, { name: "Triple Quill", description: "Three quick raptor quills in a row.", cost: 105 }, { name: "Raptor Storm", description: "A powerful flurry of razor quills.", cost: 275 }],
   blaze: [{ name: "Fire Breath", description: "Blaze's hot rolling burst of flame.", cost: 0 }, { name: "Flame Ball", description: "A faster fire blast with extra heat.", cost: 100 }, { name: "Dragon Inferno", description: "A giant fire blast from Blaze's jaws.", cost: 260 }],
 };
 
@@ -176,7 +178,7 @@ const starterProfile = {
   arenaWinsStart: 0,
   spacePizzaWinsStart: 0,
   spacePizzaUnlocked: false,
-  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blaze"],
+  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "blaze"],
   stages: stages.map((stage) => stage.id),
   favoriteFighter: null,
   favoriteStage: null,
@@ -202,7 +204,7 @@ function loadProfile() {
       // Space Pizza Planet starts locked when this new arena is added.
       spacePizzaWinsStart: Number.isFinite(saved.spacePizzaWinsStart) ? Math.max(0, Math.floor(saved.spacePizzaWinsStart)) : savedWins,
       spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
-      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blaze"])] : [...starterProfile.fighters],
+      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "blaze"])] : [...starterProfile.fighters],
       stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
       favoriteFighter: roster.some((fighter) => fighter.id === saved.favoriteFighter) ? saved.favoriteFighter : null,
       favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
@@ -254,6 +256,7 @@ const cutoutSources = {
   megameg: "assets/characters/cutouts/mecha-meg-cutout.png",
   kingcaw: "assets/characters/cutouts/king-caw-cutout.png",
   rexy: "assets/characters/cutouts/rexy-cutout.png?v=rexy-2",
+  blue: "assets/characters/cutouts/blue-raptor-cutout.png?v=blue-1",
   blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-2",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
@@ -940,6 +943,8 @@ function doAttack(who, type) {
       ? { x: who.x + who.facing * 84, y: who.y - 112 }
       : who.id === "rexy"
         ? { x: who.x + who.facing * 82, y: who.y - 70 }
+        : who.id === "blue"
+          ? { x: who.x + who.facing * 64, y: who.y - 52 }
         : who.id === "blaze"
           ? { x: who.x + who.facing * 72, y: who.y - 48 }
         : { x: who.x + who.facing * 40, y: who.y - 35 };
@@ -1100,6 +1105,19 @@ function doAttack(who, type) {
         fossilBoulder: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#e6c47a", 12);
+    } else if (who.id === "blue") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (18 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#4c4037",
+        life: 62,
+        size: 14 + weaponLevel * 4,
+        blackFeather: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#cdbb98", 7);
     } else if (who.id === "blaze") {
       game.projectiles.push({
         x: projectileOrigin.x,
