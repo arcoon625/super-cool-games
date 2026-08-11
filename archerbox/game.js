@@ -941,7 +941,7 @@ function doAttack(who, type) {
       : who.id === "rexy"
         ? { x: who.x + who.facing * 82, y: who.y - 70 }
         : who.id === "blaze"
-          ? { x: who.x + who.facing * 72, y: who.y - 86 }
+          ? { x: who.x + who.facing * 72, y: who.y - 48 }
         : { x: who.x + who.facing * 40, y: who.y - 35 };
     const verticalAim = (speed) => {
       if (who.id !== "shellshock") return 0;
