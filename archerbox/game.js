@@ -926,7 +926,7 @@ function doAttack(who, type) {
     const projectileOrigin = who.id === "shellshock"
       ? { x: who.x + who.facing * 84, y: who.y - 112 }
       : who.id === "rexy"
-        ? { x: who.x + who.facing * 82, y: who.y - 118 }
+        ? { x: who.x + who.facing * 82, y: who.y - 70 }
         : { x: who.x + who.facing * 40, y: who.y - 35 };
     const verticalAim = (speed) => {
       if (who.id !== "shellshock") return 0;
