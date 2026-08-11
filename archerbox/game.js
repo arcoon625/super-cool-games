@@ -23,7 +23,7 @@ const roster = [
   { id: "null", name: "Project Null", icon: "🔷", art: "assets/characters/project-null.png", color: "#554da0", attack: "Crystal Claw", range: "Teal Orb", special: "Gravity Crush", speed: 5.2, power: 14, omega: true },
   { id: "megameg", name: "Mecha Meg", icon: "🦈", art: "assets/characters/mecha-meg.png", color: "#198bd7", attack: "Titan Claw", range: "Plasma Torpedo", special: "Megalodon Charge", speed: 4.6, power: 15 },
   { id: "kingcaw", name: "King Caw", icon: "🐦‍⬛", art: "assets/characters/king-caw.png", color: "#60398f", attack: "Crown Claw", range: "Feather Fling", special: "Royal Wing Gust", speed: 5.8, power: 11 },
-  { id: "rexy", name: "Rexy", icon: "🦖", art: "assets/characters/rexy.png?v=rexy-2", color: "#967044", attack: "T-Rex Bite", range: "Fossil Boulder", special: "Dino Stampede", speed: 4.5, power: 16 },
+  { id: "rexy", name: "Rexy", icon: "🦖", art: "assets/characters/rexy.png?v=rexy-2", color: "#967044", attack: "Tail Slam", range: "Fossil Boulder", special: "Mega Bite", speed: 4.5, power: 16 },
 ];
 
 const trainingDummy = { id: "training-dummy", name: "Training Dummy", color: "#d47b48", attack: "None", range: "None", special: "None", speed: 0, power: 0, trainingDummy: true };
@@ -646,6 +646,14 @@ function playPowerUpSound() {
   note(1260, .045, .07, .04, "square");
 }
 
+function playRexyRoar() {
+  if (!musicContext || matchSettings.volume <= 0) return;
+  const time = musicContext.currentTime + .01;
+  playMusicNote(128, time, .22, .075, "sawtooth");
+  playMusicNote(94, time + .08, .28, .07, "sawtooth");
+  playMusicNote(72, time + .16, .34, .05, "triangle");
+}
+
 function startMusic() {
   const AudioEngine = window.AudioContext || window.webkitAudioContext;
   if (!AudioEngine) return;
@@ -916,6 +924,8 @@ function doAttack(who, type) {
   const enemy = isPlayer ? game.enemy : game.player;
   let damage = type === "heavy" ? who.power + 5 : type === "special" ? who.power + 9 : type === "super" ? who.power + 18 : who.power;
   let reach = type === "range" ? 560 : type === "special" ? 250 : type === "super" ? 650 : type === "heavy" ? 120 : 86;
+  if (who.id === "rexy" && type === "melee") reach = 120;
+  if (who.id === "rexy" && type === "special") { damage += 6; reach = 155; }
   const weaponLevel = Number.isFinite(who.weaponLevel) ? who.weaponLevel : getWeaponLevel(who.id);
   if (type === "range") { damage += weaponLevel * 5; reach += weaponLevel * 45; }
   if (type === "melee" && who.powerUp === "sword") damage += who.power;
@@ -1125,6 +1135,10 @@ function doAttack(who, type) {
   who.attackTimer = 13;
   who.attackSlide = who.facing * (type === "range" ? -12 : type === "special" ? 46 : type === "super" ? 24 : type === "heavy" ? 32 : 38);
   who.action = type;
+  if (who.id === "rexy" && (type === "melee" || type === "special") && Math.random() < (type === "special" ? .7 : .28)) {
+    showFighterEmote(who, "ROOOAR!");
+    playRexyRoar();
+  }
   if (type === "super") who.super = 0;
   if (type === "special") who.super = Math.min(100, who.super + 8);
 }
