@@ -23,6 +23,7 @@ const roster = [
   { id: "null", name: "Project Null", icon: "🔷", art: "assets/characters/project-null.png", color: "#554da0", attack: "Crystal Claw", range: "Teal Orb", special: "Gravity Crush", speed: 5.2, power: 14, omega: true },
   { id: "megameg", name: "Mecha Meg", icon: "🦈", art: "assets/characters/mecha-meg.png", color: "#198bd7", attack: "Titan Claw", range: "Plasma Torpedo", special: "Megalodon Charge", speed: 4.6, power: 15 },
   { id: "kingcaw", name: "King Caw", icon: "🐦‍⬛", art: "assets/characters/king-caw.png", color: "#60398f", attack: "Crown Claw", range: "Feather Fling", special: "Royal Wing Gust", speed: 5.8, power: 11 },
+  { id: "rexy", name: "Rexy", icon: "🦖", art: "assets/characters/rexy.png", color: "#719b43", attack: "T-Rex Bite", range: "Fossil Boulder", special: "Dino Stampede", speed: 4.5, power: 16 },
 ];
 
 const trainingDummy = { id: "training-dummy", name: "Training Dummy", color: "#d47b48", attack: "None", range: "None", special: "None", speed: 0, power: 0, trainingDummy: true };
@@ -163,6 +164,7 @@ const weaponUpgradePaths = {
   null: [{ name: "Teal Orb", description: "Project Null's starter crystal orb.", cost: 0 }, { name: "Crystal Volley", description: "A fast crystal shot.", cost: 110 }, { name: "Gravity Nova", description: "A giant gravity-powered orb.", cost: 300 }],
   megameg: [{ name: "Plasma Torpedo", description: "Mecha Meg's speedy glowing torpedo.", cost: 0 }, { name: "Fin Missile", description: "A larger missile with a bigger blast.", cost: 120 }, { name: "Megalodon Beam", description: "A huge cyan beam powered by Mecha Meg's armor.", cost: 325 }],
   kingcaw: [{ name: "Feather Fling", description: "King Caw's quick royal feather shot.", cost: 0 }, { name: "Crown Boomerang", description: "A sharp spinning crown attack.", cost: 80 }, { name: "Royal Storm", description: "A powerful flock of glowing feathers.", cost: 210 }],
+  rexy: [{ name: "Fossil Boulder", description: "Rexy's heavy rolling fossil rock.", cost: 0 }, { name: "Meteor Egg", description: "A faster dinosaur egg attack.", cost: 130 }, { name: "Volcano Chunk", description: "A huge ancient rock with extra power.", cost: 340 }],
 };
 
 const starterProfile = {
@@ -172,7 +174,7 @@ const starterProfile = {
   arenaWinsStart: 0,
   spacePizzaWinsStart: 0,
   spacePizzaUnlocked: false,
-  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw"],
+  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy"],
   stages: stages.map((stage) => stage.id),
   favoriteFighter: null,
   favoriteStage: null,
@@ -198,7 +200,7 @@ function loadProfile() {
       // Space Pizza Planet starts locked when this new arena is added.
       spacePizzaWinsStart: Number.isFinite(saved.spacePizzaWinsStart) ? Math.max(0, Math.floor(saved.spacePizzaWinsStart)) : savedWins,
       spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
-      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw"])] : [...starterProfile.fighters],
+      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy"])] : [...starterProfile.fighters],
       stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
       favoriteFighter: roster.some((fighter) => fighter.id === saved.favoriteFighter) ? saved.favoriteFighter : null,
       favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
@@ -249,6 +251,7 @@ const cutoutSources = {
   null: "assets/characters/cutouts/project-null-cutout.png",
   megameg: "assets/characters/cutouts/mecha-meg-cutout.png",
   kingcaw: "assets/characters/cutouts/king-caw-cutout.png",
+  rexy: "assets/characters/cutouts/rexy-cutout.png",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
   const cutout = new Image();
@@ -922,7 +925,9 @@ function doAttack(who, type) {
   if (type === "range") {
     const projectileOrigin = who.id === "shellshock"
       ? { x: who.x + who.facing * 84, y: who.y - 112 }
-      : { x: who.x + who.facing * 40, y: who.y - 35 };
+      : who.id === "rexy"
+        ? { x: who.x + who.facing * 82, y: who.y - 118 }
+        : { x: who.x + who.facing * 40, y: who.y - 35 };
     const verticalAim = (speed) => {
       if (who.id !== "shellshock") return 0;
       const travelFrames = Math.max(7, Math.abs(enemy.x - projectileOrigin.x) / speed);
@@ -1067,6 +1072,19 @@ function doAttack(who, type) {
         blackFeather: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#7f729b", 7);
+    } else if (who.id === "rexy") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (10 + weaponLevel * 2),
+        owner: who,
+        damage: damage + 5 + weaponLevel * 3,
+        color: "#9b6e46",
+        life: 82,
+        size: 19 + weaponLevel * 5,
+        fossilBoulder: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#e6c47a", 12);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, vy: verticalAim(15), owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -2016,6 +2034,29 @@ function drawProjectile(projectile) {
       ctx.arc(length * spot, 0, Math.max(1.5, projectile.size * .1), 0, Math.PI * 2);
       ctx.fill();
     });
+  } else if (projectile.fossilBoulder) {
+    const size = projectile.size;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.life * .13 * (Math.sign(projectile.vx) || 1));
+    ctx.shadowColor = "#dca95b";
+    ctx.shadowBlur = 11;
+    ctx.fillStyle = "#89603f";
+    ctx.beginPath();
+    for (let point = 0; point < 8; point += 1) {
+      const angle = Math.PI * 2 * point / 8;
+      const radius = size * (point % 2 ? .78 : 1);
+      if (point === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius); else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#e9ca7e";
+    ctx.lineWidth = Math.max(2, size * .12);
+    ctx.beginPath();
+    ctx.arc(0, 0, size * .43, .2, Math.PI * 1.5);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, size * .68, Math.PI * .9, Math.PI * 2.15);
+    ctx.stroke();
   } else if (projectile.blackFeather) {
     const size = projectile.size;
     const direction = Math.sign(projectile.vx) || 1;
