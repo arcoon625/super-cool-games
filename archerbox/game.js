@@ -25,6 +25,7 @@ const roster = [
   { id: "kingcaw", name: "King Caw", icon: "🐦‍⬛", art: "assets/characters/king-caw.png?v=king-caw-2", color: "#60398f", attack: "Crown Claw", range: "Feather Fling", special: "Royal Wing Gust", speed: 5.8, power: 11 },
   { id: "rexy", name: "Rexy", icon: "🦖", art: "assets/characters/rexy.png?v=rexy-3", color: "#967044", attack: "Tail Slam", range: "Fossil Boulder", special: "Mega Bite", speed: 4.5, power: 16 },
   { id: "blue", name: "Blue", icon: "🦖", art: "assets/characters/blue-raptor.png?v=blue-1", color: "#766653", attack: "Claw Rake", range: "Razor Quill", special: "Raptor Pounce", speed: 6.5, power: 12 },
+  { id: "fang", name: "Fang the Komodo Dragon", icon: "🦎", art: "assets/characters/fang-komodo.png?v=fang-1", color: "#67723e", attack: "Tail Whip", range: "Venom Spit", special: "Predator Lunge", speed: 4.8, power: 15 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
@@ -168,6 +169,7 @@ const weaponUpgradePaths = {
   kingcaw: [{ name: "Feather Fling", description: "King Caw's quick royal feather shot.", cost: 0 }, { name: "Crown Boomerang", description: "A sharp spinning crown attack.", cost: 80 }, { name: "Royal Storm", description: "A powerful flock of glowing feathers.", cost: 210 }],
   rexy: [{ name: "Fossil Boulder", description: "Rexy's heavy rolling fossil rock.", cost: 0 }, { name: "Meteor Egg", description: "A faster dinosaur egg attack.", cost: 130 }, { name: "Volcano Chunk", description: "A huge ancient rock with extra power.", cost: 340 }],
   blue: [{ name: "Razor Quill", description: "Blue's fast sharp quill throw.", cost: 0 }, { name: "Triple Quill", description: "Three quick raptor quills in a row.", cost: 105 }, { name: "Raptor Storm", description: "A powerful flurry of razor quills.", cost: 275 }],
+  fang: [{ name: "Venom Spit", description: "Fang's poisonous green venom splash.", cost: 0 }, { name: "Acid Glob", description: "A faster, stronger venom glob.", cost: 95 }, { name: "Toxic Torrent", description: "A giant splash of Komodo venom.", cost: 255 }],
   blaze: [{ name: "Fire Breath", description: "Blaze's hot rolling burst of flame.", cost: 0 }, { name: "Flame Ball", description: "A faster fire blast with extra heat.", cost: 100 }, { name: "Dragon Inferno", description: "A giant fire blast from Blaze's jaws.", cost: 260 }],
 };
 
@@ -178,7 +180,7 @@ const starterProfile = {
   arenaWinsStart: 0,
   spacePizzaWinsStart: 0,
   spacePizzaUnlocked: false,
-  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "blaze"],
+  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "fang", "blaze"],
   stages: stages.map((stage) => stage.id),
   favoriteFighter: null,
   favoriteStage: null,
@@ -204,7 +206,7 @@ function loadProfile() {
       // Space Pizza Planet starts locked when this new arena is added.
       spacePizzaWinsStart: Number.isFinite(saved.spacePizzaWinsStart) ? Math.max(0, Math.floor(saved.spacePizzaWinsStart)) : savedWins,
       spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
-      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "blaze"])] : [...starterProfile.fighters],
+      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "fang", "blaze"])] : [...starterProfile.fighters],
       stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
       favoriteFighter: roster.some((fighter) => fighter.id === saved.favoriteFighter) ? saved.favoriteFighter : null,
       favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
@@ -257,6 +259,7 @@ const cutoutSources = {
   kingcaw: "assets/characters/cutouts/king-caw-cutout.png",
   rexy: "assets/characters/cutouts/rexy-cutout.png?v=rexy-2",
   blue: "assets/characters/cutouts/blue-raptor-cutout.png?v=blue-1",
+  fang: "assets/characters/cutouts/fang-komodo-cutout.png?v=fang-1",
   blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-2",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
@@ -943,8 +946,10 @@ function doAttack(who, type) {
       ? { x: who.x + who.facing * 84, y: who.y - 112 }
       : who.id === "rexy"
         ? { x: who.x + who.facing * 82, y: who.y - 70 }
-        : who.id === "blue"
+      : who.id === "blue"
           ? { x: who.x + who.facing * 64, y: who.y - 52 }
+        : who.id === "fang"
+          ? { x: who.x + who.facing * 72, y: who.y - 48 }
         : who.id === "blaze"
           ? { x: who.x + who.facing * 72, y: who.y - 48 }
         : { x: who.x + who.facing * 40, y: who.y - 35 };
@@ -1118,6 +1123,19 @@ function doAttack(who, type) {
         blackFeather: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#cdbb98", 7);
+    } else if (who.id === "fang") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (12 + weaponLevel * 2),
+        owner: who,
+        damage: damage + weaponLevel * 3,
+        color: "#91df4c",
+        life: 58,
+        size: 15 + weaponLevel * 4,
+        venomSpit: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#bbf573", 8);
     } else if (who.id === "blaze") {
       game.projectiles.push({
         x: projectileOrigin.x,
@@ -2074,7 +2092,30 @@ function drawStageHazard(hazard) {
 
 function drawProjectile(projectile) {
   ctx.save();
-  if (projectile.fireBreath) {
+  if (projectile.venomSpit) {
+    const size = projectile.size;
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.scale(direction, 1);
+    ctx.rotate(Math.sin(projectile.life * .25) * .16);
+    ctx.shadowColor = "#8ce34f";
+    ctx.shadowBlur = 18;
+    const venom = ctx.createLinearGradient(-size, -size, size, size);
+    venom.addColorStop(0, "#d5ff8b");
+    venom.addColorStop(.5, "#8de042");
+    venom.addColorStop(1, "#3c922c");
+    ctx.fillStyle = venom;
+    ctx.beginPath();
+    ctx.moveTo(size * 1.1, 0);
+    ctx.quadraticCurveTo(size * .2, -size * .8, -size * .75, -size * .28);
+    ctx.quadraticCurveTo(-size * 1.1, 0, -size * .75, size * .28);
+    ctx.quadraticCurveTo(size * .2, size * .8, size * 1.1, 0);
+    ctx.fill();
+    ctx.fillStyle = "#f2ffc3";
+    ctx.beginPath();
+    ctx.arc(size * .28, -size * .16, Math.max(2, size * .2), 0, Math.PI * 2);
+    ctx.fill();
+  } else if (projectile.fireBreath) {
     const size = projectile.size;
     const direction = Math.sign(projectile.vx) || 1;
     ctx.translate(projectile.x, projectile.y);
