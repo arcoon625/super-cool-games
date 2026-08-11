@@ -40,7 +40,7 @@ const stages = [
   { id: "pirate", name: "Pirate Ship Panic", description: "Jump across a pirate ship sailing through giant waves", art: "assets/arenas/pirate-ship-panic.png" },
   { id: "lightning", name: "Thunder Works", description: "Storm clouds and electric towers", art: "assets/arenas/lightning.png" },
   { id: "wind", name: "Sky Gusts", description: "Clouds, windmills, and airships", art: "assets/arenas/wind.png" },
-  { id: "jungle", name: "Jungle Jump", description: "Vines, mushrooms, and small animals", art: "assets/arenas/jungle.png" },
+  { id: "jungle", name: "Rexy's Jungle", description: "Vines, mushrooms, and small animals", art: "assets/arenas/jungle.png" },
   { id: "shadow", name: "Moonlit Shadows", description: "Purple crystals and spooky trees", art: "assets/arenas/shadow.png" },
   { id: "metal", name: "Gear Factory", description: "Magnets, machines, and steel", art: "assets/arenas/metal.png" },
   { id: "space", name: "Black Hole Bay", description: "Planets, meteors, and stars", art: "assets/arenas/space.png" },
