@@ -2038,24 +2038,32 @@ function drawProjectile(projectile) {
     const size = projectile.size;
     ctx.translate(projectile.x, projectile.y);
     ctx.rotate(projectile.life * .13 * (Math.sign(projectile.vx) || 1));
-    ctx.shadowColor = "#dca95b";
-    ctx.shadowBlur = 11;
-    ctx.fillStyle = "#89603f";
+    ctx.shadowColor = "#34281f";
+    ctx.shadowBlur = 8;
+    const boulder = [[-1, -.08], [-.62, -.74], [.08, -.92], [.76, -.52], [1, .1], [.58, .78], [-.12, .93], [-.78, .55]];
+    const rockShade = ctx.createLinearGradient(-size, -size, size, size);
+    rockShade.addColorStop(0, "#c8ad84");
+    rockShade.addColorStop(.42, "#8e765b");
+    rockShade.addColorStop(1, "#4f4034");
+    ctx.fillStyle = rockShade;
     ctx.beginPath();
-    for (let point = 0; point < 8; point += 1) {
-      const angle = Math.PI * 2 * point / 8;
-      const radius = size * (point % 2 ? .78 : 1);
-      if (point === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius); else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
-    }
+    boulder.forEach(([x, y], point) => { if (point === 0) ctx.moveTo(x * size, y * size); else ctx.lineTo(x * size, y * size); });
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "#e9ca7e";
-    ctx.lineWidth = Math.max(2, size * .12);
+    ctx.fillStyle = "#d5bea0";
     ctx.beginPath();
-    ctx.arc(0, 0, size * .43, .2, Math.PI * 1.5);
-    ctx.stroke();
+    ctx.moveTo(-size * .58, -size * .62); ctx.lineTo(size * .08, -size * .89); ctx.lineTo(size * .5, -size * .42); ctx.lineTo(-size * .1, -size * .12); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#695848";
     ctx.beginPath();
-    ctx.arc(0, 0, size * .68, Math.PI * .9, Math.PI * 2.15);
+    ctx.moveTo(-size * .1, -size * .12); ctx.lineTo(size * .5, -size * .42); ctx.lineTo(size * .76, size * .16); ctx.lineTo(size * .14, size * .72); ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#3f332b";
+    ctx.lineWidth = Math.max(1.5, size * .075);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-size * .7, size * .18); ctx.lineTo(-size * .25, size * .02); ctx.lineTo(-size * .05, size * .28); ctx.lineTo(size * .3, size * .12);
+    ctx.moveTo(size * .2, -size * .68); ctx.lineTo(size * .02, -size * .3); ctx.lineTo(size * .26, -size * .04);
     ctx.stroke();
   } else if (projectile.blackFeather) {
     const size = projectile.size;
