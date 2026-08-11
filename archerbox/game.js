@@ -1104,15 +1104,15 @@ function doAttack(who, type) {
       game.projectiles.push({
         x: projectileOrigin.x,
         y: projectileOrigin.y,
-        vx: who.facing * (15 + weaponLevel * 2),
+        vx: who.facing * 14,
         owner: who,
-        damage: damage + 3 + weaponLevel * 3,
+        damage: 1.5,
         color: "#ff6a24",
-        life: 68,
-        size: 18 + weaponLevel * 5,
+        life: 28,
+        size: 13,
         fireBreath: true
       });
-      burst(projectileOrigin.x, projectileOrigin.y, "#ff9b37", 12);
+      burst(projectileOrigin.x, projectileOrigin.y, "#ff9b37", 4);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, vy: verticalAim(15), owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -1149,7 +1149,7 @@ function doAttack(who, type) {
   } else if (Math.abs(enemy.x - who.x) < reach) {
     hitOpponent(who, enemy, damage, reach, type === "special" ? who.special.toUpperCase() : type === "heavy" ? "SMASH!" : "WHACK!");
   }
-  who.cooldown = type === "super" ? 70 : type === "special" ? 42 : type === "heavy" ? 28 : 16;
+  who.cooldown = who.id === "blaze" && type === "range" ? 7 : type === "super" ? 70 : type === "special" ? 42 : type === "heavy" ? 28 : 16;
   who.attackTimer = 13;
   who.attackSlide = who.facing * (type === "range" ? -12 : type === "special" ? 46 : type === "super" ? 24 : type === "heavy" ? 32 : 38);
   who.action = type;
@@ -1267,7 +1267,10 @@ function playerInput() {
     keys.ArrowUp = false;
   }
   if (keys.a) { keys.a = false; doAttack(p, "melee"); }
-  if (keys.s) { keys.s = false; doAttack(p, "range"); }
+  if (keys.s) {
+    if (p.id === "blaze") doAttack(p, "range");
+    else { keys.s = false; doAttack(p, "range"); }
+  }
   if (keys.q) { keys.q = false; doAttack(p, "special"); }
   if (keys.w) { keys.w = false; activateOmega(); }
 }
@@ -1290,7 +1293,10 @@ function secondPlayerInput() {
     keys.i = false;
   }
   if (keys.f) { keys.f = false; doAttack(p, "melee"); }
-  if (keys.g) { keys.g = false; doAttack(p, "range"); }
+  if (keys.g) {
+    if (p.id === "blaze") doAttack(p, "range");
+    else { keys.g = false; doAttack(p, "range"); }
+  }
   if (keys.r) { keys.r = false; doAttack(p, "special"); }
   if (keys.u) { keys.u = false; activateOmega(p); }
 }
@@ -1303,6 +1309,7 @@ function onlineControlsFromKeys() {
     jumpNonce: onlineMatch.inputNonce && keys.ArrowUp ? onlineMatch.inputNonce : 0,
     meleeNonce: onlineMatch.inputNonce && keys.a ? onlineMatch.inputNonce : 0,
     rangeNonce: onlineMatch.inputNonce && keys.s ? onlineMatch.inputNonce : 0,
+    rangeHeld: Boolean(keys.s),
     specialNonce: onlineMatch.inputNonce && keys.q ? onlineMatch.inputNonce : 0,
     omegaNonce: onlineMatch.inputNonce && keys.w ? onlineMatch.inputNonce : 0,
     emote: onlineMatch.emoteText,
@@ -1326,7 +1333,8 @@ function applyOnlineControls(fighter, input, previous) {
     fighter.jumpsLeft--;
   }
   if (input.meleeNonce && input.meleeNonce !== previous.meleeNonce) doAttack(fighter, "melee");
-  if (input.rangeNonce && input.rangeNonce !== previous.rangeNonce) doAttack(fighter, "range");
+  if (fighter.id === "blaze" && input.rangeHeld) doAttack(fighter, "range");
+  else if (input.rangeNonce && input.rangeNonce !== previous.rangeNonce) doAttack(fighter, "range");
   if (input.specialNonce && input.specialNonce !== previous.specialNonce) doAttack(fighter, "special");
   if (input.omegaNonce && input.omegaNonce !== previous.omegaNonce) activateOmega(fighter);
   if (input.emoteNonce && input.emoteNonce !== previous.emoteNonce && emotePhrases.includes(input.emote)) {
