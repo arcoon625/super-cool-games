@@ -24,7 +24,7 @@ const roster = [
   { id: "megameg", name: "Mecha Meg", icon: "🦈", art: "assets/characters/mecha-meg.png", color: "#198bd7", attack: "Titan Claw", range: "Plasma Torpedo", special: "Megalodon Charge", speed: 4.6, power: 15 },
   { id: "kingcaw", name: "King Caw", icon: "🐦‍⬛", art: "assets/characters/king-caw.png?v=king-caw-2", color: "#60398f", attack: "Crown Claw", range: "Feather Fling", special: "Royal Wing Gust", speed: 5.8, power: 11 },
   { id: "rexy", name: "Rexy", icon: "🦖", art: "assets/characters/rexy.png?v=rexy-3", color: "#967044", attack: "Tail Slam", range: "Fossil Boulder", special: "Mega Bite", speed: 4.5, power: 16 },
-  { id: "blaze", name: "Blaze the Dragon", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-1", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
+  { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-2", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
 const trainingDummy = { id: "training-dummy", name: "Training Dummy", color: "#d47b48", attack: "None", range: "None", special: "None", speed: 0, power: 0, trainingDummy: true };
@@ -254,7 +254,7 @@ const cutoutSources = {
   megameg: "assets/characters/cutouts/mecha-meg-cutout.png",
   kingcaw: "assets/characters/cutouts/king-caw-cutout.png",
   rexy: "assets/characters/cutouts/rexy-cutout.png?v=rexy-2",
-  blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-1",
+  blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-2",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
   const cutout = new Image();
