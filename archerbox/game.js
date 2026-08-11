@@ -24,6 +24,7 @@ const roster = [
   { id: "megameg", name: "Mecha Meg", icon: "🦈", art: "assets/characters/mecha-meg.png", color: "#198bd7", attack: "Titan Claw", range: "Plasma Torpedo", special: "Megalodon Charge", speed: 4.6, power: 15 },
   { id: "kingcaw", name: "King Caw", icon: "🐦‍⬛", art: "assets/characters/king-caw.png?v=king-caw-2", color: "#60398f", attack: "Crown Claw", range: "Feather Fling", special: "Royal Wing Gust", speed: 5.8, power: 11 },
   { id: "rexy", name: "Rexy", icon: "🦖", art: "assets/characters/rexy.png?v=rexy-3", color: "#967044", attack: "Tail Slam", range: "Fossil Boulder", special: "Mega Bite", speed: 4.5, power: 16 },
+  { id: "blaze", name: "Blaze the Dragon", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-1", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
 const trainingDummy = { id: "training-dummy", name: "Training Dummy", color: "#d47b48", attack: "None", range: "None", special: "None", speed: 0, power: 0, trainingDummy: true };
@@ -165,6 +166,7 @@ const weaponUpgradePaths = {
   megameg: [{ name: "Plasma Torpedo", description: "Mecha Meg's speedy glowing torpedo.", cost: 0 }, { name: "Fin Missile", description: "A larger missile with a bigger blast.", cost: 120 }, { name: "Megalodon Beam", description: "A huge cyan beam powered by Mecha Meg's armor.", cost: 325 }],
   kingcaw: [{ name: "Feather Fling", description: "King Caw's quick royal feather shot.", cost: 0 }, { name: "Crown Boomerang", description: "A sharp spinning crown attack.", cost: 80 }, { name: "Royal Storm", description: "A powerful flock of glowing feathers.", cost: 210 }],
   rexy: [{ name: "Fossil Boulder", description: "Rexy's heavy rolling fossil rock.", cost: 0 }, { name: "Meteor Egg", description: "A faster dinosaur egg attack.", cost: 130 }, { name: "Volcano Chunk", description: "A huge ancient rock with extra power.", cost: 340 }],
+  blaze: [{ name: "Fire Breath", description: "Blaze's hot rolling burst of flame.", cost: 0 }, { name: "Flame Ball", description: "A faster fire blast with extra heat.", cost: 100 }, { name: "Dragon Inferno", description: "A giant fire blast from Blaze's jaws.", cost: 260 }],
 };
 
 const starterProfile = {
@@ -174,7 +176,7 @@ const starterProfile = {
   arenaWinsStart: 0,
   spacePizzaWinsStart: 0,
   spacePizzaUnlocked: false,
-  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy"],
+  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blaze"],
   stages: stages.map((stage) => stage.id),
   favoriteFighter: null,
   favoriteStage: null,
@@ -200,7 +202,7 @@ function loadProfile() {
       // Space Pizza Planet starts locked when this new arena is added.
       spacePizzaWinsStart: Number.isFinite(saved.spacePizzaWinsStart) ? Math.max(0, Math.floor(saved.spacePizzaWinsStart)) : savedWins,
       spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
-      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy"])] : [...starterProfile.fighters],
+      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blaze"])] : [...starterProfile.fighters],
       stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
       favoriteFighter: roster.some((fighter) => fighter.id === saved.favoriteFighter) ? saved.favoriteFighter : null,
       favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
@@ -252,6 +254,7 @@ const cutoutSources = {
   megameg: "assets/characters/cutouts/mecha-meg-cutout.png",
   kingcaw: "assets/characters/cutouts/king-caw-cutout.png",
   rexy: "assets/characters/cutouts/rexy-cutout.png?v=rexy-2",
+  blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-1",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
   const cutout = new Image();
@@ -937,6 +940,8 @@ function doAttack(who, type) {
       ? { x: who.x + who.facing * 84, y: who.y - 112 }
       : who.id === "rexy"
         ? { x: who.x + who.facing * 82, y: who.y - 70 }
+        : who.id === "blaze"
+          ? { x: who.x + who.facing * 72, y: who.y - 86 }
         : { x: who.x + who.facing * 40, y: who.y - 35 };
     const verticalAim = (speed) => {
       if (who.id !== "shellshock") return 0;
@@ -1095,6 +1100,19 @@ function doAttack(who, type) {
         fossilBoulder: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#e6c47a", 12);
+    } else if (who.id === "blaze") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (15 + weaponLevel * 2),
+        owner: who,
+        damage: damage + 3 + weaponLevel * 3,
+        color: "#ff6a24",
+        life: 68,
+        size: 18 + weaponLevel * 5,
+        fireBreath: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#ff9b37", 12);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, vy: verticalAim(15), owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -2030,7 +2048,28 @@ function drawStageHazard(hazard) {
 
 function drawProjectile(projectile) {
   ctx.save();
-  if (projectile.granolaBar) {
+  if (projectile.fireBreath) {
+    const size = projectile.size;
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.scale(direction, 1);
+    ctx.shadowColor = "#ff5725";
+    ctx.shadowBlur = 20;
+    const flame = ctx.createLinearGradient(-size, 0, size, 0);
+    flame.addColorStop(0, "#ffca45");
+    flame.addColorStop(.48, "#ff7927");
+    flame.addColorStop(1, "#d93622");
+    ctx.fillStyle = flame;
+    ctx.beginPath();
+    ctx.moveTo(-size, 0);
+    ctx.quadraticCurveTo(-size * .2, -size * .85, size * 1.2, 0);
+    ctx.quadraticCurveTo(-size * .2, size * .85, -size, 0);
+    ctx.fill();
+    ctx.fillStyle = "#fff2a8";
+    ctx.beginPath();
+    ctx.ellipse(-size * .15, 0, size * .48, size * .25, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (projectile.granolaBar) {
     const direction = Math.sign(projectile.vx) || 1;
     const length = projectile.size * 1.65;
     const height = projectile.size * .72;
