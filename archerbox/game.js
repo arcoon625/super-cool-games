@@ -26,7 +26,7 @@ const roster = [
   { id: "rexy", name: "Rexy", icon: "🦖", art: "assets/characters/rexy.png?v=rexy-3", color: "#967044", attack: "Tail Slam", range: "Fossil Boulder", special: "Mega Bite", speed: 4.5, power: 16 },
   { id: "blue", name: "Blue", icon: "🦖", art: "assets/characters/blue-raptor.png?v=blue-1", color: "#766653", attack: "Claw Rake", range: "Razor Quill", special: "Raptor Pounce", speed: 6.5, power: 12 },
   { id: "fang", name: "Fang the Komodo Dragon", icon: "🦎", art: "assets/characters/fang-komodo.png?v=fang-1", color: "#67723e", attack: "Tail Whip", range: "Venom Spit", special: "Predator Lunge", speed: 4.8, power: 15 },
-  { id: "fierce", name: "Shadowfang", icon: "🐆", art: "assets/characters/fierce-panther.png?v=fierce-1", color: "#26334a", attack: "Claw Combo", range: "Shadow Claw", special: "Panther Pounce", speed: 6.7, power: 12 },
+  { id: "fierce", name: "Shadow Fang", icon: "🐆", art: "assets/characters/fierce-panther.png?v=fierce-1", color: "#26334a", attack: "Claw Combo", range: "Shadow Claw", special: "Panther Pounce", speed: 6.7, power: 12 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
@@ -171,7 +171,7 @@ const weaponUpgradePaths = {
   rexy: [{ name: "Fossil Boulder", description: "Rexy's heavy rolling fossil rock.", cost: 0 }, { name: "Meteor Egg", description: "A faster dinosaur egg attack.", cost: 130 }, { name: "Volcano Chunk", description: "A huge ancient rock with extra power.", cost: 340 }],
   blue: [{ name: "Razor Quill", description: "Blue's fast sharp quill throw.", cost: 0 }, { name: "Triple Quill", description: "Three quick raptor quills in a row.", cost: 105 }, { name: "Raptor Storm", description: "A powerful flurry of razor quills.", cost: 275 }],
   fang: [{ name: "Venom Spit", description: "Fang's poisonous green venom splash.", cost: 0 }, { name: "Acid Glob", description: "A faster, stronger venom glob.", cost: 95 }, { name: "Toxic Torrent", description: "A giant splash of Komodo venom.", cost: 255 }],
-  fierce: [{ name: "Shadow Claw", description: "Shadowfang's flying claw-slash projectile.", cost: 0 }, { name: "Night Rake", description: "A faster, sharper triple slash.", cost: 110 }, { name: "Moon Fang", description: "A huge glowing panther claw wave.", cost: 285 }],
+  fierce: [{ name: "Shadow Claw", description: "Shadow Fang's flying claw-slash projectile.", cost: 0 }, { name: "Night Rake", description: "A faster, sharper triple slash.", cost: 110 }, { name: "Moon Fang", description: "A huge glowing panther claw wave.", cost: 285 }],
   blaze: [{ name: "Fire Breath", description: "Blaze's hot rolling burst of flame.", cost: 0 }, { name: "Flame Ball", description: "A faster fire blast with extra heat.", cost: 100 }, { name: "Dragon Inferno", description: "A giant fire blast from Blaze's jaws.", cost: 260 }],
 };
 
