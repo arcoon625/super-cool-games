@@ -17,4 +17,4 @@ window.RUMBLE_RIVALS_FIREBASE_CONFIG = {
   appId: "1:848273276559:web:dcf4464c7e7d1678d37afa",
   measurementId: "G-F5N8S8HDTZ"
 };
-window.RUMBLE_RIVALS_GAME_VERSION = "online-7";
+window.RUMBLE_RIVALS_GAME_VERSION = "online-8";
