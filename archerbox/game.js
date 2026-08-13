@@ -132,6 +132,8 @@ const difficultyModes = {
 };
 const coinIcon = '<span class="coin" aria-label="coin">$</span>';
 const emotePhrases = ["GOOD LUCK!", "GOOD GAME!", "MY BAD!", "NICE MOVE!", "OOPS!", "WOW!", "REMATCH?", "YOU GOT THIS!"];
+const nonMechanicalAnimalIds = ["pip", "bloop", "bolt", "kingcaw", "rexy", "blue", "fang", "fierce", "talon", "tusk", "cobra", "blaze"];
+const armoredFighterIds = ["shellshock", "ironbolt", "doomgear", "null", "megameg"];
 const achievementCatalog = [
   { id: "first-win", icon: "🥇", art: "assets/badges/first-rumble-badge.png", name: "First Rumble", description: "Win your first battle." },
   { id: "speedy", icon: "⚡", art: "assets/badges/lightning-win-badge.png", name: "Lightning Win", description: "Win a battle in under 15 seconds." },
@@ -144,6 +146,14 @@ const achievementCatalog = [
   { id: "one-hundred-trophies", icon: "🏆", art: "assets/badges/one-hundred-trophies-badge.png", name: "Platinum Champion", description: "Earn 100 trophies." },
   { id: "five-hundred-trophies", icon: "🏆", art: "assets/badges/five-hundred-trophies-badge.png", name: "Crystal Legend", description: "Earn 500 trophies." },
   { id: "one-thousand-trophies", icon: "🏆", art: "assets/badges/one-thousand-trophies-badge.png", name: "Rainbow Rumble Legend", description: "Earn 1,000 trophies." },
+  { id: "apex-predator", icon: "🐾", name: "Apex Predator", description: "Win 5 battles in a row." },
+  { id: "flawless-victory", icon: "✨", name: "Flawless Victory", description: "Win without taking any damage." },
+  { id: "overkill", icon: "💥", name: "Overkill", description: "Finish a battle with a special attack." },
+  { id: "speed-demon", icon: "🏎️", name: "Speed Demon", description: "Win a battle in less than 10 seconds." },
+  { id: "high-roller", icon: "🎰", name: "High Roller", description: "Amass 500 coins." },
+  { id: "zoo-keeper", icon: "🦁", name: "Zoo Keeper", description: "Win with every non-mechanical animal." },
+  { id: "heavy-metal", icon: "🤖", name: "Heavy Metal", description: "Win with every armored fighter." },
+  { id: "master-strategist", icon: "🧠", name: "Master Strategist", description: "Win after collecting 3 different power-ups in one battle." },
 ];
 
 const unlockCatalog = [
@@ -196,10 +206,13 @@ const starterProfile = {
   favoriteStage: null,
   upgrades: {},
   achievements: [],
+  winStreak: 0,
+  animalWins: [],
+  armorWins: [],
 };
 
 function freshProfile() {
-  return { ...starterProfile, fighters: [...starterProfile.fighters], stages: [...starterProfile.stages], upgrades: {}, achievements: [] };
+  return { ...starterProfile, fighters: [...starterProfile.fighters], stages: [...starterProfile.stages], upgrades: {}, achievements: [], animalWins: [], armorWins: [] };
 }
 
 function loadProfile() {
@@ -222,6 +235,9 @@ function loadProfile() {
       favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
       upgrades: saved.upgrades && typeof saved.upgrades === "object" ? saved.upgrades : {},
       achievements: Array.isArray(saved.achievements) ? saved.achievements : [],
+      winStreak: Number.isFinite(saved.winStreak) ? Math.max(0, Math.floor(saved.winStreak)) : 0,
+      animalWins: Array.isArray(saved.animalWins) ? saved.animalWins.filter((id) => typeof id === "string") : [],
+      armorWins: Array.isArray(saved.armorWins) ? saved.armorWins.filter((id) => typeof id === "string") : [],
     };
   } catch {
     return freshProfile();
@@ -921,7 +937,7 @@ function startBattle(selected, opponent = null) {
   const enemy = opponent || choices[Math.floor(Math.random() * choices.length)];
   const stage = matchMode === "training" ? trainingStage : matchMode === "boss" ? bossStage : chosenStage;
   const arena = stageArenas[stage.id] || fallbackArena;
-  game = { mode: matchMode, player: makeFighter(selected, 230, 1, arena.floor), enemy: makeFighter(enemy, 810, -1, arena.floor), stage, settings: { ...matchSettings }, timeLeftMs: matchMode === "training" ? null : matchSettings.timer === null ? null : matchSettings.timer * 1000, projectiles: [], tankCharges: [], hazards: [], hazardDropMs: 9000 + Math.random() * 3500, apples: [], appleDropMs: 10000, goldenAppleDropMs: Math.random() < .15 ? 15000 + Math.random() * 20000 : null, powerUps: [], powerUpDropMs: randomPowerUpDelay(), sparks: [], ended: false, messageTimer: 0, message: "3", countdownMs: 3000, countdownText: "3", startedAt: null };
+  game = { mode: matchMode, player: makeFighter(selected, 230, 1, arena.floor), enemy: makeFighter(enemy, 810, -1, arena.floor), stage, settings: { ...matchSettings }, timeLeftMs: matchMode === "training" ? null : matchSettings.timer === null ? null : matchSettings.timer * 1000, projectiles: [], tankCharges: [], hazards: [], hazardDropMs: 9000 + Math.random() * 3500, apples: [], appleDropMs: 10000, goldenAppleDropMs: Math.random() < .15 ? 15000 + Math.random() * 20000 : null, powerUps: [], powerUpDropMs: randomPowerUpDelay(), collectedPowerUps: new Set(), playerTookDamage: false, finalHitWasSpecial: false, sparks: [], ended: false, messageTimer: 0, message: "3", countdownMs: 3000, countdownText: "3", startedAt: null };
   if (matchMode === "boss") { game.enemy.maxHealth = 200; game.enemy.health = 200; }
   const onlineRoom = window.RumbleOnline?.getRoom();
   const online = game.mode === "online-host" || game.mode === "online-guest";
@@ -1299,6 +1315,8 @@ function hitOpponent(attacker, target, damage, reach, text) {
     return;
   }
   target.health = Math.max(0, target.health - damage);
+  if (target === game.player) game.playerTookDamage = true;
+  if (target.health <= 0) game.finalHitWasSpecial = text === attacker.special.toUpperCase();
   target.hitFlash = 12; target.invincible = 12;
   target.x += attacker.facing * Math.min(60, damage * 3.2);
   attacker.super = Math.min(100, attacker.super + 12);
@@ -1348,10 +1366,21 @@ function rewardWinCoins(winner = game.player, completedSeconds = null) {
   const spacePizzaUnlockingNow = !profile.spacePizzaUnlocked && profile.wins - profile.spacePizzaWinsStart === spacePizzaWinsNeeded - 1;
   profile.coins += reward;
   profile.wins++;
+  profile.winStreak = (profile.winStreak || 0) + 1;
+  if (nonMechanicalAnimalIds.includes(winner.id)) profile.animalWins = [...new Set([...(profile.animalWins || []), winner.id])];
+  if (armoredFighterIds.includes(winner.id)) profile.armorWins = [...new Set([...(profile.armorWins || []), winner.id])];
   const earnedAchievements = [];
   if (profile.wins >= 1) awardAchievement("first-win", earnedAchievements);
   if (battleSeconds < 15) awardAchievement("speedy", earnedAchievements);
   if (profile.coins >= 100) awardAchievement("coin-collector", earnedAchievements);
+  if (profile.winStreak >= 5) awardAchievement("apex-predator", earnedAchievements);
+  if (!game.playerTookDamage) awardAchievement("flawless-victory", earnedAchievements);
+  if (game.finalHitWasSpecial) awardAchievement("overkill", earnedAchievements);
+  if (battleSeconds < 10) awardAchievement("speed-demon", earnedAchievements);
+  if (profile.coins >= 500) awardAchievement("high-roller", earnedAchievements);
+  if (nonMechanicalAnimalIds.every((id) => profile.animalWins.includes(id))) awardAchievement("zoo-keeper", earnedAchievements);
+  if (armoredFighterIds.every((id) => profile.armorWins.includes(id))) awardAchievement("heavy-metal", earnedAchievements);
+  if (game.collectedPowerUps?.size >= 3) awardAchievement("master-strategist", earnedAchievements);
   if (game.mode === "boss") awardAchievement("boss-beater", earnedAchievements);
   if (winner.id === "kingcaw") awardAchievement("crow-champion", earnedAchievements);
   if (profile.trophies >= 5) awardAchievement("five-trophies", earnedAchievements);
@@ -1750,6 +1779,7 @@ function updatePowerUps(dt) {
     [game.player, game.enemy].forEach((fighter) => {
       if (powerUp.collected || Math.abs(fighter.x - powerUp.x) > 45 || Math.abs((fighter.y - 38) - powerUp.y) > 55) return;
       powerUp.collected = true;
+      if (fighter === game.player) game.collectedPowerUps.add(powerUp.type);
       if (powerUp.type === "freeze") {
         const opponent = fighter === game.player ? game.enemy : game.player;
         opponent.frozenTimer = 120;
@@ -1828,6 +1858,8 @@ function updateTankCharges() {
         return;
       }
       target.health = Math.max(0, target.health - tank.damage);
+      if (target === game.player) game.playerTookDamage = true;
+      if (target.health <= 0) game.finalHitWasSpecial = true;
       target.hitFlash = 18;
       target.invincible = 16;
       target.x += Math.sign(tank.vx) * Math.min(82, tank.damage * 4);
@@ -1888,6 +1920,7 @@ function updateStageHazards(dt) {
         return;
       }
       fighter.health = Math.max(0, fighter.health - hazard.damage);
+      if (fighter === game.player) game.playerTookDamage = true;
       fighter.hitFlash = 14;
       fighter.invincible = 18;
       fighter.x += Math.sign(hazard.x - fighter.x) * -Math.min(54, hazard.damage * 3);
@@ -2680,6 +2713,7 @@ function loop(now) {
 function endBattle(playerWon, timeRanOut = false) {
   if (game.ended) return;
   game.ended = true;
+  if (!playerWon && game.mode !== "training") profile.winStreak = 0;
   const onlineBattle = game.mode === "online-host";
   const trophyMessage = recordBattleTrophy(playerWon);
   const completedSeconds = game.startedAt ? Math.max(0, Math.floor((performance.now() - game.startedAt) / 1000)) : 0;
@@ -2786,6 +2820,7 @@ function showOnlineGuestResult(result) {
   let trophyMessage = "";
   let coinsWon = null;
   if (!claimedOnlineMatch(result.matchId)) {
+    if (!playerWon) profile.winStreak = 0;
     trophyMessage = recordBattleTrophy(playerWon);
     coinsWon = playerWon ? rewardWinCoins(game.enemy, result.completedSeconds || 0) : null;
     if (!coinsWon) saveProfile();
