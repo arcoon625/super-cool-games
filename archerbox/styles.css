@@ -28,7 +28,7 @@ button { font: inherit; cursor: pointer; }
 button:hover { transform: translateY(-2px); }
 button:active { transform: translateY(3px); box-shadow: none; }
 
-.cover-screen { align-items: center; justify-content: center; min-height: min(760px, calc(100vh - 26px)); text-align: center; background: linear-gradient(#102a5b22, #102a5b22), url("assets/rumble-rivals-cover-project-null.png") center / cover; overflow: hidden; }
+.cover-screen { align-items: center; justify-content: center; min-height: min(760px, calc(100vh - 26px)); text-align: center; background: linear-gradient(#102a5b22, #102a5b22), url("assets/rumble-rivals-cover-animals.png?v=cover-animals-1") center / cover; overflow: hidden; }
 .cover-screen.active { position: fixed; z-index: 10; inset: 0; width: 100vw; min-height: 100vh; padding: 0; }
 .cover-screen::before, .cover-screen::after { content: ""; position: absolute; border-radius: 50%; width: 450px; height: 450px; border: 42px solid #ffffff22; }
 .cover-screen::before { top: -270px; left: -170px; }.cover-screen::after { right: -190px; bottom: -300px; }
