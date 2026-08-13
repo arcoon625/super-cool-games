@@ -29,7 +29,7 @@ const roster = [
   { id: "fierce", name: "Shadow Fang", icon: "🐆", art: "assets/characters/fierce-panther.png?v=fierce-1", color: "#26334a", attack: "Claw Combo", range: "Shadow Claw", special: "Panther Pounce", speed: 6.7, power: 12 },
   { id: "snaptrap", name: "Snaptrap", icon: "🌿", art: "assets/characters/snaptrap.png?v=snaptrap-1", color: "#5b9e43", attack: "Vine Whack", range: "Leaf Slash", special: "Mega Chomp", speed: 4.9, power: 14 },
   { id: "talon", name: "Talon the Eagle", icon: "🦅", art: "assets/characters/talon-eagle.png?v=talon-1", color: "#9c6929", attack: "Wing Swipe", range: "Feather Dart", special: "Sky Dive", speed: 6.2, power: 11 },
-  { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 13, health: 120 },
+  { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 13, health: 120, battleScale: 1.3 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
@@ -1993,8 +1993,8 @@ function drawFighter(f) {
   const attackPush = f.attackTimer > 0 ? (f.action === "range" ? -8 * attackSwing : f.action === "special" || f.action === "super" ? 14 * attackSwing : 24 * attackSwing) : 0;
   const attackLift = f.attackTimer > 0 ? (f.action === "range" ? 4 * attackSwing : -8 * attackSwing) : 0;
   const tilt = f.attackTimer > 0 ? (f.action === "range" ? .12 : f.action === "special" || f.action === "super" ? -.08 : -.28) * attackSwing : jumping ? Math.max(-.18, Math.min(.18, f.vy * .025)) : f.walking ? wave * .16 : wave * .04;
-  const bossScale = f.boss ? 1.5 : 1;
-  ctx.save(); ctx.translate(f.x + f.facing * attackPush, f.y + bob + attackLift); ctx.rotate(tilt); ctx.scale(f.facing * attackStretch * breathing * jumpSquish * bossScale, (f.attackTimer > 0 ? .88 : 1) * breathing * jumpStretch * bossScale);
+  const fighterScale = (f.boss ? 1.5 : 1) * (f.battleScale || 1);
+  ctx.save(); ctx.translate(f.x + f.facing * attackPush, f.y + bob + attackLift); ctx.rotate(tilt); ctx.scale(f.facing * attackStretch * breathing * jumpSquish * fighterScale, (f.attackTimer > 0 ? .88 : 1) * breathing * jumpStretch * fighterScale);
   if (f.walking) {
     ctx.fillStyle = "#ffffffa8";
     for (let puff = 0; puff < 4; puff++) { ctx.beginPath(); ctx.ellipse(-30 - puff * 15, 4 + puff * 3 + Math.abs(wave) * 4, 13 - puff * 2, 5, 0, 0, Math.PI * 2); ctx.fill(); }
