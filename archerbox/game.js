@@ -28,6 +28,8 @@ const roster = [
   { id: "fang", name: "Fang the Komodo Dragon", icon: "🦎", art: "assets/characters/fang-komodo.png?v=fang-1", color: "#67723e", attack: "Tail Whip", range: "Venom Spit", special: "Predator Lunge", speed: 4.8, power: 15 },
   { id: "fierce", name: "Shadow Fang", icon: "🐆", art: "assets/characters/fierce-panther.png?v=fierce-1", color: "#26334a", attack: "Claw Combo", range: "Shadow Claw", special: "Panther Pounce", speed: 6.7, power: 12 },
   { id: "snaptrap", name: "Snaptrap", icon: "🌿", art: "assets/characters/snaptrap.png?v=snaptrap-1", color: "#5b9e43", attack: "Vine Whack", range: "Leaf Slash", special: "Mega Chomp", speed: 4.9, power: 14 },
+  { id: "talon", name: "Talon the Eagle", icon: "🦅", art: "assets/characters/talon-eagle.png?v=talon-1", color: "#9c6929", attack: "Wing Swipe", range: "Feather Dart", special: "Sky Dive", speed: 6.2, power: 11 },
+  { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 16 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
@@ -174,6 +176,8 @@ const weaponUpgradePaths = {
   fang: [{ name: "Venom Spit", description: "Fang's poisonous green venom splash.", cost: 0 }, { name: "Acid Glob", description: "A faster, stronger venom glob.", cost: 95 }, { name: "Toxic Torrent", description: "A giant splash of Komodo venom.", cost: 255 }],
   fierce: [{ name: "Shadow Claw", description: "Shadow Fang's flying claw-slash projectile.", cost: 0 }, { name: "Night Rake", description: "A faster, sharper triple slash.", cost: 110 }, { name: "Moon Fang", description: "A huge glowing panther claw wave.", cost: 285 }],
   snaptrap: [{ name: "Leaf Slash", description: "Snaptrap's sharp spinning leaf throw.", cost: 0 }, { name: "Thorn Disc", description: "A faster thorny leaf attack.", cost: 105 }, { name: "Jungle Cyclone", description: "A giant storm of razor leaves.", cost: 275 }],
+  talon: [{ name: "Feather Dart", description: "Talon's quick razor-feather throw.", cost: 0 }, { name: "Storm Feather", description: "A faster wind-charged feather dart.", cost: 105 }, { name: "Eagle Barrage", description: "A powerful flurry of sharp eagle feathers.", cost: 275 }],
+  tusk: [{ name: "Snowball Toss", description: "Tusk's heavy packed snowball.", cost: 0 }, { name: "Ice Boulder", description: "A bigger frozen ball with extra impact.", cost: 100 }, { name: "Glacier Ball", description: "A giant icy snowball that hits hard.", cost: 270 }],
   blaze: [{ name: "Fire Breath", description: "Blaze's hot rolling burst of flame.", cost: 0 }, { name: "Flame Ball", description: "A faster fire blast with extra heat.", cost: 100 }, { name: "Dragon Inferno", description: "A giant fire blast from Blaze's jaws.", cost: 260 }],
 };
 
@@ -184,7 +188,7 @@ const starterProfile = {
   arenaWinsStart: 0,
   spacePizzaWinsStart: 0,
   spacePizzaUnlocked: false,
-  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "blaze"],
+  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "talon", "tusk", "blaze"],
   stages: stages.map((stage) => stage.id),
   favoriteFighter: null,
   favoriteStage: null,
@@ -210,7 +214,7 @@ function loadProfile() {
       // Space Pizza Planet starts locked when this new arena is added.
       spacePizzaWinsStart: Number.isFinite(saved.spacePizzaWinsStart) ? Math.max(0, Math.floor(saved.spacePizzaWinsStart)) : savedWins,
       spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
-      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "blaze"])] : [...starterProfile.fighters],
+      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "talon", "tusk", "blaze"])] : [...starterProfile.fighters],
       stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
       favoriteFighter: roster.some((fighter) => fighter.id === saved.favoriteFighter) ? saved.favoriteFighter : null,
       favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
@@ -266,6 +270,8 @@ const cutoutSources = {
   fang: "assets/characters/cutouts/fang-komodo-cutout.png?v=fang-1",
   fierce: "assets/characters/cutouts/fierce-panther-cutout.png?v=fierce-1",
   snaptrap: "assets/characters/cutouts/snaptrap-cutout.png?v=snaptrap-1",
+  talon: "assets/characters/cutouts/talon-eagle-cutout.png?v=talon-1",
+  tusk: "assets/characters/cutouts/tusk-mammoth-cutout.png?v=tusk-1",
   blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-2",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
@@ -941,6 +947,8 @@ function doAttack(who, type) {
   let reach = type === "range" ? 560 : type === "special" ? 250 : type === "super" ? 650 : type === "heavy" ? 120 : 86;
   if (who.id === "rexy" && type === "melee") reach = 120;
   if (who.id === "rexy" && type === "special") { damage += 6; reach = 155; }
+  if (who.id === "talon" && type === "special") { damage += 3; reach = 330; }
+  if (who.id === "tusk" && type === "special") { damage += 5; reach = 225; }
   const weaponLevel = Number.isFinite(who.weaponLevel) ? who.weaponLevel : getWeaponLevel(who.id);
   if (type === "range") { damage += weaponLevel * 5; reach += weaponLevel * 45; }
   if (type === "melee" && who.powerUp === "sword") damage += who.power;
@@ -960,6 +968,10 @@ function doAttack(who, type) {
           ? { x: who.x + who.facing * 68, y: who.y - 48 }
         : who.id === "snaptrap"
           ? { x: who.x + who.facing * 66, y: who.y - 64 }
+        : who.id === "talon"
+          ? { x: who.x + who.facing * 64, y: who.y - 76 }
+        : who.id === "tusk"
+          ? { x: who.x + who.facing * 82, y: who.y - 60 }
         : who.id === "blaze"
           ? { x: who.x + who.facing * 72, y: who.y - 48 }
         : { x: who.x + who.facing * 40, y: who.y - 35 };
@@ -1172,6 +1184,32 @@ function doAttack(who, type) {
         leafSlash: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#b5ef71", 8);
+    } else if (who.id === "talon") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (18 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#f5e4aa",
+        life: 66,
+        size: 15 + weaponLevel * 4,
+        eagleFeather: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#fff2c5", 8);
+    } else if (who.id === "tusk") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (11 + weaponLevel * 2),
+        owner: who,
+        damage: damage + 3 + weaponLevel * 3,
+        color: "#e4f7ff",
+        life: 74,
+        size: 18 + weaponLevel * 5,
+        snowball: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#d7f2ff", 10);
     } else if (who.id === "blaze") {
       game.projectiles.push({
         x: projectileOrigin.x,
@@ -2275,6 +2313,49 @@ function drawProjectile(projectile) {
     ctx.beginPath();
     ctx.moveTo(-size * .8, 0);
     ctx.lineTo(size * 1.05, 0);
+    ctx.stroke();
+  } else if (projectile.eagleFeather) {
+    const size = projectile.size;
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.scale(direction, 1);
+    ctx.rotate(Math.sin(projectile.life * .25) * .2);
+    ctx.shadowColor = "#ffe19a";
+    ctx.shadowBlur = 12;
+    const feather = ctx.createLinearGradient(-size, 0, size, 0);
+    feather.addColorStop(0, "#875523");
+    feather.addColorStop(.5, "#f3d27b");
+    feather.addColorStop(1, "#fff4ca");
+    ctx.fillStyle = feather;
+    ctx.beginPath();
+    ctx.moveTo(size * 1.15, 0);
+    ctx.quadraticCurveTo(0, -size * .62, -size * .9, 0);
+    ctx.quadraticCurveTo(0, size * .62, size * 1.15, 0);
+    ctx.fill();
+    ctx.strokeStyle = "#fff8da";
+    ctx.lineWidth = Math.max(1.5, size * .11);
+    ctx.beginPath();
+    ctx.moveTo(-size * .82, 0);
+    ctx.lineTo(size * 1.08, 0);
+    ctx.stroke();
+  } else if (projectile.snowball) {
+    const size = projectile.size;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.life * .1 * (Math.sign(projectile.vx) || 1));
+    ctx.shadowColor = "#b8eaff";
+    ctx.shadowBlur = 14;
+    const snow = ctx.createRadialGradient(-size * .28, -size * .3, size * .08, 0, 0, size);
+    snow.addColorStop(0, "#ffffff");
+    snow.addColorStop(.58, "#d9f3ff");
+    snow.addColorStop(1, "#85bfd9");
+    ctx.fillStyle = snow;
+    ctx.beginPath();
+    ctx.arc(0, 0, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#c7eaff";
+    ctx.lineWidth = Math.max(1.5, size * .1);
+    ctx.beginPath();
+    ctx.arc(0, 0, size * .7, .4, Math.PI * 1.65);
     ctx.stroke();
   } else if (projectile.plasmaTornado) {
     const size = projectile.size;
