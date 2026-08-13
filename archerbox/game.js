@@ -30,7 +30,7 @@ const roster = [
   { id: "snaptrap", name: "Snaptrap", icon: "🌿", art: "assets/characters/snaptrap.png?v=snaptrap-1", color: "#5b9e43", attack: "Vine Whack", range: "Leaf Slash", special: "Mega Chomp", speed: 4.9, power: 14 },
   { id: "talon", name: "Talon the Eagle", icon: "🦅", art: "assets/characters/talon-eagle.png?v=talon-1", color: "#9c6929", attack: "Wing Swipe", range: "Feather Dart", special: "Sky Dive", speed: 6.2, power: 11 },
   { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 13, health: 120, battleScale: 1.3 },
-  { id: "cobra", name: "King Cobra", icon: "🐍", art: "assets/characters/king-cobra.png?v=cobra-1", color: "#286847", attack: "Cobra Bite", range: "Venom Orb", special: "Royal Strike", speed: 5.7, power: 14, health: 105 },
+  { id: "cobra", name: "King Cobra", icon: "🐍", art: "assets/characters/king-cobra-realistic.png?v=cobra-2", color: "#6d5a3d", attack: "Cobra Bite", range: "Venom Orb", special: "Royal Strike", speed: 5.7, power: 14, health: 105 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
@@ -274,7 +274,7 @@ const cutoutSources = {
   snaptrap: "assets/characters/cutouts/snaptrap-cutout.png?v=snaptrap-1",
   talon: "assets/characters/cutouts/talon-eagle-cutout.png?v=talon-1",
   tusk: "assets/characters/cutouts/tusk-mammoth-cutout.png?v=tusk-1",
-  cobra: "assets/characters/cutouts/king-cobra-cutout.png?v=cobra-1",
+  cobra: "assets/characters/cutouts/king-cobra-realistic-cutout.png?v=cobra-2",
   blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-2",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
