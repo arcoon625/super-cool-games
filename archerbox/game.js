@@ -27,6 +27,7 @@ const roster = [
   { id: "blue", name: "Blue", icon: "🦖", art: "assets/characters/blue-raptor.png?v=blue-1", color: "#766653", attack: "Claw Rake", range: "Razor Quill", special: "Raptor Pounce", speed: 6.5, power: 12 },
   { id: "fang", name: "Fang the Komodo Dragon", icon: "🦎", art: "assets/characters/fang-komodo.png?v=fang-1", color: "#67723e", attack: "Tail Whip", range: "Venom Spit", special: "Predator Lunge", speed: 4.8, power: 15 },
   { id: "fierce", name: "Shadow Fang", icon: "🐆", art: "assets/characters/fierce-panther.png?v=fierce-1", color: "#26334a", attack: "Claw Combo", range: "Shadow Claw", special: "Panther Pounce", speed: 6.7, power: 12 },
+  { id: "snaptrap", name: "Snaptrap", icon: "🌿", art: "assets/characters/snaptrap.png?v=snaptrap-1", color: "#5b9e43", attack: "Vine Whack", range: "Leaf Slash", special: "Mega Chomp", speed: 4.9, power: 14 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
@@ -172,6 +173,7 @@ const weaponUpgradePaths = {
   blue: [{ name: "Razor Quill", description: "Blue's fast sharp quill throw.", cost: 0 }, { name: "Triple Quill", description: "Three quick raptor quills in a row.", cost: 105 }, { name: "Raptor Storm", description: "A powerful flurry of razor quills.", cost: 275 }],
   fang: [{ name: "Venom Spit", description: "Fang's poisonous green venom splash.", cost: 0 }, { name: "Acid Glob", description: "A faster, stronger venom glob.", cost: 95 }, { name: "Toxic Torrent", description: "A giant splash of Komodo venom.", cost: 255 }],
   fierce: [{ name: "Shadow Claw", description: "Shadow Fang's flying claw-slash projectile.", cost: 0 }, { name: "Night Rake", description: "A faster, sharper triple slash.", cost: 110 }, { name: "Moon Fang", description: "A huge glowing panther claw wave.", cost: 285 }],
+  snaptrap: [{ name: "Leaf Slash", description: "Snaptrap's sharp spinning leaf throw.", cost: 0 }, { name: "Thorn Disc", description: "A faster thorny leaf attack.", cost: 105 }, { name: "Jungle Cyclone", description: "A giant storm of razor leaves.", cost: 275 }],
   blaze: [{ name: "Fire Breath", description: "Blaze's hot rolling burst of flame.", cost: 0 }, { name: "Flame Ball", description: "A faster fire blast with extra heat.", cost: 100 }, { name: "Dragon Inferno", description: "A giant fire blast from Blaze's jaws.", cost: 260 }],
 };
 
@@ -182,7 +184,7 @@ const starterProfile = {
   arenaWinsStart: 0,
   spacePizzaWinsStart: 0,
   spacePizzaUnlocked: false,
-  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "fang", "fierce", "blaze"],
+  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "blaze"],
   stages: stages.map((stage) => stage.id),
   favoriteFighter: null,
   favoriteStage: null,
@@ -208,7 +210,7 @@ function loadProfile() {
       // Space Pizza Planet starts locked when this new arena is added.
       spacePizzaWinsStart: Number.isFinite(saved.spacePizzaWinsStart) ? Math.max(0, Math.floor(saved.spacePizzaWinsStart)) : savedWins,
       spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
-      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "fang", "fierce", "blaze"])] : [...starterProfile.fighters],
+      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "blaze"])] : [...starterProfile.fighters],
       stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
       favoriteFighter: roster.some((fighter) => fighter.id === saved.favoriteFighter) ? saved.favoriteFighter : null,
       favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
@@ -263,6 +265,7 @@ const cutoutSources = {
   blue: "assets/characters/cutouts/blue-raptor-cutout.png?v=blue-1",
   fang: "assets/characters/cutouts/fang-komodo-cutout.png?v=fang-1",
   fierce: "assets/characters/cutouts/fierce-panther-cutout.png?v=fierce-1",
+  snaptrap: "assets/characters/cutouts/snaptrap-cutout.png?v=snaptrap-1",
   blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-2",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
@@ -953,8 +956,10 @@ function doAttack(who, type) {
           ? { x: who.x + who.facing * 64, y: who.y - 52 }
       : who.id === "fang"
           ? { x: who.x + who.facing * 72, y: who.y - 48 }
-        : who.id === "fierce"
+      : who.id === "fierce"
           ? { x: who.x + who.facing * 68, y: who.y - 48 }
+        : who.id === "snaptrap"
+          ? { x: who.x + who.facing * 66, y: who.y - 64 }
         : who.id === "blaze"
           ? { x: who.x + who.facing * 72, y: who.y - 48 }
         : { x: who.x + who.facing * 40, y: who.y - 35 };
@@ -1154,6 +1159,19 @@ function doAttack(who, type) {
         shadowClaw: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#afbbff", 8);
+    } else if (who.id === "snaptrap") {
+      game.projectiles.push({
+        x: projectileOrigin.x,
+        y: projectileOrigin.y,
+        vx: who.facing * (14 + weaponLevel * 2),
+        owner: who,
+        damage,
+        color: "#7fce4f",
+        life: 68,
+        size: 16 + weaponLevel * 4,
+        leafSlash: true
+      });
+      burst(projectileOrigin.x, projectileOrigin.y, "#b5ef71", 8);
     } else if (who.id === "blaze") {
       game.projectiles.push({
         x: projectileOrigin.x,
@@ -2110,7 +2128,26 @@ function drawStageHazard(hazard) {
 
 function drawProjectile(projectile) {
   ctx.save();
-  if (projectile.shadowClaw) {
+  if (projectile.leafSlash) {
+    const size = projectile.size;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.life * .24 * (Math.sign(projectile.vx) || 1));
+    ctx.shadowColor = "#76c84e";
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = "#66af42";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 1.15, size * .48, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#e9ff9a";
+    ctx.lineWidth = Math.max(2, size * .12);
+    ctx.beginPath();
+    ctx.moveTo(-size, 0); ctx.lineTo(size, 0);
+    ctx.stroke();
+    ctx.fillStyle = "#d8ff8b";
+    ctx.beginPath();
+    ctx.moveTo(size * 1.12, 0); ctx.lineTo(size * .54, -size * .25); ctx.lineTo(size * .54, size * .25); ctx.closePath();
+    ctx.fill();
+  } else if (projectile.shadowClaw) {
     const size = projectile.size;
     const direction = Math.sign(projectile.vx) || 1;
     ctx.translate(projectile.x, projectile.y);
