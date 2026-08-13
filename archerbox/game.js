@@ -29,7 +29,7 @@ const roster = [
   { id: "fierce", name: "Shadow Fang", icon: "🐆", art: "assets/characters/fierce-panther.png?v=fierce-1", color: "#26334a", attack: "Claw Combo", range: "Shadow Claw", special: "Panther Pounce", speed: 6.7, power: 12 },
   { id: "snaptrap", name: "Snaptrap", icon: "🌿", art: "assets/characters/snaptrap.png?v=snaptrap-1", color: "#5b9e43", attack: "Vine Whack", range: "Leaf Slash", special: "Mega Chomp", speed: 4.9, power: 14 },
   { id: "talon", name: "Talon the Eagle", icon: "🦅", art: "assets/characters/talon-eagle.png?v=talon-1", color: "#9c6929", attack: "Wing Swipe", range: "Feather Dart", special: "Sky Dive", speed: 6.2, power: 11 },
-  { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 16 },
+  { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 13, health: 120 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
 ];
 
@@ -855,7 +855,7 @@ function showFighterDetails(fighter) {
   const details = $("fighter-details");
   details.classList.add("active");
   details.style.background = `linear-gradient(125deg, ${fighter.color}, #2a3265)`;
-  details.innerHTML = `<img src="${fighter.art}" alt="${fighter.name}" /><div><h3>${fighter.name}'s Stats</h3><div class="fighter-stats"><span>❤️ Health: 100</span><span>💥 Damage: ${fighter.power}</span><span>⚡ Speed: ${Math.round(fighter.speed * 10)}/100</span><span>👊 Melee: ${fighter.attack}</span><span>🎯 Range: ${getRangeWeapon(fighter)}</span><span>✨ Special: ${fighter.special}</span></div></div>`;
+  details.innerHTML = `<img src="${fighter.art}" alt="${fighter.name}" /><div><h3>${fighter.name}'s Stats</h3><div class="fighter-stats"><span>❤️ Health: ${fighter.health || 100}</span><span>💥 Damage: ${fighter.power}</span><span>⚡ Speed: ${Math.round(fighter.speed * 10)}/100</span><span>👊 Melee: ${fighter.attack}</span><span>🎯 Range: ${getRangeWeapon(fighter)}</span><span>✨ Special: ${fighter.special}</span></div></div>`;
 }
 
 function startLoading() {
@@ -885,7 +885,8 @@ function getArena() {
 }
 
 function makeFighter(data, x, facing, floor) {
-  return { ...data, x, y: floor, vy: 0, facing, health: 100, maxHealth: 100, lives: 3, jumpsLeft: 2, cooldown: 0, invincible: 0, attackTimer: 0, attackSlide: 0, specialTimer: 0, hitFlash: 0, omegaTimer: 0, omegaCooldown: 0, powerUp: null, powerUpTimer: 0, frozenTimer: 0, starTimer: 0, shieldEnergy: 60, shieldExhausted: false, shielding: false, super: 0, aiTimer: 0, action: "idle", walking: false, emoteText: "", emoteTimer: 0, anim: Math.random() * 6.28 };
+  const maxHealth = data.health || 100;
+  return { ...data, x, y: floor, vy: 0, facing, health: maxHealth, maxHealth, lives: 3, jumpsLeft: 2, cooldown: 0, invincible: 0, attackTimer: 0, attackSlide: 0, specialTimer: 0, hitFlash: 0, omegaTimer: 0, omegaCooldown: 0, powerUp: null, powerUpTimer: 0, frozenTimer: 0, starTimer: 0, shieldEnergy: 60, shieldExhausted: false, shielding: false, super: 0, aiTimer: 0, action: "idle", walking: false, emoteText: "", emoteTimer: 0, anim: Math.random() * 6.28 };
 }
 
 function updateBattleStatus() {
