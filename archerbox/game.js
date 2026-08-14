@@ -131,6 +131,10 @@ const stageArenas = {
 
 const seasonalEvents = [
   {
+    id: "new-year", name: "Firework Frenzy", icon: "🎆", month: 0, firstDay: 1, lastDay: 7,
+    kind: "bonus", description: "Every battle win gives double coins and double trophies all week!",
+  },
+  {
     id: "christmas", name: "Frost King Challenge", icon: "❄️", month: 11, firstDay: 20, lastDay: 25,
     boss: frostKing, stageId: "icy", rewardId: "perry", rewardName: "Perry the Present Penguin",
     description: "Defeat the Frost King. He has 300 health, double damage, and icy attacks!",
@@ -146,6 +150,7 @@ function localCalendarDay(date = new Date()) { return `${date.getFullYear()}-${S
 function isSeasonalEventActive(event, date = new Date()) { return date.getMonth() === event.month && date.getDate() >= event.firstDay && date.getDate() <= event.lastDay; }
 function activeSeasonalEvents(date = new Date()) { return seasonalEvents.filter((event) => isSeasonalEventActive(event, date)); }
 function getSeasonalEvent(id) { return seasonalEvents.find((event) => event.id === id); }
+function fireworkFrenzyActive() { return activeSeasonalEvents().some((event) => event.id === "new-year"); }
 
 const difficultyModes = {
   easy: { label: "EASY", moveSpeed: .65, thinking: 1.45, attackChance: .68 },
@@ -413,6 +418,16 @@ function buildSeasonalEvents() {
   events.forEach((event) => {
     const card = document.createElement("article");
     card.className = `seasonal-event-card ${event.id}`;
+    if (event.kind === "bonus") {
+      card.innerHTML = `<div class="seasonal-event-icon">${event.icon}</div><div><p class="eyebrow">JANUARY ${event.firstDay}–${event.lastDay}</p><h3>${event.name}</h3><p>${event.description}</p><p class="seasonal-reward">✨ ACTIVE IN EVERY NORMAL BATTLE</p><small>NO BOSS NEEDED — JUST PLAY!</small></div>`;
+      const button = document.createElement("button");
+      button.className = "big-button";
+      button.textContent = "PLAY FIREWORK FRENZY";
+      button.addEventListener("click", () => { activeSeasonalEvent = null; matchMode = "computer"; showScreen("stages"); });
+      card.append(button);
+      grid.append(card);
+      return;
+    }
     const rewardUnlocked = profile.fighters.includes(event.rewardId);
     const attemptsLeft = seasonalAttemptsLeft(event);
     card.innerHTML = `<div class="seasonal-event-icon">${event.icon}</div><div><p class="eyebrow">${event.firstDay}–${event.lastDay} ${event.id === "christmas" ? "DECEMBER" : "OCTOBER"}</p><h3>${event.name}</h3><p>${event.description}</p><p class="seasonal-reward">REWARD: ${rewardUnlocked ? "✅ " : "🎁 "}${event.rewardName}</p><small>${rewardUnlocked ? "UNLOCKED FOREVER!" : `${attemptsLeft} OF 3 CHANCES LEFT TODAY`}</small></div>`;
@@ -572,9 +587,10 @@ function updateTrophyDisplay() {
 function recordBattleTrophy(playerWon) {
   if (game.mode === "training") return "";
   const hadTrophy = profile.trophies > 0;
-  profile.trophies = Math.max(0, profile.trophies + (playerWon ? 1 : -1));
+  const trophyReward = playerWon ? (fireworkFrenzyActive() ? 2 : 1) : -1;
+  profile.trophies = Math.max(0, profile.trophies + trophyReward);
   updateTrophyDisplay();
-  return playerWon ? "+1 🏆 trophy!" : hadTrophy ? "-1 🏆 trophy." : "No trophies to lose.";
+  return playerWon ? `+${trophyReward} 🏆 ${trophyReward === 1 ? "trophy" : "trophies"}!${trophyReward === 2 ? " FIREWORK FRENZY!" : ""}` : hadTrophy ? "-1 🏆 trophy." : "No trophies to lose.";
 }
 
 function hasAchievement(id) { return profile.achievements.includes(id); }
@@ -1444,7 +1460,8 @@ function rewardWinCoins(winner = game.player, completedSeconds = null) {
   const battleSeconds = completedSeconds === null ? Math.floor((performance.now() - game.startedAt) / 1000) : completedSeconds;
   const speedBonus = Math.max(0, 25 - Math.floor(battleSeconds / 5));
   const bossMultiplier = game.mode === "boss" || game.mode === "seasonal-boss" ? 5 : 1;
-  const reward = (battleCoins + speedBonus) * bossMultiplier;
+  const seasonalCoinMultiplier = fireworkFrenzyActive() ? 2 : 1;
+  const reward = (battleCoins + speedBonus) * bossMultiplier * seasonalCoinMultiplier;
   const winsBefore = arenaChallengeWins();
   const spacePizzaUnlockingNow = !profile.spacePizzaUnlocked && profile.wins - profile.spacePizzaWinsStart === spacePizzaWinsNeeded - 1;
   profile.coins += reward;
@@ -1486,7 +1503,7 @@ function rewardWinCoins(winner = game.player, completedSeconds = null) {
   if (mysteryUnlockingNow || sharkLabUnlockingNow || frozenAquariumUnlockingNow || treehouseUnlockingNow || spacePizzaUnlockingNow) buildStages();
   const arenaUnlockMessage = `${mysteryUnlockingNow ? " Mystery Arena unlocked!" : ""}${sharkLabUnlockingNow ? " Shark Lab unlocked!" : ""}${frozenAquariumUnlockingNow ? " Frozen Aquarium unlocked!" : ""}${treehouseUnlockingNow ? " Giant Treehouse unlocked!" : ""}${spacePizzaUnlockingNow ? " Space Pizza Planet unlocked!" : ""}`;
   const achievementMessage = earnedAchievements.length ? ` Achievement unlocked: ${earnedAchievements.map((id) => achievementCatalog.find((item) => item.id === id).name).join(" + ")}!` : "";
-  return { reward, battleCoins, speedBonus, bossMultiplier, arenaUnlockMessage, achievementMessage, seasonalRewardMessage: seasonalRewardNow ? ` ${seasonalEvent.rewardName} unlocked forever!` : "" };
+  return { reward, battleCoins, speedBonus, bossMultiplier, seasonalCoinMultiplier, arenaUnlockMessage, achievementMessage, seasonalRewardMessage: `${seasonalCoinMultiplier === 2 ? " FIREWORK FRENZY DOUBLE COINS!" : ""}${seasonalRewardNow ? ` ${seasonalEvent.rewardName} unlocked forever!` : ""}` };
 }
 
 function activateOmega(p = game.player) {
