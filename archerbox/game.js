@@ -132,7 +132,11 @@ const stageArenas = {
 const seasonalEvents = [
   {
     id: "new-year", name: "Firework Frenzy", icon: "🎆", month: 0, firstDay: 1, lastDay: 7,
-    kind: "bonus", description: "Every battle win gives double coins and double trophies all week!",
+    kind: "bonus", description: "Every battle win gives double coins and double trophies all week!", rewardLine: "✨ DOUBLE COINS + TROPHIES", buttonLabel: "PLAY FIREWORK FRENZY",
+  },
+  {
+    id: "shark-week", name: "Shark Week", icon: "🦈", month: 6, firstDay: 20, lastDay: 26,
+    kind: "bonus", description: "Bloop and Mecha Meg deal 50% extra damage in every battle!", rewardLine: "🦈 SHARKS DEAL 50% EXTRA DAMAGE", buttonLabel: "PLAY SHARK WEEK",
   },
   {
     id: "christmas", name: "Frost King Challenge", icon: "❄️", month: 11, firstDay: 20, lastDay: 25,
@@ -151,6 +155,7 @@ function isSeasonalEventActive(event, date = new Date()) { return date.getMonth(
 function activeSeasonalEvents(date = new Date()) { return seasonalEvents.filter((event) => isSeasonalEventActive(event, date)); }
 function getSeasonalEvent(id) { return seasonalEvents.find((event) => event.id === id); }
 function fireworkFrenzyActive() { return activeSeasonalEvents().some((event) => event.id === "new-year"); }
+function sharkWeekActive() { return activeSeasonalEvents().some((event) => event.id === "shark-week"); }
 
 const difficultyModes = {
   easy: { label: "EASY", moveSpeed: .65, thinking: 1.45, attackChance: .68 },
@@ -419,10 +424,11 @@ function buildSeasonalEvents() {
     const card = document.createElement("article");
     card.className = `seasonal-event-card ${event.id}`;
     if (event.kind === "bonus") {
-      card.innerHTML = `<div class="seasonal-event-icon">${event.icon}</div><div><p class="eyebrow">JANUARY ${event.firstDay}–${event.lastDay}</p><h3>${event.name}</h3><p>${event.description}</p><p class="seasonal-reward">✨ ACTIVE IN EVERY NORMAL BATTLE</p><small>NO BOSS NEEDED — JUST PLAY!</small></div>`;
+      const monthName = event.month === 0 ? "JANUARY" : "JULY";
+      card.innerHTML = `<div class="seasonal-event-icon">${event.icon}</div><div><p class="eyebrow">${monthName} ${event.firstDay}–${event.lastDay}</p><h3>${event.name}</h3><p>${event.description}</p><p class="seasonal-reward">${event.rewardLine}</p><small>NO BOSS NEEDED — JUST PLAY!</small></div>`;
       const button = document.createElement("button");
       button.className = "big-button";
-      button.textContent = "PLAY FIREWORK FRENZY";
+      button.textContent = event.buttonLabel;
       button.addEventListener("click", () => { activeSeasonalEvent = null; matchMode = "computer"; showScreen("stages"); });
       card.append(button);
       grid.append(card);
@@ -1075,6 +1081,7 @@ function doAttack(who, type) {
   if (type === "range" && who.powerUp === "pistol") damage += 12;
   if (who.omegaTimer > 0) { damage += 7; reach += 70; }
   if (who.boss) damage = Math.round(damage * (who.eventBoss ? 2 : 1.5));
+  if (sharkWeekActive() && (who.id === "bloop" || who.id === "megameg")) damage = Math.round(damage * 1.5);
   if (type === "range") {
     const projectileOrigin = who.id === "shellshock"
       ? { x: who.x + who.facing * 84, y: who.y - 112 }
