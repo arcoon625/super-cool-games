@@ -153,7 +153,7 @@ const achievementCatalog = [
   { id: "high-roller", icon: "🎰", art: "assets/badges/high-roller-badge.png?v=high-roller-1", name: "High Roller", description: "Amass 500 coins." },
   { id: "zoo-keeper", icon: "🦁", art: "assets/badges/zoo-keeper-badge.png?v=zoo-keeper-1", name: "Zoo Keeper", description: "Win with every non-mechanical animal." },
   { id: "heavy-metal", icon: "🤖", art: "assets/badges/heavy-metal-badge.png?v=heavy-metal-1", name: "Heavy Metal", description: "Win with every armored fighter." },
-  { id: "master-strategist", icon: "🧠", name: "Master Strategist", description: "Win after collecting 3 different power-ups in one battle." },
+  { id: "master-strategist", icon: "🧠", art: "assets/badges/master-strategist-badge.png?v=master-strategist-1", name: "Master Strategist", description: "Win after collecting 3 different power-ups in one battle." },
 ];
 
 const unlockCatalog = [
