@@ -149,7 +149,7 @@ const achievementCatalog = [
   { id: "apex-predator", icon: "🐾", art: "assets/badges/apex-predator-badge.png?v=apex-1", name: "Apex Predator", description: "Win 5 battles in a row." },
   { id: "flawless-victory", icon: "✨", art: "assets/badges/flawless-victory-badge.png?v=flawless-1", name: "Flawless Victory", description: "Win without taking any damage." },
   { id: "overkill", icon: "💥", name: "Overkill", description: "Finish a battle with a special attack." },
-  { id: "speed-demon", icon: "🏎️", name: "Speed Demon", description: "Win a battle in less than 10 seconds." },
+  { id: "speed-demon", icon: "🏎️", art: "assets/badges/speed-demon-badge.png?v=speed-demon-1", name: "Speed Demon", description: "Win a battle in less than 10 seconds." },
   { id: "high-roller", icon: "🎰", art: "assets/badges/high-roller-badge.png?v=high-roller-1", name: "High Roller", description: "Amass 500 coins." },
   { id: "zoo-keeper", icon: "🦁", name: "Zoo Keeper", description: "Win with every non-mechanical animal." },
   { id: "heavy-metal", icon: "🤖", name: "Heavy Metal", description: "Win with every armored fighter." },
