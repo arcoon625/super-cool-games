@@ -147,7 +147,7 @@ const achievementCatalog = [
   { id: "five-hundred-trophies", icon: "🏆", art: "assets/badges/five-hundred-trophies-badge.png", name: "Crystal Legend", description: "Earn 500 trophies." },
   { id: "one-thousand-trophies", icon: "🏆", art: "assets/badges/one-thousand-trophies-badge.png", name: "Rainbow Rumble Legend", description: "Earn 1,000 trophies." },
   { id: "apex-predator", icon: "🐾", art: "assets/badges/apex-predator-badge.png?v=apex-1", name: "Apex Predator", description: "Win 5 battles in a row." },
-  { id: "flawless-victory", icon: "✨", name: "Flawless Victory", description: "Win without taking any damage." },
+  { id: "flawless-victory", icon: "✨", art: "assets/badges/flawless-victory-badge.png?v=flawless-1", name: "Flawless Victory", description: "Win without taking any damage." },
   { id: "overkill", icon: "💥", name: "Overkill", description: "Finish a battle with a special attack." },
   { id: "speed-demon", icon: "🏎️", name: "Speed Demon", description: "Win a battle in less than 10 seconds." },
   { id: "high-roller", icon: "🎰", name: "High Roller", description: "Amass 500 coins." },
