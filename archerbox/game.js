@@ -152,7 +152,7 @@ const achievementCatalog = [
   { id: "speed-demon", icon: "🏎️", art: "assets/badges/speed-demon-badge.png?v=speed-demon-1", name: "Speed Demon", description: "Win a battle in less than 10 seconds." },
   { id: "high-roller", icon: "🎰", art: "assets/badges/high-roller-badge.png?v=high-roller-1", name: "High Roller", description: "Amass 500 coins." },
   { id: "zoo-keeper", icon: "🦁", art: "assets/badges/zoo-keeper-badge.png?v=zoo-keeper-1", name: "Zoo Keeper", description: "Win with every non-mechanical animal." },
-  { id: "heavy-metal", icon: "🤖", name: "Heavy Metal", description: "Win with every armored fighter." },
+  { id: "heavy-metal", icon: "🤖", art: "assets/badges/heavy-metal-badge.png?v=heavy-metal-1", name: "Heavy Metal", description: "Win with every armored fighter." },
   { id: "master-strategist", icon: "🧠", name: "Master Strategist", description: "Win after collecting 3 different power-ups in one battle." },
 ];
 
