@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rumble Rivals</title>
-    <link rel="stylesheet" href="styles.css?v=blaze-wide" />
+    <link rel="stylesheet" href="styles.css?v=seasonal-events-1" />
     <style>
       .result-card { position: relative; z-index: 1; }
       .win-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -54,11 +54,24 @@
             <button id="find-friend-button" class="menu-choice-button">FIND A FRIEND</button>
             <button id="enter-code-button" class="menu-choice-button">ENTER CODE</button>
             <button id="favorites-button" class="menu-choice-button">⭐ FAVORITES</button>
+            <button id="seasonal-events-button" class="seasonal-events-button" hidden>❄️ SEASONAL EVENT</button>
           </div>
           <p id="favorite-summary" class="favorite-summary">⭐ Pick your favorite fighter and arena!</p>
           <p id="play-menu-message" class="play-menu-message" aria-live="polite">Play Game lets you choose an arena and fighter.</p>
           <button id="play-menu-back" class="small-button">Back to Cover</button>
         </div>
+      </section>
+
+      <section id="seasonal-events" class="screen seasonal-events-screen">
+        <header class="select-header">
+          <div>
+            <p class="eyebrow">LIMITED-TIME CHALLENGES</p>
+            <h2>Seasonal Events</h2>
+          </div>
+          <button id="seasonal-events-back" class="small-button">Back</button>
+        </header>
+        <p class="select-help">Beat the event boss to unlock its reward fighter forever!</p>
+        <div id="seasonal-event-grid" class="seasonal-event-grid"></div>
       </section>
 
       <section id="favorites" class="screen favorites-screen">
@@ -279,11 +292,11 @@
         </div>
       </section>
     </main>
-    <script src="firebase-config.js?v=online-19"></script>
+    <script src="firebase-config.js?v=online-20"></script>
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
-    <script src="online.js?v=online-19"></script>
-    <script src="game.js?v=online-63"></script>
+    <script src="online.js?v=online-20"></script>
+    <script src="game.js?v=online-64"></script>
   </body>
 </html>

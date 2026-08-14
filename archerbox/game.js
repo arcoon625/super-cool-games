@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-const screens = ["cover", "loading", "play-menu", "favorites", "online-lobby", "settings", "unlocks", "upgrades", "achievements", "stages", "select", "battle", "result"];
+const screens = ["cover", "loading", "play-menu", "seasonal-events", "favorites", "online-lobby", "settings", "unlocks", "upgrades", "achievements", "stages", "select", "battle", "result"];
 const canvas = $("game-canvas");
 const ctx = canvas.getContext("2d");
 const fallbackArena = {
@@ -32,12 +32,16 @@ const roster = [
   { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 13, health: 120, battleScale: 1.3 },
   { id: "cobra", name: "King Cobra", icon: "🐍", art: "assets/characters/king-cobra-realistic.png?v=cobra-2", color: "#6d5a3d", attack: "Cobra Bite", range: "Venom Orb", special: "Royal Strike", speed: 5.7, power: 14, health: 105 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
+  { id: "perry", name: "Perry the Present Penguin", icon: "🐧", art: "assets/characters/perry-penguin.svg", color: "#4d88bc", attack: "Present Bonk", range: "Candy Cane Shot", special: "Snowy Surprise", speed: 5.5, power: 13, seasonal: "christmas" },
+  { id: "boo", name: "Boo the Bat", icon: "🦇", art: "assets/characters/boo-the-bat.svg", color: "#6b4c91", attack: "Wing Swipe", range: "Spooky Spark", special: "Moon Dash", speed: 6.5, power: 12, seasonal: "halloween" },
 ];
 
 const trainingDummy = { id: "training-dummy", name: "Training Dummy", color: "#d47b48", attack: "None", range: "None", special: "None", speed: 0, power: 0, trainingDummy: true };
 const trainingStage = { id: "training-room", name: "Training Room", art: "assets/arenas/training-room.png" };
 const bossEnemy = { id: "boss", name: "MEGA DOOMGEAR", color: "#bd3f4e", attack: "Titan Smash", range: "Plasma Cannon", special: "Meteor Crash", speed: 4.7, power: 10, boss: true };
 const bossStage = { id: "boss-lair", name: "Boss Lair" };
+const frostKing = { id: "frost-king", name: "FROST KING", color: "#7ccfeb", attack: "Glacier Claw", range: "Ice Shard", special: "Blizzard Roar", speed: 4.8, power: 13, boss: true, battleScale: 1.5, eventBoss: "christmas" };
+const pumpkinKing = { id: "pumpkin-king", name: "PUMPKIN KING", color: "#dd7133", attack: "Vine Smash", range: "Pumpkin Spark", special: "Haunted Howl", speed: 5.0, power: 13, boss: true, battleScale: 1.5, eventBoss: "halloween" };
 
 const stages = [
   { id: "icy", name: "Icy Peaks", description: "Frozen platforms under the northern lights", art: "assets/arenas/icy.png" },
@@ -125,6 +129,24 @@ const stageArenas = {
   library:   { floor: 472, platforms: [{ x: 38, y: 304, width: 292 }, { x: 414, y: 183, width: 278 }, { x: 768, y: 304, width: 298 }] },
 };
 
+const seasonalEvents = [
+  {
+    id: "christmas", name: "Frost King Challenge", icon: "❄️", month: 11, firstDay: 20, lastDay: 25,
+    boss: frostKing, stageId: "icy", rewardId: "perry", rewardName: "Perry the Present Penguin",
+    description: "Defeat the Frost King. He has 300 health, double damage, and icy attacks!",
+  },
+  {
+    id: "halloween", name: "Pumpkin King Challenge", icon: "🎃", month: 9, firstDay: 25, lastDay: 31,
+    boss: pumpkinKing, stageId: "shadow", rewardId: "boo", rewardName: "Boo the Bat",
+    description: "Defeat the Pumpkin King to unlock a spooky bat fighter forever!",
+  },
+];
+
+function localCalendarDay(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
+function isSeasonalEventActive(event, date = new Date()) { return date.getMonth() === event.month && date.getDate() >= event.firstDay && date.getDate() <= event.lastDay; }
+function activeSeasonalEvents(date = new Date()) { return seasonalEvents.filter((event) => isSeasonalEventActive(event, date)); }
+function getSeasonalEvent(id) { return seasonalEvents.find((event) => event.id === id); }
+
 const difficultyModes = {
   easy: { label: "EASY", moveSpeed: .65, thinking: 1.45, attackChance: .68 },
   normal: { label: "NORMAL", moveSpeed: 1, thinking: 1, attackChance: .9 },
@@ -191,6 +213,8 @@ const weaponUpgradePaths = {
   tusk: [{ name: "Snowball Toss", description: "Tusk's heavy packed snowball.", cost: 0 }, { name: "Ice Boulder", description: "A bigger frozen ball with extra impact.", cost: 100 }, { name: "Glacier Ball", description: "A giant icy snowball that hits hard.", cost: 270 }],
   cobra: [{ name: "Venom Orb", description: "King Cobra's glowing poison orb.", cost: 0 }, { name: "Royal Venom", description: "A faster venom blast with extra sting.", cost: 110 }, { name: "Crown Toxin", description: "A giant royal poison orb that hits hard.", cost: 285 }],
   blaze: [{ name: "Fire Breath", description: "Blaze's hot rolling burst of flame.", cost: 0 }, { name: "Flame Ball", description: "A faster fire blast with extra heat.", cost: 100 }, { name: "Dragon Inferno", description: "A giant fire blast from Blaze's jaws.", cost: 260 }],
+  perry: [{ name: "Candy Cane Shot", description: "Perry's sweet-and-sharp candy cane projectile.", cost: 0 }],
+  boo: [{ name: "Spooky Spark", description: "Boo's fast glowing night spark.", cost: 0 }],
 };
 
 const starterProfile = {
@@ -209,10 +233,11 @@ const starterProfile = {
   winStreak: 0,
   animalWins: [],
   armorWins: [],
+  seasonalAttempts: {},
 };
 
 function freshProfile() {
-  return { ...starterProfile, fighters: [...starterProfile.fighters], stages: [...starterProfile.stages], upgrades: {}, achievements: [], animalWins: [], armorWins: [] };
+  return { ...starterProfile, fighters: [...starterProfile.fighters], stages: [...starterProfile.stages], upgrades: {}, achievements: [], animalWins: [], armorWins: [], seasonalAttempts: {} };
 }
 
 function loadProfile() {
@@ -238,6 +263,7 @@ function loadProfile() {
       winStreak: Number.isFinite(saved.winStreak) ? Math.max(0, Math.floor(saved.winStreak)) : 0,
       animalWins: Array.isArray(saved.animalWins) ? saved.animalWins.filter((id) => typeof id === "string") : [],
       armorWins: Array.isArray(saved.armorWins) ? saved.armorWins.filter((id) => typeof id === "string") : [],
+      seasonalAttempts: saved.seasonalAttempts && typeof saved.seasonalAttempts === "object" ? saved.seasonalAttempts : {},
     };
   } catch {
     return freshProfile();
@@ -266,6 +292,20 @@ function isUnlocked(type, id) {
     return true;
   }
   return profile[type].includes(id);
+}
+function isSeasonalRewardVisible(fighter) {
+  return !fighter.seasonal || profile.fighters.includes(fighter.id);
+}
+function seasonalAttemptsUsed(event) {
+  const record = profile.seasonalAttempts?.[event.id];
+  return record?.day === localCalendarDay() ? Math.max(0, Math.floor(record.used || 0)) : 0;
+}
+function seasonalAttemptsLeft(event) { return Math.max(0, 3 - seasonalAttemptsUsed(event)); }
+function useSeasonalAttempt(event) {
+  if (seasonalAttemptsLeft(event) <= 0) return false;
+  profile.seasonalAttempts = { ...(profile.seasonalAttempts || {}), [event.id]: { day: localCalendarDay(), used: seasonalAttemptsUsed(event) + 1 } };
+  saveProfile();
+  return true;
 }
 function getUnlock(type, id) { return unlockCatalog.find((item) => item.type === type && item.id === id); }
 
@@ -316,6 +356,7 @@ let hoveredFighter = null;
 let chosenStage = stages[0];
 let matchMode = "computer";
 let playerOneChoice = null;
+let activeSeasonalEvent = null;
 let matchSettings = { difficulty: "normal", timer: 120, volume: .55 };
 let profile = loadProfile();
 let selectedUpgradeFighter = roster[0];
@@ -356,10 +397,41 @@ function leaveOnlineMatch() {
 
 function showScreen(id) {
   screens.forEach((screen) => $(screen).classList.toggle("active", screen === id));
-  if (id === "play-menu") updateFavoriteSummary();
+  if (id === "play-menu") {
+    updateFavoriteSummary();
+    $("seasonal-events-button").hidden = activeSeasonalEvents().length === 0;
+  }
   const menuVisible = id === "stages" || id === "select";
   $("settings-button").classList.toggle("visible", menuVisible);
   $("boss-button").classList.toggle("visible", id === "stages");
+}
+
+function buildSeasonalEvents() {
+  const grid = $("seasonal-event-grid");
+  const events = activeSeasonalEvents();
+  grid.innerHTML = "";
+  events.forEach((event) => {
+    const card = document.createElement("article");
+    card.className = `seasonal-event-card ${event.id}`;
+    const rewardUnlocked = profile.fighters.includes(event.rewardId);
+    const attemptsLeft = seasonalAttemptsLeft(event);
+    card.innerHTML = `<div class="seasonal-event-icon">${event.icon}</div><div><p class="eyebrow">${event.firstDay}–${event.lastDay} ${event.id === "christmas" ? "DECEMBER" : "OCTOBER"}</p><h3>${event.name}</h3><p>${event.description}</p><p class="seasonal-reward">REWARD: ${rewardUnlocked ? "✅ " : "🎁 "}${event.rewardName}</p><small>${rewardUnlocked ? "UNLOCKED FOREVER!" : `${attemptsLeft} OF 3 CHANCES LEFT TODAY`}</small></div>`;
+    const button = document.createElement("button");
+    button.className = "big-button";
+    button.textContent = rewardUnlocked ? "REWARD UNLOCKED" : attemptsLeft ? "FIGHT THE BOSS" : "COME BACK TOMORROW";
+    button.disabled = rewardUnlocked || attemptsLeft <= 0;
+    button.addEventListener("click", () => {
+      activeSeasonalEvent = event;
+      matchMode = "seasonal-boss";
+      playerOneChoice = null;
+      buildRoster();
+      showFighterSelection();
+      showScreen("select");
+    });
+    card.append(button);
+    grid.append(card);
+  });
+  if (!events.length) grid.innerHTML = "<p class=\"unlock-message\">There are no seasonal events today. Check back during Halloween or December 20–25!</p>";
 }
 
 function setOnlineLobbyMessage(message) {
@@ -578,7 +650,7 @@ function getRangeWeapon(fighter) {
 function buildUpgrades() {
   const grid = $("upgrade-fighter-grid");
   grid.innerHTML = "";
-  roster.forEach((fighter) => {
+  roster.filter(isSeasonalRewardVisible).forEach((fighter) => {
     const unlocked = isUnlocked("fighters", fighter.id);
     const level = getWeaponLevel(fighter.id);
     const card = document.createElement("button");
@@ -728,7 +800,7 @@ function startMusic() {
 function buildRoster() {
   const grid = $("character-grid");
   grid.innerHTML = "";
-  roster.forEach((fighter) => {
+  roster.filter(isSeasonalRewardVisible).forEach((fighter) => {
     const card = document.createElement("button");
     const unlocked = isUnlocked("fighters", fighter.id);
     const unlock = getUnlock("fighters", fighter.id);
@@ -764,17 +836,23 @@ function buildRoster() {
 function showFighterSelection() {
   const training = matchMode === "training";
   const boss = matchMode === "boss";
+  const seasonalBoss = matchMode === "seasonal-boss" && activeSeasonalEvent;
   const choosingPlayerTwo = matchMode === "two-player" && playerOneChoice;
   const onlineHost = onlineIsHost();
   const onlineGuest = onlineIsGuest();
-  $("fighter-select-eyebrow").textContent = boss ? "BOSS BATTLE · 5× COINS" : training ? "TRAINING ROOM" : onlineHost ? "FRIEND BATTLE · PLAYER 1" : onlineGuest ? "FRIEND BATTLE · PLAYER 2" : choosingPlayerTwo ? "PLAYER 2: CHOOSE YOUR FIGHTER" : matchMode === "two-player" ? "PLAYER 1: CHOOSE YOUR FIGHTER" : "CHOOSE YOUR FIGHTER";
-  $("fighter-select-heading").textContent = boss ? "Pick a hero to face Mega Doomgear" : training ? "Pick a fighter to train" : onlineHost ? "Choose Player 1" : onlineGuest ? "Choose Player 2" : choosingPlayerTwo ? "Player 2, pick your fighter!" : matchMode === "two-player" ? "Player 1, pick your fighter!" : "Who will you play?";
-  $("fighter-select-help").textContent = boss ? "Mega Doomgear has 200 health, 1.5× damage, and is 3× bigger. Win to earn five times the coins!" : training ? "Practice your moves on a dummy. No coins or wins are used." : onlineHost ? "Pick your fighter. Then your friend picks Player 2 using the room code." : onlineGuest ? "Your friend picked the arena. Pick your fighter to start the online battle!" : choosingPlayerTwo ? "Player 2: click any unlocked fighter. Then the battle starts!" : matchMode === "two-player" ? "Player 1 goes first. Click a fighter, then Player 2 picks one." : "Click a fighter to play. The computer will pick a rival!";
+  $("fighter-select-eyebrow").textContent = seasonalBoss ? `${activeSeasonalEvent.icon} SEASONAL BOSS` : boss ? "BOSS BATTLE · 5× COINS" : training ? "TRAINING ROOM" : onlineHost ? "FRIEND BATTLE · PLAYER 1" : onlineGuest ? "FRIEND BATTLE · PLAYER 2" : choosingPlayerTwo ? "PLAYER 2: CHOOSE YOUR FIGHTER" : matchMode === "two-player" ? "PLAYER 1: CHOOSE YOUR FIGHTER" : "CHOOSE YOUR FIGHTER";
+  $("fighter-select-heading").textContent = seasonalBoss ? `Pick a hero to face the ${activeSeasonalEvent.boss.name}` : boss ? "Pick a hero to face Mega Doomgear" : training ? "Pick a fighter to train" : onlineHost ? "Choose Player 1" : onlineGuest ? "Choose Player 2" : choosingPlayerTwo ? "Player 2, pick your fighter!" : matchMode === "two-player" ? "Player 1, pick your fighter!" : "Who will you play?";
+  $("fighter-select-help").textContent = seasonalBoss ? `${seasonalAttemptsLeft(activeSeasonalEvent)} of 3 chances left today. Beat the boss to unlock ${activeSeasonalEvent.rewardName} forever!` : boss ? "Mega Doomgear has 200 health, 1.5× damage, and is 3× bigger. Win to earn five times the coins!" : training ? "Practice your moves on a dummy. No coins or wins are used." : onlineHost ? "Pick your fighter. Then your friend picks Player 2 using the room code." : onlineGuest ? "Your friend picked the arena. Pick your fighter to start the online battle!" : choosingPlayerTwo ? "Player 2: click any unlocked fighter. Then the battle starts!" : matchMode === "two-player" ? "Player 1 goes first. Click a fighter, then Player 2 picks one." : "Click a fighter to play. The computer will pick a rival!";
 }
 
 function chooseFighter(fighter) {
   if (matchMode === "training") { startBattle(fighter, trainingDummy); return; }
   if (matchMode === "boss") { startBattle(fighter, bossEnemy); return; }
+  if (matchMode === "seasonal-boss" && activeSeasonalEvent) {
+    if (!useSeasonalAttempt(activeSeasonalEvent)) { buildSeasonalEvents(); showScreen("seasonal-events"); return; }
+    startBattle(fighter, activeSeasonalEvent.boss);
+    return;
+  }
   if (onlineIsHost()) {
     onlineMatch.hostConfigured = true;
     window.RumbleOnline.setHostSetup({ stageId: chosenStage.id, settings: { difficulty: matchSettings.difficulty, timer: matchSettings.timer }, hostFighter: fighter.id, hostWeaponLevel: getWeaponLevel(fighter.id) })
@@ -909,7 +987,7 @@ function makeFighter(data, x, facing, floor) {
 }
 
 function updateBattleStatus() {
-  const modeLabel = game.mode === "boss" ? "BOSS BATTLE" : game.mode === "training" ? "TRAINING" : game.mode === "two-player" ? "2 PLAYER" : game.mode === "online-host" || game.mode === "online-guest" ? "ONLINE FRIEND" : difficultyModes[game.settings.difficulty].label;
+  const modeLabel = game.mode === "seasonal-boss" ? "SEASONAL BOSS" : game.mode === "boss" ? "BOSS BATTLE" : game.mode === "training" ? "TRAINING" : game.mode === "two-player" ? "2 PLAYER" : game.mode === "online-host" || game.mode === "online-guest" ? "ONLINE FRIEND" : difficultyModes[game.settings.difficulty].label;
   if (game.timeLeftMs === null) {
     $("round-text").innerHTML = `${modeLabel} · NO TIMER · ${coinIcon} ${profile.coins} · 🏆 ${profile.trophies}`;
     return;
@@ -935,10 +1013,15 @@ function startBattle(selected, opponent = null) {
   cancelAnimationFrame(animationFrame);
   const choices = roster.filter((fighter) => fighter.id !== selected.id && isUnlocked("fighters", fighter.id));
   const enemy = opponent || choices[Math.floor(Math.random() * choices.length)];
-  const stage = matchMode === "training" ? trainingStage : matchMode === "boss" ? bossStage : chosenStage;
+  const stage = matchMode === "training" ? trainingStage : matchMode === "boss" ? bossStage : matchMode === "seasonal-boss" && activeSeasonalEvent ? stages.find((entry) => entry.id === activeSeasonalEvent.stageId) : chosenStage;
   const arena = stageArenas[stage.id] || fallbackArena;
-  game = { mode: matchMode, player: makeFighter(selected, 230, 1, arena.floor), enemy: makeFighter(enemy, 810, -1, arena.floor), stage, settings: { ...matchSettings }, timeLeftMs: matchMode === "training" ? null : matchSettings.timer === null ? null : matchSettings.timer * 1000, projectiles: [], tankCharges: [], hazards: [], hazardDropMs: 9000 + Math.random() * 3500, apples: [], appleDropMs: 10000, goldenAppleDropMs: Math.random() < .15 ? 15000 + Math.random() * 20000 : null, powerUps: [], powerUpDropMs: randomPowerUpDelay(), collectedPowerUps: new Set(), playerTookDamage: false, finalHitWasSpecial: false, sparks: [], ended: false, messageTimer: 0, message: "3", countdownMs: 3000, countdownText: "3", startedAt: null };
+  game = { mode: matchMode, seasonalEventId: activeSeasonalEvent?.id || null, player: makeFighter(selected, 230, 1, arena.floor), enemy: makeFighter(enemy, 810, -1, arena.floor), stage, settings: { ...matchSettings }, timeLeftMs: matchMode === "training" ? null : matchSettings.timer === null ? null : matchSettings.timer * 1000, projectiles: [], tankCharges: [], hazards: [], hazardDropMs: 9000 + Math.random() * 3500, apples: [], appleDropMs: 10000, goldenAppleDropMs: Math.random() < .15 ? 15000 + Math.random() * 20000 : null, powerUps: [], powerUpDropMs: randomPowerUpDelay(), collectedPowerUps: new Set(), playerTookDamage: false, finalHitWasSpecial: false, sparks: [], ended: false, messageTimer: 0, message: "3", countdownMs: 3000, countdownText: "3", startedAt: null };
   if (matchMode === "boss") { game.enemy.maxHealth = 200; game.enemy.health = 200; }
+  if (matchMode === "seasonal-boss") {
+    game.enemy.maxHealth = 300; game.enemy.health = 300;
+    game.player.lives = 1; game.enemy.lives = 1;
+    game.appleDropMs = Infinity; game.goldenAppleDropMs = null; game.powerUpDropMs = Infinity;
+  }
   const onlineRoom = window.RumbleOnline?.getRoom();
   const online = game.mode === "online-host" || game.mode === "online-guest";
   $("player-name").textContent = game.mode === "two-player" ? `P1 · ${selected.name.toUpperCase()}` : online ? `P1 · ${(onlineRoom?.hostName || selected.name).toUpperCase()}` : selected.name.toUpperCase();
@@ -975,7 +1058,7 @@ function doAttack(who, type) {
   if (type === "melee" && who.powerUp === "sword") damage += who.power;
   if (type === "range" && who.powerUp === "pistol") damage += 12;
   if (who.omegaTimer > 0) { damage += 7; reach += 70; }
-  if (who.boss) damage = Math.round(damage * 1.5);
+  if (who.boss) damage = Math.round(damage * (who.eventBoss ? 2 : 1.5));
   if (type === "range") {
     const projectileOrigin = who.id === "shellshock"
       ? { x: who.x + who.facing * 84, y: who.y - 112 }
@@ -1360,7 +1443,7 @@ function rewardWinCoins(winner = game.player, completedSeconds = null) {
   const battleCoins = game.settings.difficulty === "hard" ? 30 : game.settings.difficulty === "easy" ? 10 : 20;
   const battleSeconds = completedSeconds === null ? Math.floor((performance.now() - game.startedAt) / 1000) : completedSeconds;
   const speedBonus = Math.max(0, 25 - Math.floor(battleSeconds / 5));
-  const bossMultiplier = game.mode === "boss" ? 5 : 1;
+  const bossMultiplier = game.mode === "boss" || game.mode === "seasonal-boss" ? 5 : 1;
   const reward = (battleCoins + speedBonus) * bossMultiplier;
   const winsBefore = arenaChallengeWins();
   const spacePizzaUnlockingNow = !profile.spacePizzaUnlocked && profile.wins - profile.spacePizzaWinsStart === spacePizzaWinsNeeded - 1;
@@ -1395,12 +1478,15 @@ function rewardWinCoins(winner = game.player, completedSeconds = null) {
   const frozenAquariumUnlockingNow = winsBefore < frozenAquariumWinsNeeded && winsAfter >= frozenAquariumWinsNeeded;
   const treehouseUnlockingNow = winsBefore < treehouseWinsNeeded && winsAfter >= treehouseWinsNeeded;
   if (spacePizzaUnlockingNow) profile.spacePizzaUnlocked = true;
+  const seasonalEvent = game.mode === "seasonal-boss" ? getSeasonalEvent(game.seasonalEventId) : null;
+  const seasonalRewardNow = Boolean(seasonalEvent && !profile.fighters.includes(seasonalEvent.rewardId));
+  if (seasonalRewardNow) profile.fighters = [...new Set([...profile.fighters, seasonalEvent.rewardId])];
   saveProfile();
   updateCoinDisplays();
   if (mysteryUnlockingNow || sharkLabUnlockingNow || frozenAquariumUnlockingNow || treehouseUnlockingNow || spacePizzaUnlockingNow) buildStages();
   const arenaUnlockMessage = `${mysteryUnlockingNow ? " Mystery Arena unlocked!" : ""}${sharkLabUnlockingNow ? " Shark Lab unlocked!" : ""}${frozenAquariumUnlockingNow ? " Frozen Aquarium unlocked!" : ""}${treehouseUnlockingNow ? " Giant Treehouse unlocked!" : ""}${spacePizzaUnlockingNow ? " Space Pizza Planet unlocked!" : ""}`;
   const achievementMessage = earnedAchievements.length ? ` Achievement unlocked: ${earnedAchievements.map((id) => achievementCatalog.find((item) => item.id === id).name).join(" + ")}!` : "";
-  return { reward, battleCoins, speedBonus, bossMultiplier, arenaUnlockMessage, achievementMessage };
+  return { reward, battleCoins, speedBonus, bossMultiplier, arenaUnlockMessage, achievementMessage, seasonalRewardMessage: seasonalRewardNow ? ` ${seasonalEvent.rewardName} unlocked forever!` : "" };
 }
 
 function activateOmega(p = game.player) {
@@ -2009,12 +2095,20 @@ function drawCharacterArt(context, f) {
     oval(0, -34, 30, 42, "#332b4c"); circle(0, -83, 32, "#22263d"); poly([[-30,-88],[-46,-128],[-7,-112]], "#4f387e"); poly([[8,-112],[46,-128],[30,-88]], "#4f387e"); oval(0,-82,25,22,"#9f9ca8"); circle(-10,-84,7,"#7650d3");circle(11,-84,7,"#7650d3"); line(0,-69,0,-58,6,"#5ce8dc"); line(28,-46,62,-62,18,"#697180"); circle(66,-65,13,"#9ba5af");
   } else if (f.id === "null") {
     oval(0, -34, 27, 42, omega ? "#242a41" : "#323f8c"); circle(0, -82, 31, "#3d4da3"); poly([[-24,-96],[-24,-124],[-2,-106]], "#272f6e"); poly([[2,-106],[24,-124],[24,-96]], "#1f7da0"); oval(-10,-81,16,21,"#444990"); oval(10,-81,16,21,"#2787ae"); line(0,-106,0,-57,4,"#67f4e4"); eye(-10,-84,"#59f6e5"); eye(10,-84,"#a56eff"); poly([[25,-48],[43,-73],[49,-38]], omega ? "#a46dff" : "#4f3ea6"); poly([[-25,-50],[-45,-70],[-48,-37]], omega ? "#8afff1" : "#4f3ea6");
+  } else if (f.id === "frost-king") {
+    oval(0, -36, 34, 44, "#f8feff"); circle(0, -88, 36, "#edfaff"); eye(-12, -91, "#277bb8"); eye(12, -91, "#277bb8"); poly([[-32,-113],[-18,-143],[-4,-117],[0,-151],[12,-117],[30,-142],[34,-112]], "#8bdcf7"); line(-35,-48,-67,-18,13,"#9de9ff"); line(35,-48,67,-18,13,"#9de9ff");
+  } else if (f.id === "pumpkin-king") {
+    oval(0, -37, 34, 43, "#4a7540"); circle(0, -88, 38, "#e57a35"); poly([[-24,-111],[-12,-124],[-4,-109]], "#273d25"); poly([[4,-109],[12,-124],[24,-111]], "#273d25"); eye(-12, -89, "#f9ed63"); eye(12, -89, "#f9ed63"); context.strokeStyle="#503126"; context.lineWidth=6; context.beginPath(); context.arc(0,-82,20,.2,2.94); context.stroke(); line(0,-125,0,-143,9,"#5f8d42");
+  } else if (f.id === "perry") {
+    oval(0, -36, 29, 43, "#253a58"); oval(0, -35, 20, 31, "#fffdf1"); circle(0, -85, 31, "#263957"); eye(-10, -87); eye(10, -87); poly([[-10,-75],[10,-75],[0,-61]], "#f6ae31"); context.fillStyle="#de4a4e"; context.fillRect(-34,-117,68,17); circle(30,-129,15,"#fff7e4"); line(-23,-45,-49,-15,12,"#263957"); context.fillStyle="#dc424b"; context.fillRect(22,-47,34,34); line(39,-47,39,-13,7,"#ffe368");
+  } else if (f.id === "boo") {
+    oval(0, -39, 28, 43, "#493260"); circle(0, -87, 31, "#593b73"); poly([[-28,-100],[-53,-130],[-46,-76]], "#69498a"); poly([[28,-100],[53,-130],[46,-76]], "#69498a"); eye(-10,-88,"#d8d3ff"); eye(10,-88,"#d8d3ff"); poly([[-23,-110],[-16,-140],[-2,-115]], "#69498a"); poly([[2,-115],[16,-140],[23,-110]], "#69498a"); line(-22,-52,-53,-24,11,"#69498a"); line(22,-52,53,-24,11,"#69498a");
   }
   if (omega) { context.strokeStyle="#8afff1"; context.lineWidth=5; context.beginPath(); context.arc(0,-68,59,0,Math.PI*2); context.stroke(); }
 }
 
 function drawBattlePortrait(f) {
-  const cutout = battleCutouts[f.boss ? "doomgear" : f.id];
+  const cutout = battleCutouts[f.id] || (f.id === "boss" ? battleCutouts.doomgear : null);
   if (!cutout || !cutout.complete || !cutout.naturalWidth) return false;
   const maxWidth = 190;
   const maxHeight = 224;
@@ -2720,7 +2814,7 @@ function endBattle(playerWon, timeRanOut = false) {
   const coinsWon = (playerWon || game.mode === "two-player") && game.mode !== "training" ? rewardWinCoins(game.player, completedSeconds) : null;
   if (!coinsWon && game.mode !== "training") saveProfile();
   const rewardText = coinsWon?.bossMultiplier === 5
-    ? `+${coinsWon.reward} ${coinIcon}! 5× BOSS BATTLE REWARD!${coinsWon.arenaUnlockMessage}${coinsWon.achievementMessage}`
+    ? `+${coinsWon.reward} ${coinIcon}! 5× BOSS BATTLE REWARD!${coinsWon.arenaUnlockMessage}${coinsWon.achievementMessage}${coinsWon.seasonalRewardMessage || ""}`
     : coinsWon ? `+${coinsWon.reward} ${coinIcon}! ${coinsWon.battleCoins} for winning + ${coinsWon.speedBonus} speed bonus.${coinsWon.arenaUnlockMessage}${coinsWon.achievementMessage}` : "";
   cancelAnimationFrame(animationFrame);
   flashMessage(timeRanOut ? "TIME'S UP!" : playerWon ? "YOU WIN!" : "OH NO!", 60);
@@ -2743,8 +2837,8 @@ function endBattle(playerWon, timeRanOut = false) {
       $("coin-reward").innerHTML = rewardText;
       $("trophy-reward").textContent = trophyMessage;
     } else {
-      $("result-kicker").textContent = game.mode === "boss" ? playerWon ? "BOSS DEFEATED!" : "THE BOSS WAS TOO STRONG!" : timeRanOut ? "TIME'S UP!" : playerWon ? "THE ARENA CHEERS!" : "KEEP PRACTICING!";
-      $("result-title").textContent = game.mode === "boss" ? playerWon ? "BOSS BEATEN!" : "TRY AGAIN!" : playerWon ? "YOU WIN!" : timeRanOut ? "TIME'S UP!" : "TRY AGAIN!";
+      $("result-kicker").textContent = game.mode === "boss" || game.mode === "seasonal-boss" ? playerWon ? "BOSS DEFEATED!" : "THE BOSS WAS TOO STRONG!" : timeRanOut ? "TIME'S UP!" : playerWon ? "THE ARENA CHEERS!" : "KEEP PRACTICING!";
+      $("result-title").textContent = game.mode === "boss" || game.mode === "seasonal-boss" ? playerWon ? "BOSS BEATEN!" : "TRY AGAIN!" : playerWon ? "YOU WIN!" : timeRanOut ? "TIME'S UP!" : "TRY AGAIN!";
       $("result-copy").textContent = timeRanOut ? `${playerWon ? game.player.name : game.enemy.name} had more health when time ran out!` : playerWon ? `${game.player.name} is the Rumble Rivals champion!` : `${game.enemy.name} won this round. You can get them next time!`;
       $("coin-reward").innerHTML = playerWon ? rewardText : `You have ${profile.coins} ${coinIcon}. Win the next battle to earn more!`;
       $("trophy-reward").textContent = trophyMessage;
@@ -2881,11 +2975,13 @@ window.RumbleOnline?.subscribe((event) => {
 });
 
 $("start-button").addEventListener("click", startLoading);
-$("solo-play-button").addEventListener("click", () => { matchMode = "computer"; playerOneChoice = null; showScreen("stages"); });
-$("two-player-button").addEventListener("click", () => { matchMode = "two-player"; playerOneChoice = null; showScreen("stages"); });
+$("solo-play-button").addEventListener("click", () => { activeSeasonalEvent = null; matchMode = "computer"; playerOneChoice = null; showScreen("stages"); });
+$("two-player-button").addEventListener("click", () => { activeSeasonalEvent = null; matchMode = "two-player"; playerOneChoice = null; showScreen("stages"); });
 $("find-friend-button").addEventListener("click", () => showOnlineLobby("host"));
 $("enter-code-button").addEventListener("click", () => showOnlineLobby("join"));
 $("favorites-button").addEventListener("click", () => { buildFavorites(); showScreen("favorites"); });
+$("seasonal-events-button").addEventListener("click", () => { buildSeasonalEvents(); showScreen("seasonal-events"); });
+$("seasonal-events-back").addEventListener("click", () => showScreen("play-menu"));
 $("favorites-back").addEventListener("click", () => showScreen("play-menu"));
 $("online-create-button").addEventListener("click", () => {
   if (onlineIsHost() && !onlineMatch.hostConfigured) { showScreen("stages"); return; }
@@ -2904,8 +3000,8 @@ $("online-lobby-back").addEventListener("click", () => {
   showScreen("play-menu");
 });
 $("play-menu-back").addEventListener("click", returnToCover);
-$("training-button").addEventListener("click", () => { matchMode = "training"; playerOneChoice = null; buildRoster(); showFighterSelection(); showScreen("select"); });
-$("boss-button").addEventListener("click", () => { matchMode = "boss"; playerOneChoice = null; buildRoster(); showFighterSelection(); showScreen("select"); });
+$("training-button").addEventListener("click", () => { activeSeasonalEvent = null; matchMode = "training"; playerOneChoice = null; buildRoster(); showFighterSelection(); showScreen("select"); });
+$("boss-button").addEventListener("click", () => { activeSeasonalEvent = null; matchMode = "boss"; playerOneChoice = null; buildRoster(); showFighterSelection(); showScreen("select"); });
 document.querySelectorAll(".setting-choice").forEach((button) => button.addEventListener("click", () => chooseSetting(button.dataset.setting, button.dataset.value)));
 $("settings-button").addEventListener("click", () => {
   settingsReturnScreen = $("select").classList.contains("active") ? "select" : "stages";
@@ -2920,9 +3016,18 @@ $("unlocks-back").addEventListener("click", () => showScreen("settings"));
 $("upgrades-back").addEventListener("click", () => showScreen("settings"));
 $("achievements-back").addEventListener("click", () => showScreen("settings"));
 $("stage-back").addEventListener("click", () => isOnlineMatch() ? showOnlineWaiting() : showScreen("play-menu"));
-$("back-to-cover").addEventListener("click", () => { playerOneChoice = null; isOnlineMatch() ? showOnlineWaiting() : showScreen("stages"); });
+$("back-to-cover").addEventListener("click", () => { playerOneChoice = null; isOnlineMatch() ? showOnlineWaiting() : matchMode === "seasonal-boss" ? (buildSeasonalEvents(), showScreen("seasonal-events")) : showScreen("stages"); });
 $("quit-battle").addEventListener("click", returnToCover);
-$("rematch-button").addEventListener("click", () => isOnlineMatch() ? returnToCover() : startBattle(game.player, game.mode === "two-player" ? game.enemy : null));
+$("rematch-button").addEventListener("click", () => {
+  if (isOnlineMatch()) { returnToCover(); return; }
+  if (game.mode === "seasonal-boss") {
+    const event = getSeasonalEvent(game.seasonalEventId);
+    if (event && useSeasonalAttempt(event)) { activeSeasonalEvent = event; startBattle(game.player, event.boss); }
+    else { buildSeasonalEvents(); showScreen("seasonal-events"); }
+    return;
+  }
+  startBattle(game.player, game.mode === "two-player" ? game.enemy : null);
+});
 $("select-button").addEventListener("click", returnToCover);
 $("emote-toggle").addEventListener("click", () => {
   const options = $("emote-options");
