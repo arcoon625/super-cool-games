@@ -132,7 +132,7 @@ const stageArenas = {
 
 const seasonalEvents = [
   {
-    id: "birthday", name: "Archer's Birthday Bash", icon: "🎂", month: 5, firstDay: 25, lastDay: 25,
+    id: "birthday", name: "Birthday Bash", icon: "🎂", month: 5, firstDay: 25, lastDay: 25,
     kind: "bonus", description: "Birthday cakes replace apples and fully heal you. Every win earns triple coins!", rewardLine: "🎂 FULL-HEAL CAKES + 3× COINS", buttonLabel: "PLAY BIRTHDAY BASH",
   },
   {
