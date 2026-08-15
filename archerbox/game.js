@@ -132,6 +132,10 @@ const stageArenas = {
 
 const seasonalEvents = [
   {
+    id: "birthday", name: "Archer's Birthday Bash", icon: "🎂", month: 5, firstDay: 25, lastDay: 25,
+    kind: "bonus", description: "Birthday cakes replace apples and fully heal you. Every win earns triple coins!", rewardLine: "🎂 FULL-HEAL CAKES + 3× COINS", buttonLabel: "PLAY BIRTHDAY BASH",
+  },
+  {
     id: "new-year", name: "Firework Frenzy", icon: "🎆", month: 0, firstDay: 1, lastDay: 7,
     kind: "bonus", description: "Every battle win gives double coins and double trophies all week!", rewardLine: "✨ DOUBLE COINS + TROPHIES", buttonLabel: "PLAY FIREWORK FRENZY",
   },
@@ -162,6 +166,7 @@ function getSeasonalEvent(id) { return seasonalEvents.find((event) => event.id =
 function fireworkFrenzyActive() { return activeSeasonalEvents().some((event) => event.id === "new-year"); }
 function sharkWeekActive() { return activeSeasonalEvents().some((event) => event.id === "shark-week"); }
 function thanksgivingActive() { return activeSeasonalEvents().some((event) => event.id === "thanksgiving"); }
+function birthdayActive() { return activeSeasonalEvents().some((event) => event.id === "birthday"); }
 function seasonalMonthName(event) { return ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"][event.month]; }
 
 const difficultyModes = {
@@ -1477,7 +1482,7 @@ function rewardWinCoins(winner = game.player, completedSeconds = null) {
   const speedBonus = Math.max(0, 25 - Math.floor(battleSeconds / 5));
   const seasonalEvent = game.mode === "seasonal-boss" ? getSeasonalEvent(game.seasonalEventId) : null;
   const bossMultiplier = seasonalEvent?.coinMultiplier || (game.mode === "boss" || game.mode === "seasonal-boss" ? 5 : 1);
-  const seasonalCoinMultiplier = fireworkFrenzyActive() ? 2 : 1;
+  const seasonalCoinMultiplier = birthdayActive() ? 3 : fireworkFrenzyActive() ? 2 : 1;
   const reward = (battleCoins + speedBonus) * bossMultiplier * seasonalCoinMultiplier;
   const winsBefore = arenaChallengeWins();
   const spacePizzaUnlockingNow = !profile.spacePizzaUnlocked && profile.wins - profile.spacePizzaWinsStart === spacePizzaWinsNeeded - 1;
@@ -1519,7 +1524,7 @@ function rewardWinCoins(winner = game.player, completedSeconds = null) {
   if (mysteryUnlockingNow || sharkLabUnlockingNow || frozenAquariumUnlockingNow || treehouseUnlockingNow || spacePizzaUnlockingNow) buildStages();
   const arenaUnlockMessage = `${mysteryUnlockingNow ? " Mystery Arena unlocked!" : ""}${sharkLabUnlockingNow ? " Shark Lab unlocked!" : ""}${frozenAquariumUnlockingNow ? " Frozen Aquarium unlocked!" : ""}${treehouseUnlockingNow ? " Giant Treehouse unlocked!" : ""}${spacePizzaUnlockingNow ? " Space Pizza Planet unlocked!" : ""}`;
   const achievementMessage = earnedAchievements.length ? ` Achievement unlocked: ${earnedAchievements.map((id) => achievementCatalog.find((item) => item.id === id).name).join(" + ")}!` : "";
-  return { reward, battleCoins, speedBonus, bossMultiplier, seasonalCoinMultiplier, arenaUnlockMessage, achievementMessage, seasonalRewardMessage: `${seasonalCoinMultiplier === 2 ? " FIREWORK FRENZY DOUBLE COINS!" : ""}${seasonalRewardNow ? ` ${seasonalEvent.rewardName} unlocked forever!` : ""}${seasonalEvent?.id === "thanksgiving" ? " TURKEY BOSS BONUS!" : ""}` };
+  return { reward, battleCoins, speedBonus, bossMultiplier, seasonalCoinMultiplier, arenaUnlockMessage, achievementMessage, seasonalRewardMessage: `${seasonalCoinMultiplier === 2 ? " FIREWORK FRENZY DOUBLE COINS!" : ""}${seasonalCoinMultiplier === 3 ? " BIRTHDAY BASH TRIPLE COINS!" : ""}${seasonalRewardNow ? ` ${seasonalEvent.rewardName} unlocked forever!` : ""}${seasonalEvent?.id === "thanksgiving" ? " TURKEY BOSS BONUS!" : ""}` };
 }
 
 function activateOmega(p = game.player) {
@@ -1793,8 +1798,9 @@ function updateProjectiles() {
 
 function spawnApple(golden = false) {
   const turkey = !golden && thanksgivingActive();
-  game.apples.push({ x: 55 + Math.random() * (canvas.width - 110), y: -28, vy: 0, life: golden ? 180 : 300, landed: false, golden, turkey });
-  flashMessage(golden ? "GOLDEN APPLE DROP!" : turkey ? "FULL-HEAL TURKEY DROP!" : "APPLE DROP!", 42);
+  const cake = !golden && birthdayActive();
+  game.apples.push({ x: 55 + Math.random() * (canvas.width - 110), y: -28, vy: 0, life: golden ? 180 : 300, landed: false, golden, turkey, cake });
+  flashMessage(golden ? "GOLDEN APPLE DROP!" : turkey ? "FULL-HEAL TURKEY DROP!" : cake ? "BIRTHDAY CAKE DROP!" : "APPLE DROP!", 42);
 }
 
 function updateApples(dt) {
@@ -1803,7 +1809,7 @@ function updateApples(dt) {
     spawnApple();
     game.appleDropMs += 10000;
   }
-  if (thanksgivingActive()) game.goldenAppleDropMs = null;
+  if (thanksgivingActive() || birthdayActive()) game.goldenAppleDropMs = null;
   if (game.goldenAppleDropMs !== null) {
     game.goldenAppleDropMs -= dt;
     if (game.goldenAppleDropMs <= 0) { spawnApple(true); game.goldenAppleDropMs = null; }
@@ -1825,14 +1831,15 @@ function updateApples(dt) {
     }
     apple.life--;
     [game.player, game.enemy].forEach((fighter) => {
+      const specialHealingDrop = apple.turkey || apple.cake;
       const turkeyCanHealFighter = game.mode === "two-player" || game.mode === "online-host" || game.mode === "online-guest" || fighter === game.player;
-      if (apple.collected || (apple.turkey && !turkeyCanHealFighter) || Math.abs(fighter.x - apple.x) > 42 || Math.abs((fighter.y - 38) - apple.y) > 52) return;
+      if (apple.collected || (specialHealingDrop && !turkeyCanHealFighter) || Math.abs(fighter.x - apple.x) > 42 || Math.abs((fighter.y - 38) - apple.y) > 52) return;
       apple.collected = true;
-      fighter.health = apple.golden || apple.turkey ? fighter.maxHealth : Math.min(fighter.maxHealth, fighter.health + 25);
+      fighter.health = apple.golden || specialHealingDrop ? fighter.maxHealth : Math.min(fighter.maxHealth, fighter.health + 25);
       updateHealth();
       playPowerUpSound(apple.golden ? "golden-apple" : "apple");
-      burst(apple.x, apple.y, apple.golden ? "#ffe34d" : apple.turkey ? "#bd6c30" : "#ff4d4d", apple.golden || apple.turkey ? 25 : 13);
-      flashMessage(apple.golden ? "GOLDEN APPLE! FULL HEALTH!" : apple.turkey ? "TURKEY FEAST! FULL HEALTH!" : "APPLE! +25 HEALTH", 55);
+      burst(apple.x, apple.y, apple.golden ? "#ffe34d" : apple.turkey ? "#bd6c30" : apple.cake ? "#ff83bd" : "#ff4d4d", apple.golden || specialHealingDrop ? 25 : 13);
+      flashMessage(apple.golden ? "GOLDEN APPLE! FULL HEALTH!" : apple.turkey ? "TURKEY FEAST! FULL HEALTH!" : apple.cake ? "BIRTHDAY CAKE! FULL HEALTH!" : "APPLE! +25 HEALTH", 55);
     });
   });
   game.apples = game.apples.filter((apple) => !apple.collected && apple.life > 0);
@@ -1841,6 +1848,22 @@ function updateApples(dt) {
 function drawApple(apple) {
   ctx.save();
   ctx.translate(apple.x, apple.y);
+  if (apple.cake) {
+    ctx.shadowColor = "#ffb1d5";
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = "#f6d097";
+    ctx.fillRect(-20, -2, 40, 21);
+    ctx.fillStyle = "#f58cc0";
+    ctx.beginPath(); ctx.roundRect(-22, -8, 44, 14, 7); ctx.fill();
+    ctx.fillStyle = "#fff3d1";
+    ctx.fillRect(-3, -30, 6, 21);
+    ctx.fillStyle = "#ffcc32";
+    ctx.beginPath(); ctx.moveTo(0, -42); ctx.quadraticCurveTo(-7, -32, 0, -28); ctx.quadraticCurveTo(7, -32, 0, -42); ctx.fill();
+    ctx.fillStyle = "#fff";
+    [-11, 11].forEach((x) => { ctx.beginPath(); ctx.arc(x, 8, 3, 0, Math.PI * 2); ctx.fill(); });
+    ctx.restore();
+    return;
+  }
   if (apple.turkey) {
     ctx.shadowColor = "#ffbb5d";
     ctx.shadowBlur = 14;
