@@ -32,6 +32,11 @@ const roster = [
   { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 13, health: 120, battleScale: 1.3 },
   { id: "cobra", name: "King Cobra", icon: "🐍", art: "assets/characters/king-cobra-realistic.png?v=cobra-2", color: "#6d5a3d", attack: "Cobra Bite", range: "Venom Orb", special: "Royal Strike", speed: 5.7, power: 14, health: 105 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
+  { id: "axel", name: "Axel the Axolotl", icon: "🦎", art: "assets/characters/axel-axolotl.svg", color: "#e978a7", attack: "Fin Flick", range: "Water Orb", special: "Bubble Whirl", speed: 5.8, power: 10 },
+  { id: "hank", name: "Hank the Hippo", icon: "🦛", art: "assets/characters/hank-hippo.svg", color: "#7385a4", attack: "Hippo Headbutt", range: "Mud Ball", special: "River Rush", speed: 4.1, power: 15, health: 115, battleScale: 1.12 },
+  { id: "buzz", name: "Buzz the Bee", icon: "🐝", art: "assets/characters/buzz-bee.svg", color: "#f2b931", attack: "Stinger Jab", range: "Honey Bolt", special: "Swarm Blitz", speed: 6.8, power: 9 },
+  { id: "frost", name: "Frost the Polar Bear", icon: "🐻‍❄️", art: "assets/characters/frost-polar-bear.svg", color: "#8dc7df", attack: "Polar Paw", range: "Snowball Toss", special: "Arctic Slam", speed: 4.8, power: 14, health: 110 },
+  { id: "bamboo", name: "Bamboo the Panda", icon: "🐼", art: "assets/characters/bamboo-panda.svg", color: "#6b7182", attack: "Bamboo Bonk", range: "Bamboo Shoot", special: "Panda Roll", speed: 5.3, power: 12 },
   { id: "perry", name: "Perry the Present Penguin", icon: "🐧", art: "assets/characters/perry-penguin.svg", color: "#4d88bc", attack: "Present Bonk", range: "Candy Cane Shot", special: "Snowy Surprise", speed: 5.5, power: 13, seasonal: "christmas" },
   { id: "boo", name: "Boo the Bat", icon: "🦇", art: "assets/characters/boo-the-bat.svg", color: "#6b4c91", attack: "Wing Swipe", range: "Spooky Spark", special: "Moon Dash", speed: 6.5, power: 12, seasonal: "halloween" },
 ];
@@ -176,7 +181,7 @@ const difficultyModes = {
 };
 const coinIcon = '<span class="coin" aria-label="coin">$</span>';
 const emotePhrases = ["GOOD LUCK!", "GOOD GAME!", "MY BAD!", "NICE MOVE!", "OOPS!", "WOW!", "REMATCH?", "YOU GOT THIS!"];
-const nonMechanicalAnimalIds = ["pip", "bloop", "bolt", "kingcaw", "rexy", "blue", "fang", "fierce", "talon", "tusk", "cobra", "blaze"];
+const nonMechanicalAnimalIds = ["pip", "bloop", "bolt", "kingcaw", "rexy", "blue", "fang", "fierce", "talon", "tusk", "cobra", "blaze", "axel", "hank", "buzz", "frost", "bamboo"];
 const armoredFighterIds = ["shellshock", "ironbolt", "doomgear", "null", "megameg"];
 const achievementCatalog = [
   { id: "first-win", icon: "🥇", art: "assets/badges/first-rumble-badge.png", name: "First Rumble", description: "Win your first battle." },
@@ -235,6 +240,11 @@ const weaponUpgradePaths = {
   tusk: [{ name: "Snowball Toss", description: "Tusk's heavy packed snowball.", cost: 0 }, { name: "Ice Boulder", description: "A bigger frozen ball with extra impact.", cost: 100 }, { name: "Glacier Ball", description: "A giant icy snowball that hits hard.", cost: 270 }],
   cobra: [{ name: "Venom Orb", description: "King Cobra's glowing poison orb.", cost: 0 }, { name: "Royal Venom", description: "A faster venom blast with extra sting.", cost: 110 }, { name: "Crown Toxin", description: "A giant royal poison orb that hits hard.", cost: 285 }],
   blaze: [{ name: "Fire Breath", description: "Blaze's hot rolling burst of flame.", cost: 0 }, { name: "Flame Ball", description: "A faster fire blast with extra heat.", cost: 100 }, { name: "Dragon Inferno", description: "A giant fire blast from Blaze's jaws.", cost: 260 }],
+  axel: [{ name: "Water Orb", description: "Axel's bouncy aqua bubble.", cost: 0 }, { name: "Wave Orb", description: "A quicker water shot with more splash.", cost: 85 }, { name: "Tidal Bubble", description: "A giant powerful bubble blast.", cost: 220 }],
+  hank: [{ name: "Mud Ball", description: "Hank's heavy packed mud ball.", cost: 0 }, { name: "River Boulder", description: "A larger muddy boulder with more power.", cost: 105 }, { name: "Flood Rock", description: "A giant crashing mud-rock blast.", cost: 275 }],
+  buzz: [{ name: "Honey Bolt", description: "Buzz's quick golden stinger shot.", cost: 0 }, { name: "Triple Stinger", description: "A faster buzzing stinger attack.", cost: 95 }, { name: "Honey Storm", description: "A huge glowing honey-powered bolt.", cost: 250 }],
+  frost: [{ name: "Snowball Toss", description: "Frost's packed snowball projectile.", cost: 0 }, { name: "Ice Ball", description: "A bigger, colder snowball with more impact.", cost: 105 }, { name: "Polar Blizzard", description: "A giant frozen ball that hits hard.", cost: 275 }],
+  bamboo: [{ name: "Bamboo Shoot", description: "Bamboo's sharp spinning bamboo shot.", cost: 0 }, { name: "Bamboo Boomerang", description: "A faster, heavier bamboo blast.", cost: 90 }, { name: "Forest Fury", description: "A huge bamboo-powered projectile.", cost: 240 }],
   perry: [{ name: "Candy Cane Shot", description: "Perry's sweet-and-sharp candy cane projectile.", cost: 0 }],
   boo: [{ name: "Spooky Spark", description: "Boo's fast glowing night spark.", cost: 0 }],
 };
@@ -246,7 +256,7 @@ const starterProfile = {
   arenaWinsStart: 0,
   spacePizzaWinsStart: 0,
   spacePizzaUnlocked: false,
-  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "talon", "tusk", "cobra", "blaze"],
+  fighters: ["shellshock", "pip", "professor", "bloop", "ironbolt", "bolt", "goblin", "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "talon", "tusk", "cobra", "blaze", "axel", "hank", "buzz", "frost", "bamboo"],
   stages: stages.map((stage) => stage.id),
   favoriteFighter: null,
   favoriteStage: null,
@@ -276,7 +286,7 @@ function loadProfile() {
       // Space Pizza Planet starts locked when this new arena is added.
       spacePizzaWinsStart: Number.isFinite(saved.spacePizzaWinsStart) ? Math.max(0, Math.floor(saved.spacePizzaWinsStart)) : savedWins,
       spacePizzaUnlocked: saved.spacePizzaUnlocked === true,
-      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "talon", "tusk", "cobra", "blaze"])] : [...starterProfile.fighters],
+      fighters: Array.isArray(saved.fighters) ? [...new Set([...saved.fighters, "kingcaw", "rexy", "blue", "fang", "fierce", "snaptrap", "talon", "tusk", "cobra", "blaze", "axel", "hank", "buzz", "frost", "bamboo"])] : [...starterProfile.fighters],
       stages: Array.isArray(saved.stages) ? saved.stages : [...starterProfile.stages],
       favoriteFighter: roster.some((fighter) => fighter.id === saved.favoriteFighter) ? saved.favoriteFighter : null,
       favoriteStage: stages.some((stage) => stage.id === saved.favoriteStage) ? saved.favoriteStage : null,
@@ -1115,8 +1125,18 @@ function doAttack(who, type) {
           ? { x: who.x + who.facing * 82, y: who.y - 60 }
         : who.id === "cobra"
           ? { x: who.x + who.facing * 58, y: who.y - 88 }
-        : who.id === "blaze"
+      : who.id === "blaze"
           ? { x: who.x + who.facing * 72, y: who.y - 48 }
+        : who.id === "axel"
+          ? { x: who.x + who.facing * 62, y: who.y - 64 }
+        : who.id === "hank"
+          ? { x: who.x + who.facing * 80, y: who.y - 62 }
+        : who.id === "buzz"
+          ? { x: who.x + who.facing * 48, y: who.y - 78 }
+        : who.id === "frost"
+          ? { x: who.x + who.facing * 70, y: who.y - 68 }
+        : who.id === "bamboo"
+          ? { x: who.x + who.facing * 68, y: who.y - 65 }
         : { x: who.x + who.facing * 40, y: who.y - 35 };
     const verticalAim = (speed) => {
       if (who.id !== "shellshock") return 0;
@@ -1379,6 +1399,21 @@ function doAttack(who, type) {
         fireBreath: true
       });
       burst(projectileOrigin.x, projectileOrigin.y, "#ff9b37", 4);
+    } else if (who.id === "axel") {
+      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * (13 + weaponLevel * 2), owner: who, damage, color: "#7de4ef", life: 72, size: 16 + weaponLevel * 4, bubble: true });
+      burst(projectileOrigin.x, projectileOrigin.y, "#b4faff", 8);
+    } else if (who.id === "hank") {
+      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * (10 + weaponLevel * 2), owner: who, damage: damage + 4 + weaponLevel * 3, color: "#73553d", life: 78, size: 18 + weaponLevel * 5, fossilBoulder: true });
+      burst(projectileOrigin.x, projectileOrigin.y, "#b5885f", 10);
+    } else if (who.id === "buzz") {
+      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * (19 + weaponLevel * 2), owner: who, damage, color: "#ffd64a", life: 62, size: 13 + weaponLevel * 4, beeStinger: true });
+      burst(projectileOrigin.x, projectileOrigin.y, "#fff29a", 8);
+    } else if (who.id === "frost") {
+      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * (12 + weaponLevel * 2), owner: who, damage: damage + 2 + weaponLevel * 3, color: "#e4f7ff", life: 74, size: 18 + weaponLevel * 5, snowball: true });
+      burst(projectileOrigin.x, projectileOrigin.y, "#d7f2ff", 10);
+    } else if (who.id === "bamboo") {
+      game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * (15 + weaponLevel * 2), owner: who, damage, color: "#76b84c", life: 68, size: 15 + weaponLevel * 4, bambooShoot: true });
+      burst(projectileOrigin.x, projectileOrigin.y, "#c2ed8e", 8);
     } else if (who.id === "shellshock") {
       if (weaponLevel === 0) {
         game.projectiles.push({ x: projectileOrigin.x, y: projectileOrigin.y, vx: who.facing * 15, vy: verticalAim(15), owner: who, damage, color: "#fff3a8", life: 58, size: 5, gunBullet: true, bulletColor: "#fff3a8", bulletLength: 1.15 });
@@ -2184,6 +2219,16 @@ function drawCharacterArt(context, f) {
     [[-28,"#b64733"],[-10,"#ec9a39"],[10,"#f2cf58"],[28,"#9a5437"]].forEach(([x, color]) => { oval(x, -73, 16, 45, color); });
     oval(0, -38, 34, 43, "#875036"); circle(0, -91, 33, "#a9633e"); eye(-11, -94, "#251a24"); eye(11, -94, "#251a24");
     poly([[19,-91],[48,-82],[19,-73]], "#f2bd39"); circle(-7, -121, 7, "#d84c40"); circle(0, -132, 7, "#d84c40"); line(-1,-77,-1,-62,7,"#d6423e"); line(-26,-48,-58,-18,13,"#9a593a"); line(26,-48,58,-18,13,"#9a593a");
+  } else if (f.id === "axel") {
+    oval(0, -42, 29, 39, "#ec83ad"); circle(0, -87, 32, "#ff9fc5"); [-1, 1].forEach((side) => { poly([[side * 22,-100],[side * 52,-120],[side * 39,-77]], "#ed78ac"); }); eye(-10,-88); eye(10,-88); oval(0,-70,18,10,"#ffe8f0"); line(-24,-48,-51,-24,9,"#e87ca7"); line(24,-48,51,-24,9,"#e87ca7");
+  } else if (f.id === "hank") {
+    oval(0, -36, 39, 45, "#667894"); circle(0, -84, 38, "#7589a6"); circle(-17,-94,12,"#a9bdd0"); circle(17,-94,12,"#a9bdd0"); oval(0,-73,24,15,"#b6c7d5"); circle(-8,-73,4,"#4a5b72"); circle(8,-73,4,"#4a5b72"); eye(-13,-91); eye(13,-91); line(-32,-46,-61,-18,14,"#667894"); line(32,-46,61,-18,14,"#667894");
+  } else if (f.id === "buzz") {
+    oval(0, -44, 24, 37, "#f4c52e"); circle(0, -86, 24, "#2e303b"); eye(-8,-87); eye(8,-87); [-1,1].forEach((side) => { oval(side * 27,-61,22,12,"#eafaff"); }); context.fillStyle="#30313d"; context.fillRect(-18,-54,36,7); context.fillRect(-18,-39,36,7); line(0,-110,-9,-123,3,"#30313d"); line(0,-110,9,-123,3,"#30313d");
+  } else if (f.id === "frost") {
+    oval(0, -37, 33, 43, "#eaf8ff"); circle(0, -86, 34, "#f7fdff"); circle(-22,-111,12,"#d9eef7"); circle(22,-111,12,"#d9eef7"); oval(0,-72,20,14,"#d3e9f3"); eye(-11,-88,"#3978a0"); eye(11,-88,"#3978a0"); line(-28,-48,-57,-18,13,"#ecfaff"); line(28,-48,57,-18,13,"#ecfaff");
+  } else if (f.id === "bamboo") {
+    oval(0, -37, 31, 43, "#f3f4f0"); circle(0, -86, 34, "#f5f6f2"); oval(-24,-108,13,18,"#27313d"); oval(24,-108,13,18,"#27313d"); oval(-15,-84,12,16,"#27313d"); oval(15,-84,12,16,"#27313d"); oval(0,-68,18,11,"#eff1ed"); eye(-12,-87); eye(12,-87); line(29,-50,59,-73,8,"#5e9d40"); line(40,-65,55,-88,5,"#78bd51"); line(-28,-48,-56,-18,12,"#27313d");
   } else if (f.id === "perry") {
     oval(0, -36, 29, 43, "#253a58"); oval(0, -35, 20, 31, "#fffdf1"); circle(0, -85, 31, "#263957"); eye(-10, -87); eye(10, -87); poly([[-10,-75],[10,-75],[0,-61]], "#f6ae31"); context.fillStyle="#de4a4e"; context.fillRect(-34,-117,68,17); circle(30,-129,15,"#fff7e4"); line(-23,-45,-49,-15,12,"#263957"); context.fillStyle="#dc424b"; context.fillRect(22,-47,34,34); line(39,-47,39,-13,7,"#ffe368");
   } else if (f.id === "boo") {
@@ -2398,7 +2443,34 @@ function drawStageHazard(hazard) {
 
 function drawProjectile(projectile) {
   ctx.save();
-  if (projectile.leafSlash) {
+  if (projectile.beeStinger) {
+    const size = projectile.size;
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.scale(direction, 1);
+    ctx.rotate(Math.sin(projectile.life * .32) * .22);
+    ctx.shadowColor = "#ffe85a"; ctx.shadowBlur = 15;
+    ctx.fillStyle = "#f5c62e";
+    ctx.beginPath(); ctx.ellipse(0, 0, size, size * .52, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#343340";
+    [-.28, .12].forEach((offset) => ctx.fillRect(size * offset, -size * .48, size * .18, size * .96));
+    ctx.fillStyle = "#fff8d7";
+    ctx.beginPath(); ctx.ellipse(-size * .25, -size * .55, size * .52, size * .22, -.45, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#2c2933";
+    ctx.beginPath(); ctx.moveTo(size, 0); ctx.lineTo(size * 1.7, 0); ctx.lineTo(size * .98, size * .22); ctx.closePath(); ctx.fill();
+  } else if (projectile.bambooShoot) {
+    const size = projectile.size;
+    const direction = Math.sign(projectile.vx) || 1;
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.life * .2 * direction);
+    ctx.shadowColor = "#8fdd5a"; ctx.shadowBlur = 12;
+    ctx.fillStyle = "#5ca53e";
+    ctx.beginPath(); ctx.roundRect(-size * 1.2, -size * .35, size * 2.4, size * .7, size * .25); ctx.fill();
+    ctx.strokeStyle = "#d3f59b"; ctx.lineWidth = Math.max(2, size * .12);
+    [-.45, .1, .63].forEach((mark) => { ctx.beginPath(); ctx.moveTo(size * mark, -size * .33); ctx.lineTo(size * mark, size * .33); ctx.stroke(); });
+    ctx.fillStyle = "#e4ffad";
+    ctx.beginPath(); ctx.moveTo(size * 1.2, 0); ctx.lineTo(size * .68, -size * .42); ctx.lineTo(size * .68, size * .42); ctx.closePath(); ctx.fill();
+  } else if (projectile.leafSlash) {
     const size = projectile.size;
     ctx.translate(projectile.x, projectile.y);
     ctx.rotate(projectile.life * .24 * (Math.sign(projectile.vx) || 1));
