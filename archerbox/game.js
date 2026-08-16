@@ -32,11 +32,11 @@ const roster = [
   { id: "tusk", name: "Tusk the Mammoth", icon: "🦣", art: "assets/characters/tusk-mammoth.png?v=tusk-1", color: "#79513a", attack: "Tusk Jab", range: "Snowball Toss", special: "Tusk Charge", speed: 4.2, power: 13, health: 120, battleScale: 1.3 },
   { id: "cobra", name: "King Cobra", icon: "🐍", art: "assets/characters/king-cobra-realistic.png?v=cobra-2", color: "#6d5a3d", attack: "Cobra Bite", range: "Venom Orb", special: "Royal Strike", speed: 5.7, power: 14, health: 105 },
   { id: "blaze", name: "Blaze", icon: "🐉", art: "assets/characters/blaze-the-dragon.png?v=blaze-3", color: "#e75228", attack: "Claw Swipe", range: "Fire Breath", special: "Wing Bash", speed: 5.1, power: 13 },
-  { id: "axel", name: "Axel the Axolotl", icon: "🦎", art: "assets/characters/axel-axolotl.svg", color: "#e978a7", attack: "Fin Flick", range: "Water Orb", special: "Bubble Whirl", speed: 5.8, power: 10 },
-  { id: "hank", name: "Hank the Hippo", icon: "🦛", art: "assets/characters/hank-hippo.svg", color: "#7385a4", attack: "Hippo Headbutt", range: "Mud Ball", special: "River Rush", speed: 4.1, power: 15, health: 115, battleScale: 1.12 },
-  { id: "buzz", name: "Buzz the Bee", icon: "🐝", art: "assets/characters/buzz-bee.svg", color: "#f2b931", attack: "Stinger Jab", range: "Honey Bolt", special: "Swarm Blitz", speed: 6.8, power: 9 },
-  { id: "frost", name: "Frost the Polar Bear", icon: "🐻‍❄️", art: "assets/characters/frost-polar-bear.svg", color: "#8dc7df", attack: "Polar Paw", range: "Snowball Toss", special: "Arctic Slam", speed: 4.8, power: 14, health: 110 },
-  { id: "bamboo", name: "Bamboo the Panda", icon: "🐼", art: "assets/characters/bamboo-panda.svg", color: "#6b7182", attack: "Bamboo Bonk", range: "Bamboo Shoot", special: "Panda Roll", speed: 5.3, power: 12 },
+  { id: "axel", name: "Axel the Axolotl", icon: "🦎", art: "assets/characters/axel-axolotl-real.png?v=real-1", color: "#e978a7", attack: "Fin Flick", range: "Water Orb", special: "Bubble Whirl", speed: 5.8, power: 10 },
+  { id: "hank", name: "Hank the Hippo", icon: "🦛", art: "assets/characters/hank-hippo-real.png?v=real-1", color: "#7385a4", attack: "Hippo Headbutt", range: "Mud Ball", special: "River Rush", speed: 4.1, power: 15, health: 115, battleScale: 1.12 },
+  { id: "buzz", name: "Buzz the Bee", icon: "🐝", art: "assets/characters/buzz-bee-real.png?v=real-1", color: "#f2b931", attack: "Stinger Jab", range: "Honey Bolt", special: "Swarm Blitz", speed: 6.8, power: 9 },
+  { id: "frost", name: "Frost the Polar Bear", icon: "🐻‍❄️", art: "assets/characters/frost-polar-bear-real.png?v=real-1", color: "#8dc7df", attack: "Polar Paw", range: "Snowball Toss", special: "Arctic Slam", speed: 4.8, power: 14, health: 110 },
+  { id: "bamboo", name: "Bamboo the Panda", icon: "🐼", art: "assets/characters/bamboo-panda-real.png?v=real-1", color: "#6b7182", attack: "Bamboo Bonk", range: "Bamboo Shoot", special: "Panda Roll", speed: 5.3, power: 12 },
   { id: "perry", name: "Perry the Present Penguin", icon: "🐧", art: "assets/characters/perry-penguin.svg", color: "#4d88bc", attack: "Present Bonk", range: "Candy Cane Shot", special: "Snowy Surprise", speed: 5.5, power: 13, seasonal: "christmas" },
   { id: "boo", name: "Boo the Bat", icon: "🦇", art: "assets/characters/boo-the-bat.svg", color: "#6b4c91", attack: "Wing Swipe", range: "Spooky Spark", special: "Moon Dash", speed: 6.5, power: 12, seasonal: "halloween" },
 ];
@@ -364,6 +364,11 @@ const cutoutSources = {
   tusk: "assets/characters/cutouts/tusk-mammoth-cutout.png?v=tusk-1",
   cobra: "assets/characters/cutouts/king-cobra-realistic-cutout.png?v=cobra-2",
   blaze: "assets/characters/cutouts/blaze-the-dragon-cutout.png?v=blaze-2",
+  axel: "assets/characters/axel-axolotl-real.png?v=real-1",
+  hank: "assets/characters/hank-hippo-real.png?v=real-1",
+  buzz: "assets/characters/buzz-bee-real.png?v=real-1",
+  frost: "assets/characters/frost-polar-bear-real.png?v=real-1",
+  bamboo: "assets/characters/bamboo-panda-real.png?v=real-1",
 };
 Object.entries(cutoutSources).forEach(([id, source]) => {
   const cutout = new Image();
