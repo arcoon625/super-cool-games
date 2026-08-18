@@ -705,7 +705,7 @@ function buildUpgrades() {
     const level = getWeaponLevel(fighter.id);
     const card = document.createElement("button");
     card.className = "upgrade-fighter-card";
-    card.style.background = fighter.cardBackground || `linear-gradient(145deg, ${fighter.color}, #263663)`;
+    card.style.background = fighter.cardBackground ? "#22345f" : `linear-gradient(145deg, ${fighter.color}, #263663)`;
     card.classList.toggle("selected", selectedUpgradeFighter.id === fighter.id);
     card.innerHTML = `<img src="${fighter.art}" alt="${fighter.name}" /><strong>${fighter.name}</strong><span>${unlocked ? `${getRangeWeapon(fighter)} · Level ${level + 1}` : "🔒 Unlock this fighter first"}</span>`;
     card.disabled = !unlocked;
@@ -858,7 +858,8 @@ function buildRoster() {
     card.style.background = fighter.cardBackground || `linear-gradient(145deg, ${fighter.color}, #263663)`;
     card.classList.toggle("real-background-card", Boolean(fighter.cardBackground));
     const pickedByPlayerOne = matchMode === "two-player" && playerOneChoice?.id === fighter.id;
-    card.innerHTML = `<img class="fighter-portrait" src="${fighter.art}" alt="${fighter.name}" />${pickedByPlayerOne ? '<span class="player-one-tag">PLAYER 1</span>' : ""}<div class="fighter-card-info"><h3>${fighter.name}</h3><p>${unlocked ? fighter.special : `🔒 LOCKED · ${coinIcon} ${unlock.cost}`}</p></div>`;
+    const portrait = fighter.cardBackground ? `<div class="fighter-art-area" style="background: ${fighter.cardBackground}"><img class="fighter-portrait" src="${fighter.art}" alt="${fighter.name}" /></div>` : `<img class="fighter-portrait" src="${fighter.art}" alt="${fighter.name}" />`;
+    card.innerHTML = `${portrait}${pickedByPlayerOne ? '<span class="player-one-tag">PLAYER 1</span>' : ""}<div class="fighter-card-info"><h3>${fighter.name}</h3><p>${unlocked ? fighter.special : `🔒 LOCKED · ${coinIcon} ${unlock.cost}`}</p></div>`;
     card.classList.toggle("picked-player-one", pickedByPlayerOne);
     if (!unlocked) {
       card.classList.add("locked");
