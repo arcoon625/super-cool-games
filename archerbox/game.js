@@ -856,8 +856,9 @@ function buildRoster() {
     const unlock = getUnlock("fighters", fighter.id);
     card.className = "character-card";
     card.style.background = fighter.cardBackground || `linear-gradient(145deg, ${fighter.color}, #263663)`;
+    card.classList.toggle("real-background-card", Boolean(fighter.cardBackground));
     const pickedByPlayerOne = matchMode === "two-player" && playerOneChoice?.id === fighter.id;
-    card.innerHTML = `<img class="fighter-portrait" src="${fighter.art}" alt="${fighter.name}" />${pickedByPlayerOne ? '<span class="player-one-tag">PLAYER 1</span>' : ""}<h3>${fighter.name}</h3><p>${unlocked ? fighter.special : `🔒 LOCKED · ${coinIcon} ${unlock.cost}`}</p>`;
+    card.innerHTML = `<img class="fighter-portrait" src="${fighter.art}" alt="${fighter.name}" />${pickedByPlayerOne ? '<span class="player-one-tag">PLAYER 1</span>' : ""}<div class="fighter-card-info"><h3>${fighter.name}</h3><p>${unlocked ? fighter.special : `🔒 LOCKED · ${coinIcon} ${unlock.cost}`}</p></div>`;
     card.classList.toggle("picked-player-one", pickedByPlayerOne);
     if (!unlocked) {
       card.classList.add("locked");
