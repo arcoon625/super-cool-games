@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rumble Rivals</title>
-    <link rel="stylesheet" href="styles.css?v=seasonal-events-7" />
+    <link rel="stylesheet" href="styles.css?v=seasonal-events-8" />
     <style>
       .result-card { position: relative; z-index: 1; }
       .win-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -15,6 +15,18 @@
   <body>
     <main class="game-shell">
       <button id="settings-button" class="gear-button" aria-label="Open battle settings" title="Battle settings">⚙</button>
+      <button id="reset-progress-button" class="reset-progress-button" type="button">↻ RESET</button>
+      <div id="reset-progress-modal" class="reset-progress-modal" role="dialog" aria-modal="true" aria-labelledby="reset-progress-title" hidden>
+        <div class="reset-progress-card">
+          <p class="eyebrow">RESET PROGRESS</p>
+          <h2 id="reset-progress-title">Are you sure you want to completely start over?</h2>
+          <p>This resets your coins, trophies, wins, upgrades, and unlocks.</p>
+          <div class="reset-progress-actions">
+            <button id="reset-progress-no" class="small-button" type="button">NO</button>
+            <button id="reset-progress-yes" class="big-button" type="button">YES, START OVER</button>
+          </div>
+        </div>
+      </div>
       <section id="cover" class="screen cover-screen active">
         <div class="cover-stars">✦ ✧ ✦ ✧ ✦</div>
         <div id="cover-card" class="cover-card">
@@ -297,6 +309,6 @@
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
     <script src="online.js?v=online-29"></script>
-    <script src="game.js?v=online-76"></script>
+    <script src="game.js?v=online-77"></script>
   </body>
 </html>

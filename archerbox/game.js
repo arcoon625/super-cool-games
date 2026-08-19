@@ -3173,6 +3173,19 @@ $("settings-button").addEventListener("click", () => {
   showScreen("settings");
 });
 $("settings-back").addEventListener("click", () => showScreen(settingsReturnScreen));
+
+$("reset-progress-button").addEventListener("click", () => {
+  $("reset-progress-modal").hidden = false;
+});
+
+$("reset-progress-no").addEventListener("click", () => {
+  $("reset-progress-modal").hidden = true;
+});
+
+$("reset-progress-yes").addEventListener("click", () => {
+  $("reset-progress-modal").hidden = true;
+  resetAllProgress();
+});
 $("settings-continue").addEventListener("click", () => showScreen(settingsReturnScreen));
 $("unlock-menu-button").addEventListener("click", () => { buildUnlocks(); showScreen("unlocks"); });
 $("upgrade-menu-button").addEventListener("click", () => { buildUpgrades(); showScreen("upgrades"); });

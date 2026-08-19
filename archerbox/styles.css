@@ -18,6 +18,14 @@ button { font: inherit; cursor: pointer; }
 .game-shell { width: min(1200px, calc(100vw - 26px)); min-height: min(780px, calc(100vh - 26px)); margin: 13px auto; position: relative; overflow: hidden; border: 5px solid #fff; border-radius: 28px; box-shadow: 0 22px 70px #060a1d99; background: var(--cream); }
 .gear-button { position: absolute; z-index: 12; top: 19px; right: 20px; display: none; width: 48px; height: 48px; padding: 0; border: 3px solid white; border-radius: 50%; color: #fff; background: #6f7784; box-shadow: 0 4px 0 #3f4652; font-size: 1.65rem; line-height: 1; }
 .gear-button.visible { display: block; }
+.reset-progress-button { position: absolute; z-index: 21; top: 19px; left: 20px; padding: 10px 14px; border: 3px solid #fff; border-radius: 999px; color: #fff; background: #5c6674; box-shadow: 0 4px 0 #35404d; font-size: .72rem; font-weight: 1000; letter-spacing: .05em; }
+.reset-progress-modal { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 20px; background: #101a35b8; }
+.reset-progress-modal[hidden] { display: none; }
+.reset-progress-card { width: min(470px, 100%); padding: 30px; border: 4px solid #fff; border-radius: 28px; text-align: center; background: #fff8e8; box-shadow: 0 10px 0 #1d2c57; }
+.reset-progress-card h2 { margin: 8px 0 12px; color: #1d2c57; font-size: clamp(1.45rem, 4vw, 2rem); line-height: 1.08; }
+.reset-progress-card p:not(.eyebrow) { margin: 0; color: #48516a; font-weight: 800; line-height: 1.35; }
+.reset-progress-actions { display: flex; justify-content: center; gap: 12px; margin-top: 24px; }
+.reset-progress-actions .big-button { background: #e34e68; box-shadow: 0 5px 0 #a72d46; }
 .boss-button { display: none; padding: 11px 13px; border: 3px solid white; border-radius: 999px; color: white; background: linear-gradient(#f36a4b, #a52e46); box-shadow: 0 4px 0 #68213a; font-size: .75rem; font-weight: 1000; letter-spacing: .06em; }.boss-button.visible { display: block; }
 .screen { display: none; min-height: 760px; padding: 34px; position: relative; }
 .screen.active { display: flex; }
