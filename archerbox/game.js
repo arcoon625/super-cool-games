@@ -585,7 +585,9 @@ function resetAllProgress() {
   matchSettings = { difficulty: "normal", timer: 120, volume: .55 };
   chosenStage = stages[0];
   playerOneChoice = null;
-  try { localStorage.removeItem("rumble-rivals-profile"); } catch { /* A fresh profile still works for this visit. */ }
+  // Write the fresh profile immediately so the zero coins survive a reload too.
+  saveProfile();
+  try { localStorage.removeItem("rumble-rivals-online-results"); } catch { /* A fresh profile still works for this visit. */ }
   if (musicMasterGain && musicContext) musicMasterGain.gain.setTargetAtTime(matchSettings.volume, musicContext.currentTime, .03);
   document.querySelectorAll(".setting-choice").forEach((button) => {
     const value = button.dataset.value;
@@ -602,6 +604,7 @@ function resetAllProgress() {
   buildUpgrades();
   buildAchievements();
   updateCoinDisplays();
+  updateTrophyDisplay();
   returnToCover();
 }
 
